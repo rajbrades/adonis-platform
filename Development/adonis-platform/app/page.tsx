@@ -13,12 +13,10 @@ export default function HomePage() {
       <header className="bg-black/95 backdrop-blur-sm border-b border-yellow-500/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-20">
-            {/* Logo */}
             <Link href="/" className="text-3xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent hover:text-yellow-300 transition-colors">
               ADONIS
             </Link>
 
-            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center space-x-8">
               <div className="relative">
                 <button 
@@ -65,7 +63,6 @@ export default function HomePage() {
               </Link>
             </nav>
 
-            {/* CTA Buttons */}
             <div className="hidden lg:flex items-center space-x-4">
               <Link href="/login" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
                 Sign In
@@ -78,7 +75,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Mobile Menu Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden text-white/90 hover:text-yellow-400 transition-colors"
@@ -87,58 +83,20 @@ export default function HomePage() {
             </button>
           </div>
 
-          {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="lg:hidden border-t border-yellow-500/20 py-4">
               <div className="space-y-4">
-                <Link 
-                  href="/products" 
-                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
+                <Link href="/products" className="block text-white/90 hover:text-yellow-400 transition-colors font-medium" onClick={() => setMobileMenuOpen(false)}>
                   Treatments
                 </Link>
-                <Link 
-                  href="/consultation" 
-                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
+                <Link href="/consultation" className="block text-white/90 hover:text-yellow-400 transition-colors font-medium" onClick={() => setMobileMenuOpen(false)}>
                   Consultation
                 </Link>
-                <Link 
-                  href="/how-it-works" 
-                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
+                <Link href="/how-it-works" className="block text-white/90 hover:text-yellow-400 transition-colors font-medium" onClick={() => setMobileMenuOpen(false)}>
                   How It Works
                 </Link>
-                <Link 
-                  href="/science" 
-                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Science
-                </Link>
-                <Link 
-                  href="/about" 
-                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  About
-                </Link>
                 <div className="pt-4 border-t border-yellow-500/20">
-                  <Link 
-                    href="/login" 
-                    className="block text-white/90 hover:text-yellow-400 transition-colors font-medium mb-3"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    href="/consultation" 
-                    className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
+                  <Link href="/consultation" className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold text-center" onClick={() => setMobileMenuOpen(false)}>
                     Get Started
                   </Link>
                 </div>
@@ -232,4 +190,33 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-yellow-400 to-yellow-600">
         <div className="max-w-4xl mx-auto text-center px-6">
-          <h2 className="
+          <h2 className="text-5xl font-black text-black mb-8">
+            READY TO OPTIMIZE?
+          </h2>
+          <p className="text-xl text-black/80 mb-12">
+            Join thousands of executives already performing at their peak
+          </p>
+          <Link 
+            href="/consultation" 
+            className="bg-black text-yellow-400 px-12 py-4 rounded-lg text-xl font-bold inline-flex items-center"
+          >
+            Start Your Assessment
+            <ArrowRight className="ml-2 w-6 h-6" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black border-t border-yellow-500/20 py-12">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="text-2xl font-black text-yellow-400 mb-4">
+            ADONIS
+          </div>
+          <p className="text-white/70">
+            Peak performance medicine for elite executives
+          </p>
+        </div>
+      </footer>
+    </div>
+  )
+}
