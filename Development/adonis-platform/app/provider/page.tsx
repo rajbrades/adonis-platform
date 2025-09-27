@@ -3,12 +3,34 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Search, Filter, Clock, User, AlertCircle, CheckCircle, FileText, Calendar } from 'lucide-react'
 
+type TabType = 'pending' | 'reviewed'
+
+interface Patient {
+  id: number
+  name: string
+  age: number
+  occupation: string
+  submitted?: string
+  reviewed?: string
+  priority?: string
+  status?: string
+  treatment?: string
+  goals: string[]
+  symptoms: string[]
+  conditions: string[]
+  lifestyle: {
+    exercise: string
+    sleep: string
+    stress: string
+  }
+}
+
 export default function ProviderDashboard() {
-  const [selectedTab, setSelectedTab] = useState('pending')
-  const [selectedPatient, setSelectedPatient] = useState(null)
+  const [selectedTab, setSelectedTab] = useState<TabType>('pending')
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   // Mock patient data
-  const patients = {
+  const patients: Record<TabType, Patient[]> = {
     pending: [
       {
         id: 1,
@@ -55,7 +77,11 @@ export default function ProviderDashboard() {
         occupation: 'VP Operations',
         reviewed: '1 day ago',
         status: 'approved',
-        treatment: 'Testosterone Optimization Protocol'
+        treatment: 'Testosterone Optimization Protocol',
+        goals: ['Energy Optimization'],
+        symptoms: ['Low Energy'],
+        conditions: ['None'],
+        lifestyle: { exercise: 'Regular', sleep: '7-8 hours', stress: 'Moderate' }
       }
     ]
   }
@@ -227,64 +253,51 @@ export default function ProviderDashboard() {
                   )}
                 </div>
 
-                {selectedTab === 'pending' && (
-                  <div className="space-y-6">
-                    {/* Primary Goals */}
-                    <div>
-                      <h3 className="text-lg font-bold text-yellow-400 mb-3">Primary Goals</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedPatient.goals.map((goal, index) => (
-                          <span key={index} className="bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                            {goal}
-                          </span>
-                        ))}
+                <div className="space-y-6">
+                  {/* Primary Goals */}
+                  <div>
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Primary Goals</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPatient.goals.map((goal, index) => (
+                        <span key={index} className="bg-yellow-400/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
+                          {goal}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Current Symptoms */}
+                  <div>
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Current Symptoms</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedPatient.symptoms.map((symptom, index) => (
+                        <span key={index} className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
+                          {symptom}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lifestyle Factors */}
+                  <div>
+                    <h3 className="text-lg font-bold text-yellow-400 mb-3">Lifestyle Assessment</h3>
+                    <div className="grid md:grid-cols-3 gap-4">
+                      <div className="bg-white/5 rounded-lg p-4">
+                        <div className="text-white/60 text-sm">Exercise</div>
+                        <div className="text-white font-medium">{selectedPatient.lifestyle.exercise}</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-4">
+                        <div className="text-white/60 text-sm">Sleep</div>
+                        <div className="text-white font-medium">{selectedPatient.lifestyle.sleep}</div>
+                      </div>
+                      <div className="bg-white/5 rounded-lg p-4">
+                        <div className="text-white/60 text-sm">Stress Level</div>
+                        <div className="text-white font-medium">{selectedPatient.lifestyle.stress}</div>
                       </div>
                     </div>
+                  </div>
 
-                    {/* Current Symptoms */}
-                    <div>
-                      <h3 className="text-lg font-bold text-yellow-400 mb-3">Current Symptoms</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedPatient.symptoms.map((symptom, index) => (
-                          <span key={index} className="bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm">
-                            {symptom}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Medical Conditions */}
-                    <div>
-                      <h3 className="text-lg font-bold text-yellow-400 mb-3">Medical Conditions</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedPatient.conditions.map((condition, index) => (
-                          <span key={index} className="bg-white/10 text-white/80 px-3 py-1 rounded-full text-sm">
-                            {condition}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Lifestyle Factors */}
-                    <div>
-                      <h3 className="text-lg font-bold text-yellow-400 mb-3">Lifestyle Assessment</h3>
-                      <div className="grid md:grid-cols-3 gap-4">
-                        <div className="bg-white/5 rounded-lg p-4">
-                          <div className="text-white/60 text-sm">Exercise</div>
-                          <div className="text-white font-medium">{selectedPatient.lifestyle.exercise}</div>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4">
-                          <div className="text-white/60 text-sm">Sleep</div>
-                          <div className="text-white font-medium">{selectedPatient.lifestyle.sleep}</div>
-                        </div>
-                        <div className="bg-white/5 rounded-lg p-4">
-                          <div className="text-white/60 text-sm">Stress Level</div>
-                          <div className="text-white font-medium">{selectedPatient.lifestyle.stress}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Recommended Actions */}
+                  {selectedTab === 'pending' && (
                     <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 border border-yellow-500/30 rounded-lg p-4">
                       <h3 className="text-lg font-bold text-yellow-400 mb-3">Recommended Next Steps</h3>
                       <div className="space-y-2 text-white/80">
@@ -302,21 +315,21 @@ export default function ProviderDashboard() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {selectedTab === 'reviewed' && selectedPatient.status && (
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-2">
-                      <CheckCircle className="w-5 h-5 text-green-400" />
-                      <span className="text-green-400 font-medium">Approved for Treatment</span>
+                  {selectedTab === 'reviewed' && selectedPatient.status && (
+                    <div className="space-y-4">
+                      <div className="flex items-center space-x-2">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <span className="text-green-400 font-medium">Approved for Treatment</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-yellow-400 mb-2">Recommended Treatment</h3>
+                        <div className="text-white">{selectedPatient.treatment}</div>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-yellow-400 mb-2">Recommended Treatment</h3>
-                      <div className="text-white">{selectedPatient.treatment}</div>
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ) : (
               <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-12 text-center">
