@@ -106,8 +106,19 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black relative">
+      {/* Hero Section with Background Image */}
+      <section className="min-h-screen flex items-center justify-center relative overflow-hidden">
+        {/* Background Image */}
+        <div className="absolute inset-0">
+          <img 
+            src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=1920&h=1080&fit=crop&crop=center"
+            alt="Modern medical facility"
+            className="w-full h-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/60 to-black/80"></div>
+        </div>
+
+        {/* Existing blur effects */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-600/10 rounded-full blur-3xl"></div>
@@ -118,7 +129,7 @@ export default function HomePage() {
             PEAK<br />PERFORMANCE<br />UNLOCKED
           </h1>
           
-          <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
             Precision medicine for elite executives. Data-driven hormone optimization with licensed physicians.
           </p>
 
@@ -159,29 +170,107 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Treatment Categories */}
+      {/* Features Section with Images */}
       <section className="py-20 bg-gradient-to-b from-black to-gray-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl font-black text-center mb-16 text-yellow-400">
+            WHY ELITE EXECUTIVES CHOOSE ADONIS
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-12">
+            <div className="text-center">
+              <div className="mb-6 overflow-hidden rounded-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=300&fit=crop&crop=center"
+                  alt="Licensed medical doctor"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Real Medical Doctors</h3>
+              <p className="text-white/70 text-lg">Licensed physicians review every case personally. No algorithms, no shortcuts.</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="mb-6 overflow-hidden rounded-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1f?w=400&h=300&fit=crop&crop=center"
+                  alt="Medical laboratory"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Data-Driven Results</h3>
+              <p className="text-white/70 text-lg">Advanced biomarker testing and continuous monitoring for measurable outcomes.</p>
+            </div>
+            
+            <div className="text-center">
+              <div className="mb-6 overflow-hidden rounded-xl">
+                <img 
+                  src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop&crop=center"
+                  alt="Executive professional"
+                  className="w-full h-48 object-cover"
+                />
+              </div>
+              <h3 className="text-2xl font-bold mb-4 text-white">Executive-Focused</h3>
+              <p className="text-white/70 text-lg">Designed for high-performers who demand results and value their time.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Treatment Categories with Images */}
+      <section className="py-20 bg-gradient-to-b from-gray-900 to-black">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-black text-center mb-16 text-yellow-400">
             PREMIUM TREATMENT OPTIONS
           </h2>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
-              <h3 className="text-xl font-bold mb-4 text-yellow-400">Hormone Optimization</h3>
-              <div className="text-2xl font-bold text-white mb-4">From $199/mo</div>
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=400&h=200&fit=crop&crop=center"
+                alt="Hormone therapy"
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold mb-4 text-yellow-400">Hormone Optimization</h3>
+                <div className="text-2xl font-bold text-white mb-4">From $199/mo</div>
+              </div>
             </div>
-            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
-              <h3 className="text-xl font-bold mb-4 text-yellow-400">Peptide Therapy</h3>
-              <div className="text-2xl font-bold text-white mb-4">From $249/mo</div>
+            
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1585435557343-3b092031d8ad?w=400&h=200&fit=crop&crop=center"
+                alt="Peptide therapy"
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold mb-4 text-yellow-400">Peptide Therapy</h3>
+                <div className="text-2xl font-bold text-white mb-4">From $249/mo</div>
+              </div>
             </div>
-            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
-              <h3 className="text-xl font-bold mb-4 text-yellow-400">Weight Management</h3>
-              <div className="text-2xl font-bold text-white mb-4">From $399/mo</div>
+            
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=200&fit=crop&crop=center"
+                alt="Weight management"
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold mb-4 text-yellow-400">Weight Management</h3>
+                <div className="text-2xl font-bold text-white mb-4">From $399/mo</div>
+              </div>
             </div>
-            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
-              <h3 className="text-xl font-bold mb-4 text-yellow-400">Longevity Protocols</h3>
-              <div className="text-2xl font-bold text-white mb-4">From $299/mo</div>
+            
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl overflow-hidden">
+              <img 
+                src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=400&h=200&fit=crop&crop=center"
+                alt="Longevity protocols"
+                className="w-full h-32 object-cover"
+              />
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold mb-4 text-yellow-400">Longevity Protocols</h3>
+                <div className="text-2xl font-bold text-white mb-4">From $299/mo</div>
+              </div>
             </div>
           </div>
         </div>
