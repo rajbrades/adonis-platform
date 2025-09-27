@@ -246,9 +246,12 @@ export default function ProviderDashboard() {
                       <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-medium transition-colors">
                         Decline
                       </button>
-                      <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all">
+                      <Link 
+                        href={`/provider/approve/${selectedPatient.id}`}
+                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all"
+                      >
                         Approve & Recommend Labs
-                      </button>
+                      </Link>
                     </div>
                   )}
                 </div>
