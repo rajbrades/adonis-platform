@@ -1,25 +1,155 @@
+'use client'
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowRight, Menu, X, ChevronDown } from 'lucide-react'
 
 export default function HomePage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [servicesOpen, setServicesOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="bg-black border-b border-yellow-500/20 py-4">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
-          <div className="text-3xl font-black text-yellow-400">
-            ADONIS
-          </div>
-          <div className="hidden md:flex space-x-8">
-            <Link href="/products" className="text-white/80 hover:text-yellow-400 transition-colors">
-              Treatments
+      {/* Improved Header */}
+      <header className="bg-black/95 backdrop-blur-sm border-b border-yellow-500/20 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <Link href="/" className="text-3xl font-black text-yellow-400 hover:text-yellow-300 transition-colors">
+              ADONIS
             </Link>
-            <Link href="/consultation" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold">
-              Get Started
-            </Link>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-8">
+              <div className="relative">
+                <button 
+                  onMouseEnter={() => setServicesOpen(true)}
+                  onMouseLeave={() => setServicesOpen(false)}
+                  className="flex items-center text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                >
+                  Services
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {servicesOpen && (
+                  <div 
+                    onMouseEnter={() => setServicesOpen(true)}
+                    onMouseLeave={() => setServicesOpen(false)}
+                    className="absolute top-full left-0 mt-2 w-64 bg-gray-900 border border-yellow-500/20 rounded-lg shadow-2xl py-2"
+                  >
+                    <Link href="/products" className="block px-4 py-3 text-white/80 hover:text-yellow-400 hover:bg-white/5 transition-colors">
+                      <div className="font-medium">Treatment Catalog</div>
+                      <div className="text-sm text-white/60">View all available therapies</div>
+                    </Link>
+                    <Link href="/consultation" className="block px-4 py-3 text-white/80 hover:text-yellow-400 hover:bg-white/5 transition-colors">
+                      <div className="font-medium">Medical Consultation</div>
+                      <div className="text-sm text-white/60">Start your assessment</div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              <Link href="/products" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Treatments
+              </Link>
+              
+              <Link href="/how-it-works" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                How It Works
+              </Link>
+              
+              <Link href="/science" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Science
+              </Link>
+              
+              <Link href="/about" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                About
+              </Link>
+            </nav>
+
+            {/* CTA Buttons */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <Link href="/login" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Sign In
+              </Link>
+              <Link 
+                href="/consultation" 
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold hover:shadow-lg hover:shadow-yellow-500/25 transition-all"
+              >
+                Get Started
+              </Link>
+            </div>
+
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden text-white/90 hover:text-yellow-400 transition-colors"
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden border-t border-yellow-500/20 py-4">
+              <div className="space-y-4">
+                <Link 
+                  href="/products" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Treatments
+                </Link>
+                <Link 
+                  href="/consultation" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Consultation
+                </Link>
+                <Link 
+                  href="/how-it-works" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  How It Works
+                </Link>
+                <Link 
+                  href="/science" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Science
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </Link>
+                <div className="pt-4 border-t border-yellow-500/20">
+                  <Link 
+                    href="/login" 
+                    className="block text-white/90 hover:text-yellow-400 transition-colors font-medium mb-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Sign In
+                  </Link>
+                  <Link 
+                    href="/consultation" 
+                    className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
+      {/* Hero Section */}
       <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black relative">
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl"></div>
@@ -72,6 +202,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Treatment Categories */}
       <section className="py-20 bg-gradient-to-b from-black to-gray-900">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-4xl font-black text-center mb-16 text-yellow-400">
@@ -99,6 +230,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-yellow-400 to-yellow-600">
         <div className="max-w-4xl mx-auto text-center px-6">
           <h2 className="text-5xl font-black text-black mb-8">
@@ -117,6 +249,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Footer */}
       <footer className="bg-black border-t border-yellow-500/20 py-12">
         <div className="max-w-7xl mx-auto px-6 text-center">
           <div className="text-2xl font-black text-yellow-400 mb-4">
