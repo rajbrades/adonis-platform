@@ -2,7 +2,6 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { ArrowRight, Menu, X, ChevronDown } from 'lucide-react'
-import styles from './page.module.css'
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -11,20 +10,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContainer}>
-          <div className={styles.headerFlex}>
-            <Link href="/" className={styles.logo}>
+      <header className="bg-black/95 backdrop-blur-sm border-b border-yellow-500/20 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between items-center h-20">
+            {/* Logo */}
+            <Link href="/" className="text-3xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent hover:text-yellow-300 transition-colors">
               ADONIS
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className={styles.nav}>
+            <nav className="hidden lg:flex items-center space-x-8">
               <div className="relative">
                 <button 
                   onMouseEnter={() => setServicesOpen(true)}
                   onMouseLeave={() => setServicesOpen(false)}
-                  className={`${styles.navLink} flex items-center`}
+                  className="flex items-center text-white/90 hover:text-yellow-400 transition-colors font-medium"
                 >
                   Services
                   <ChevronDown className="w-4 h-4 ml-1" />
@@ -34,13 +34,13 @@ export default function HomePage() {
                   <div 
                     onMouseEnter={() => setServicesOpen(true)}
                     onMouseLeave={() => setServicesOpen(false)}
-                    className={styles.dropdown}
+                    className="absolute top-full left-0 mt-2 w-64 bg-gray-900 border border-yellow-500/20 rounded-lg shadow-2xl py-2"
                   >
-                    <Link href="/products" className={styles.dropdownItem}>
+                    <Link href="/products" className="block px-4 py-3 text-white/80 hover:text-yellow-400 hover:bg-white/5 transition-colors">
                       <div className="font-medium">Treatment Catalog</div>
                       <div className="text-sm text-white/60">View all available therapies</div>
                     </Link>
-                    <Link href="/consultation" className={styles.dropdownItem}>
+                    <Link href="/consultation" className="block px-4 py-3 text-white/80 hover:text-yellow-400 hover:bg-white/5 transition-colors">
                       <div className="font-medium">Medical Consultation</div>
                       <div className="text-sm text-white/60">Start your assessment</div>
                     </Link>
@@ -48,22 +48,40 @@ export default function HomePage() {
                 )}
               </div>
 
-              <Link href="/products" className={styles.navLink}>Treatments</Link>
-              <Link href="/how-it-works" className={styles.navLink}>How It Works</Link>
-              <Link href="/science" className={styles.navLink}>Science</Link>
-              <Link href="/about" className={styles.navLink}>About</Link>
+              <Link href="/products" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Treatments
+              </Link>
+              
+              <Link href="/how-it-works" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                How It Works
+              </Link>
+              
+              <Link href="/science" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Science
+              </Link>
+              
+              <Link href="/about" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                About
+              </Link>
             </nav>
 
             {/* CTA Buttons */}
-            <div className={styles.ctaContainer}>
-              <Link href="/login" className={styles.signInLink}>Sign In</Link>
-              <Link href="/consultation" className={styles.primaryButton}>Get Started</Link>
+            <div className="hidden lg:flex items-center space-x-4">
+              <Link href="/login" className="text-white/90 hover:text-yellow-400 transition-colors font-medium">
+                Sign In
+              </Link>
+              <Link 
+                href="/consultation" 
+                className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold hover:shadow-lg hover:shadow-yellow-500/25 transition-all"
+              >
+                Get Started
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={styles.mobileMenuButton}
+              className="lg:hidden text-white/90 hover:text-yellow-400 transition-colors"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -71,28 +89,56 @@ export default function HomePage() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className={styles.mobileMenu}>
-              <div className={styles.mobileMenuContent}>
-                <Link href="/products" className={styles.mobileMenuLink} onClick={() => setMobileMenuOpen(false)}>
+            <div className="lg:hidden border-t border-yellow-500/20 py-4">
+              <div className="space-y-4">
+                <Link 
+                  href="/products" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Treatments
                 </Link>
-                <Link href="/consultation" className={styles.mobileMenuLink} onClick={() => setMobileMenuOpen(false)}>
+                <Link 
+                  href="/consultation" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Consultation
                 </Link>
-                <Link href="/how-it-works" className={styles.mobileMenuLink} onClick={() => setMobileMenuOpen(false)}>
+                <Link 
+                  href="/how-it-works" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   How It Works
                 </Link>
-                <Link href="/science" className={styles.mobileMenuLink} onClick={() => setMobileMenuOpen(false)}>
+                <Link 
+                  href="/science" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   Science
                 </Link>
-                <Link href="/about" className={styles.mobileMenuLink} onClick={() => setMobileMenuOpen(false)}>
+                <Link 
+                  href="/about" 
+                  className="block text-white/90 hover:text-yellow-400 transition-colors font-medium"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   About
                 </Link>
-                <div className={styles.mobileMenuCta}>
-                  <Link href="/login" className={`${styles.mobileMenuLink} mb-3`} onClick={() => setMobileMenuOpen(false)}>
+                <div className="pt-4 border-t border-yellow-500/20">
+                  <Link 
+                    href="/login" 
+                    className="block text-white/90 hover:text-yellow-400 transition-colors font-medium mb-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     Sign In
                   </Link>
-                  <Link href="/consultation" className={`${styles.primaryButton} block text-center`} onClick={() => setMobileMenuOpen(false)}>
+                  <Link 
+                    href="/consultation" 
+                    className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2.5 rounded-lg font-bold text-center"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
                     Get Started
                   </Link>
                 </div>
@@ -103,99 +149,87 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className={styles.heroSection}>
-        <div className={styles.heroBackground}>
-          <div className={styles.heroBlur1}></div>
-          <div className={styles.heroBlur2}></div>
+      <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black relative">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-600/10 rounded-full blur-3xl"></div>
         </div>
 
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>
+        <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+          <h1 className="text-6xl md:text-8xl font-black mb-8 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 bg-clip-text text-transparent leading-tight">
             PEAK<br />PERFORMANCE<br />UNLOCKED
           </h1>
           
-          <p className={styles.heroSubtitle}>
+          <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto">
             Precision medicine for elite executives. Data-driven hormone optimization with licensed physicians.
           </p>
 
-          <div className={styles.heroButtonContainer}>
-            <Link href="/consultation" className={styles.heroPrimaryButton}>
+          <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-16">
+            <Link 
+              href="/consultation" 
+              className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all inline-flex items-center"
+            >
               Start Consultation
               <ArrowRight className="ml-2 w-6 h-6" />
             </Link>
-            <Link href="/products" className={styles.heroSecondaryButton}>
+            <Link 
+              href="/products" 
+              className="border-2 border-yellow-400 text-yellow-400 px-12 py-4 rounded-lg text-xl font-bold hover:bg-yellow-400 hover:text-black transition-all"
+            >
               View Treatments
             </Link>
           </div>
 
-          <div className={styles.trustIndicators}>
-            <div className={styles.trustIndicatorItem}>
-              <div className={styles.trustIndicatorNumber}>98%</div>
-              <div className={styles.trustIndicatorLabel}>Patient Satisfaction</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-yellow-400">98%</div>
+              <div className="text-white/70">Patient Satisfaction</div>
             </div>
-            <div className={styles.trustIndicatorItem}>
-              <div className={styles.trustIndicatorNumber}>24-48h</div>
-              <div className={styles.trustIndicatorLabel}>Lab Review</div>
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-yellow-400">24-48h</div>
+              <div className="text-white/70">Lab Review</div>
             </div>
-            <div className={styles.trustIndicatorItem}>
-              <div className={styles.trustIndicatorNumber}>FDA</div>
-              <div className={styles.trustIndicatorLabel}>Approved Medications</div>
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-yellow-400">FDA</div>
+              <div className="text-white/70">Approved Medications</div>
             </div>
-            <div className={styles.trustIndicatorItem}>
-              <div className={styles.trustIndicatorNumber}>Licensed</div>
-              <div className={styles.trustIndicatorLabel}>Medical Providers</div>
+            <div className="space-y-2">
+              <div className="text-3xl font-bold text-yellow-400">Licensed</div>
+              <div className="text-white/70">Medical Providers</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Treatment Categories */}
-      <section className={styles.treatmentSection}>
-        <div className={styles.treatmentContainer}>
-          <h2 className={styles.treatmentTitle}>PREMIUM TREATMENT OPTIONS</h2>
+      <section className="py-20 bg-gradient-to-b from-black to-gray-900">
+        <div className="max-w-7xl mx-auto px-6">
+          <h2 className="text-4xl font-black text-center mb-16 text-yellow-400">
+            PREMIUM TREATMENT OPTIONS
+          </h2>
           
-          <div className={styles.treatmentGrid}>
-            <div className={styles.treatmentCard}>
-              <h3 className={styles.treatmentCardTitle}>Hormone Optimization</h3>
-              <div className={styles.treatmentCardPrice}>From $199/mo</div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">Hormone Optimization</h3>
+              <div className="text-2xl font-bold text-white mb-4">From $199/mo</div>
             </div>
-            <div className={styles.treatmentCard}>
-              <h3 className={styles.treatmentCardTitle}>Peptide Therapy</h3>
-              <div className={styles.treatmentCardPrice}>From $249/mo</div>
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">Peptide Therapy</h3>
+              <div className="text-2xl font-bold text-white mb-4">From $249/mo</div>
             </div>
-            <div className={styles.treatmentCard}>
-              <h3 className={styles.treatmentCardTitle}>Weight Management</h3>
-              <div className={styles.treatmentCardPrice}>From $399/mo</div>
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">Weight Management</h3>
+              <div className="text-2xl font-bold text-white mb-4">From $399/mo</div>
             </div>
-            <div className={styles.treatmentCard}>
-              <h3 className={styles.treatmentCardTitle}>Longevity Protocols</h3>
-              <div className={styles.treatmentCardPrice}>From $299/mo</div>
+            <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-6 text-center">
+              <h3 className="text-xl font-bold mb-4 text-yellow-400">Longevity Protocols</h3>
+              <div className="text-2xl font-bold text-white mb-4">From $299/mo</div>
             </div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className={styles.ctaSection}>
-        <div className={styles.ctaSectionContainer}>
-          <h2 className={styles.ctaSectionTitle}>READY TO OPTIMIZE?</h2>
-          <p className={styles.ctaSectionSubtitle}>
-            Join thousands of executives already performing at their peak
-          </p>
-          <Link href="/consultation" className={styles.ctaSectionButton}>
-            Start Your Assessment
-            <ArrowRight className="ml-2 w-6 h-6" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContainer}>
-          <div className={styles.footerLogo}>ADONIS</div>
-          <p className={styles.footerText}>Peak performance medicine for elite executives</p>
-        </div>
-      </footer>
-    </div>
-  )
-}
+      <section className="py-20 bg-gradient-to-r from-yellow-400 to-yellow-600">
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h2 className="
