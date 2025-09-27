@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Star, CheckCircle } from 'lucide-react'
 
 export default function ProductsPage() {
   const products = [
@@ -26,7 +26,7 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="bg-black border-b border-yellow-500/20">
-        <nav className="max-w-7xl mx-auto px-6 py-4">
+        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-3xl font-black text-yellow-400">
             ADONIS
           </Link>
