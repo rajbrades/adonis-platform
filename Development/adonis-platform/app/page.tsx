@@ -9,12 +9,12 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Improved Header */}
+      {/* Header */}
       <header className="bg-black/95 backdrop-blur-sm border-b border-yellow-500/20 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <Link href="/" className="text-3xl font-black text-yellow-400 hover:text-yellow-300 transition-colors">
+            <Link href="/" className="text-3xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent hover:text-yellow-300 transition-colors">
               ADONIS
             </Link>
 
