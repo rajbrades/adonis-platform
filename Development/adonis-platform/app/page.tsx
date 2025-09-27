@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Shield, Users, Zap, Award, Star, Clock, CheckCircle, TrendingUp, Activity, Brain, Heart } from 'lucide-react'
+import { ArrowRight, Shield, Users, Zap, Star, TrendingUp, Activity, Heart } from 'lucide-react'
 
 export default function HomePage() {
   return (
@@ -14,13 +14,7 @@ export default function HomePage() {
             <Link href="/products" className="text-white/80 hover:text-yellow-400 transition-colors">
               Treatments
             </Link>
-            <Link href="/about" className="text-white/80 hover:text-yellow-400 transition-colors">
-              How It Works
-            </Link>
-            <Link href="/science" className="text-white/80 hover:text-yellow-400 transition-colors">
-              Science
-            </Link>
-            <Link href="/login" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all">
+            <Link href="/products" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all">
               Get Started
             </Link>
           </div>
@@ -29,7 +23,6 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black">
-        {/* Background Effects */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-yellow-400/10 rounded-full blur-3xl"></div>
           <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-yellow-600/10 rounded-full blur-3xl"></div>
@@ -42,7 +35,7 @@ export default function HomePage() {
           
           <p className="text-xl md:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
             Precision medicine for elite executives. Data-driven hormone optimization, 
-            peptide therapy, and longevity treatments. Consultation with real doctors.
+            peptide therapy, and longevity treatments.
           </p>
 
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center mb-16">
@@ -145,7 +138,7 @@ export default function HomePage() {
                 step: "01",
                 icon: <Users className="w-12 h-12" />,
                 title: "Consult Real Doctors",
-                description: "Licensed physicians review your health goals and medical history in detail"
+                description: "Licensed physicians review your health goals and medical history"
               },
               {
                 step: "02",
@@ -157,7 +150,7 @@ export default function HomePage() {
                 step: "03",
                 icon: <Zap className="w-12 h-12" />,
                 title: "Precision Treatment",
-                description: "Personalized protocols delivered to your door with ongoing monitoring"
+                description: "Personalized protocols delivered with ongoing monitoring"
               }
             ].map((step, index) => (
               <div key={index} className="text-center relative">
@@ -167,71 +160,6 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-2xl font-bold mb-4 text-white">{step.title}</h3>
                 <p className="text-white/70 text-lg">{step.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Results Section */}
-      <section className="py-20 bg-gradient-to-b from-gray-900 to-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            PROVEN RESULTS
-          </h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { metric: "+47%", label: "Average Energy Increase" },
-              { metric: "+156%", label: "Testosterone Optimization" },
-              { metric: "-23 lbs", label: "Average Weight Loss" },
-              { metric: "87%", label: "Improved Sleep Quality" }
-            ].map((stat, index) => (
-              <div key={index} className="text-center bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-                <div className="text-4xl font-black text-yellow-400 mb-2">{stat.metric}</div>
-                <div className="text-white/70">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-20 bg-black">
-        <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-5xl font-black text-center mb-16 bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            EXECUTIVE TESTIMONIALS
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                quote: "My energy levels are through the roof. I'm performing at levels I haven't experienced since my 20s.",
-                name: "Michael Chen",
-                title: "CEO, TechCorp"
-              },
-              {
-                quote: "The hormone optimization has completely transformed my focus and drive. Game changer for any executive.",
-                name: "Sarah Williams", 
-                title: "Managing Director, Goldman Sachs"
-              },
-              {
-                quote: "Finally found a medical team that understands the demands of executive life. Results speak for themselves.",
-                name: "David Rodriguez",
-                title: "Founder, StartupX"
-              }
-            ].map((testimonial, index) => (
-              <div key={index} className="bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-                <div className="flex mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-white/80 mb-6 italic">"{testimonial.quote}"</p>
-                <div>
-                  <div className="font-bold text-yellow-400">{testimonial.name}</div>
-                  <div className="text-white/60 text-sm">{testimonial.title}</div>
-                </div>
               </div>
             ))}
           </div>
@@ -253,52 +181,7 @@ export default function HomePage() {
           </Link>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-black border-t border-yellow-500/20 py-12">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <div className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent mb-4">
-                ADONIS
-              </div>
-              <p className="text-white/70">
-                Peak performance medicine for elite executives
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Treatments</h4>
-              <div className="space-y-2 text-white/70">
-                <div>Hormone Optimization</div>
-                <div>Peptide Therapy</div>
-                <div>Weight Management</div>
-                <div>Longevity Protocols</div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Company</h4>
-              <div className="space-y-2 text-white/70">
-                <div>How It Works</div>
-                <div>Science</div>
-                <div>Safety</div>
-                <div>About</div>
-              </div>
-            </div>
-            <div>
-              <h4 className="font-bold text-white mb-4">Support</h4>
-              <div className="space-y-2 text-white/70">
-                <div>Contact</div>
-                <div>FAQ</div>
-                <div>Privacy</div>
-                <div>Terms</div>
-              </div>
-            </div>
-          </div>
-          <div className="pt-8 border-t border-yellow-500/20 text-center text-white/50">
-            © 2024 Adonis Platform. All rights reserved.
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
+
