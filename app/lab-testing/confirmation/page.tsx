@@ -118,7 +118,7 @@ export default function ConfirmationPage() {
             </Link>
             
             
-              href="https://www.labcorp.com/labs-and-appointments-locations"
+            <a  href="https://www.labcorp.com/labs-and-appointments-locations"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-slate-700 text-white px-8 py-4 rounded-lg font-semibold hover:bg-slate-600 transition-colors"
