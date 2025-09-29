@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ConfirmationPage() {
+function ConfirmationContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams?.get('order');
   const [showSuccess, setShowSuccess] = useState(false);
@@ -118,7 +118,7 @@ export default function ConfirmationPage() {
             </Link>
             
             
-            <a  href="https://www.labcorp.com/labs-and-appointments-locations"
+              href="https://www.labcorp.com/labs-and-appointments-locations"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-slate-700 text-white px-8 py-4 rounded-lg font-semibold hover:bg-slate-600 transition-colors"
@@ -138,5 +138,13 @@ export default function ConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ConfirmationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="text-white">Loading...</div></div>}>
+      <ConfirmationContent />
+    </Suspense>
   );
 }
