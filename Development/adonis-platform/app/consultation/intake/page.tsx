@@ -1,9 +1,11 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function IntakePage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,6 +17,25 @@ export default function IntakePage() {
     occupation: '',
     primaryGoals: [] as string[]
   })
+
+  // Load existing data from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem('consultationData')
+    if (saved) {
+      const data = JSON.parse(saved)
+      setFormData({
+        firstName: data.firstName || '',
+        lastName: data.lastName || '',
+        email: data.email || '',
+        phone: data.phone || '',
+        dateOfBirth: data.dateOfBirth || '',
+        height: data.height || '',
+        weight: data.weight || '',
+        occupation: data.occupation || '',
+        primaryGoals: data.optimizationGoals || []
+      })
+    }
+  }, [])
 
   const goals = [
     'Increase Energy & Vitality',
@@ -41,6 +62,26 @@ export default function IntakePage() {
       ...prev,
       [e.target.name]: e.target.value
     }))
+  }
+
+  const handleContinue = (e: React.MouseEvent) => {
+    e.preventDefault()
+    
+    // Save to sessionStorage
+    const dataToSave = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      phone: formData.phone,
+      dateOfBirth: formData.dateOfBirth,
+      height: formData.height,
+      weight: formData.weight,
+      occupation: formData.occupation,
+      optimizationGoals: formData.primaryGoals
+    }
+    
+    sessionStorage.setItem('consultationData', JSON.stringify(dataToSave))
+    router.push('/consultation/medical-history')
   }
 
   const isFormValid = formData.firstName && formData.lastName && formData.email && 
@@ -180,8 +221,9 @@ export default function IntakePage() {
               Back
             </Link>
             
-            <Link
-              href="/consultation/medical-history"
+            <button
+              onClick={handleContinue}
+              disabled={!isFormValid}
               className={`flex items-center px-8 py-3 rounded-lg font-bold transition-all ${
                 isFormValid
                   ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black hover:shadow-lg'
@@ -190,11 +232,10 @@ export default function IntakePage() {
             >
               Continue
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+            </button>
           </div>
         </form>
       </div>
     </div>
   )
 }
-

@@ -1,9 +1,11 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowRight, ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 export default function MedicalHistoryPage() {
+  const router = useRouter()
   const [formData, setFormData] = useState({
     currentMedications: '',
     allergies: '',
@@ -23,6 +25,33 @@ export default function MedicalHistoryPage() {
     labsRecent: '',
     primaryConcerns: ''
   })
+
+  // Load existing data from sessionStorage on mount
+  useEffect(() => {
+    const saved = sessionStorage.getItem('consultationData')
+    if (saved) {
+      const data = JSON.parse(saved)
+      setFormData({
+        currentMedications: data.currentMedications || '',
+        allergies: data.allergies || '',
+        medicalConditions: data.medicalConditions || [],
+        surgeries: data.surgeries || '',
+        familyHistory: data.familyHistory || '',
+        lifestyle: data.lifestyle || {
+          exerciseFrequency: '',
+          sleepHours: '',
+          stressLevel: '',
+          alcohol: '',
+          smoking: '',
+          diet: ''
+        },
+        symptoms: data.symptoms || [],
+        previousHormoneTherapy: data.previousHormoneTherapy || '',
+        labsRecent: data.labsRecent || '',
+        primaryConcerns: data.primaryConcerns || ''
+      })
+    }
+  }, [])
 
   const commonConditions = [
     'High Blood Pressure',
@@ -84,6 +113,41 @@ export default function MedicalHistoryPage() {
         [name]: value
       }))
     }
+  }
+
+  const handleContinue = (e: React.MouseEvent) => {
+    e.preventDefault()
+    
+    // Get existing data and merge with medical history
+    const existingData = sessionStorage.getItem('consultationData')
+    const allData = existingData ? JSON.parse(existingData) : {}
+    
+    const updatedData = {
+      ...allData,
+      currentMedications: formData.currentMedications,
+      allergies: formData.allergies,
+      medicalConditions: formData.medicalConditions,
+      surgeries: formData.surgeries,
+      familyHistory: formData.familyHistory,
+      lifestyle: formData.lifestyle,
+      symptoms: formData.symptoms,
+      previousHormoneTherapy: formData.previousHormoneTherapy,
+      labsRecent: formData.labsRecent,
+      primaryConcerns: formData.primaryConcerns,
+      medicalHistory: {
+        conditions: formData.medicalConditions,
+        medications: formData.currentMedications ? [formData.currentMedications] : [],
+        allergies: formData.allergies ? [formData.allergies] : [],
+        symptoms: formData.symptoms.join(', '),
+        exerciseFrequency: formData.lifestyle.exerciseFrequency,
+        sleepHours: formData.lifestyle.sleepHours,
+        stressLevel: formData.lifestyle.stressLevel,
+        alcoholConsumption: formData.lifestyle.alcohol
+      }
+    }
+    
+    sessionStorage.setItem('consultationData', JSON.stringify(updatedData))
+    router.push('/consultation/review')
   }
 
   const isFormValid = formData.lifestyle.exerciseFrequency && formData.lifestyle.sleepHours && 
@@ -299,8 +363,9 @@ export default function MedicalHistoryPage() {
               Back
             </Link>
             
-            <Link
-              href="/consultation/review"
+            <button
+              onClick={handleContinue}
+              disabled={!isFormValid}
               className={`flex items-center px-8 py-3 rounded-lg font-bold transition-all ${
                 isFormValid
                   ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black hover:shadow-lg'
@@ -309,7 +374,7 @@ export default function MedicalHistoryPage() {
             >
               Continue to Review
               <ArrowRight className="w-5 h-5 ml-2" />
-            </Link>
+            </button>
           </div>
         </form>
       </div>

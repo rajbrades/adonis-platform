@@ -1,7 +1,73 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle, Clock, Shield } from 'lucide-react'
 
 export default function ReviewPage() {
+  const router = useRouter()
+  const [consultationData, setConsultationData] = useState<any>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    // Get consultation data from sessionStorage
+    const data = sessionStorage.getItem('consultationData')
+    if (data) {
+      setConsultationData(JSON.parse(data))
+    } else {
+      // If no data, redirect back to start
+      router.push('/consultation/intake')
+    }
+  }, [router])
+
+  const handleSubmit = async () => {
+    if (!consultationData) return
+
+    setIsSubmitting(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/consultations/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(consultationData),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to submit consultation')
+      }
+
+      // Store submission ID for confirmation page
+      sessionStorage.setItem('submissionId', result.submissionId)
+
+      // Clear consultation data
+      sessionStorage.removeItem('consultationData')
+
+      // Show success message
+      alert('Consultation submitted successfully!')
+      router.push('/')
+
+    } catch (err: any) {
+      console.error('Submission error:', err)
+      setError(err.message || 'Failed to submit consultation. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (!consultationData) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-gray-400">Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="bg-black border-b border-yellow-500/20">
@@ -65,8 +131,18 @@ export default function ReviewPage() {
             Complete your consultation to receive personalized medical recommendations
           </p>
 
-          <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all mb-4">
-            Complete Consultation - $199
+          {error && (
+            <div className="mb-6 p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
+              <p className="text-red-400 text-center">{error}</p>
+            </div>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all mb-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSubmitting ? 'Submitting...' : 'Complete Consultation - $199'}
           </button>
           
           <p className="text-white/60 text-sm">
@@ -79,14 +155,9 @@ export default function ReviewPage() {
             href="/consultation/medical-history"
             className="flex items-center text-white/70 hover:text-yellow-400 transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Back
+            ← Back
           </Link>
-          
-          <Link
-            href="/"
-            className="text-white/70 hover:text-yellow-400 transition-colors"
-          >
+          <Link href="/" className="text-white/70 hover:text-yellow-400 transition-colors">
             Return Home
           </Link>
         </div>
