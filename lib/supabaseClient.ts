@@ -5,6 +5,9 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Export createClient for use in lab testing pages
+export { createClient }
+
 export interface ConsultationSubmission {
   id?: string
   created_at?: string
