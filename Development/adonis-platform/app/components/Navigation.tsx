@@ -52,6 +52,9 @@ export default function Navigation() {
             <Link href="/how-it-works" className="text-white hover:text-yellow-400 transition-colors">
               How it Works
             </Link>
+            <Link href="/lab-testing" className="text-white hover:text-yellow-400 transition-colors">
+              Lab Testing
+            </Link>
             <Link href="/about" className="text-white hover:text-yellow-400 transition-colors">
               About Us
             </Link>
@@ -108,6 +111,9 @@ export default function Navigation() {
               </Link>
               <Link href="/how-it-works" className="block text-white hover:text-yellow-400 transition-colors" onClick={() => setIsOpen(false)}>
                 How it Works
+              </Link>
+              <Link href="/lab-testing" className="block text-white hover:text-yellow-400 transition-colors" onClick={() => setIsOpen(false)}>
+                Lab Testing
               </Link>
               <Link href="/about" className="block text-white hover:text-yellow-400 transition-colors" onClick={() => setIsOpen(false)}>
                 About Us
