@@ -28,8 +28,8 @@ export default function AboutPage() {
     {
       name: "Dr. James Wilson, MD",
       title: "Lead Physician",
-      specialty: "Men's Health & Sexual Wellness",
-      experience: "10+ years in men's optimization therapy",
+      specialty: "Men&apos;s Health & Sexual Wellness",
+      experience: "10+ years in men&apos;s optimization therapy",
       credentials: "Board Certified Urology, Johns Hopkins University"
     }
   ]
@@ -45,7 +45,7 @@ export default function AboutPage() {
             About Adonis
           </h1>
           <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
-            We're on a mission to help high-performers reclaim their energy, vitality, and peak physical condition 
+            We&apos;re on a mission to help high-performers reclaim their energy, vitality, and peak physical condition 
             through evidence-based hormone optimization and personalized medicine.
           </p>
         </div>
@@ -63,7 +63,7 @@ export default function AboutPage() {
               </p>
               <p className="text-white/80 mb-6 text-lg">
                 We believe every man deserves to feel like his best self - energetic, strong, confident, and mentally sharp. 
-                That's why we've created a comprehensive hormone optimization platform that combines cutting-edge medicine 
+                That&apos;s why we&apos;ve created a comprehensive hormone optimization platform that combines cutting-edge medicine 
                 with personalized care.
               </p>
               <p className="text-white/80 text-lg">
@@ -121,7 +121,7 @@ export default function AboutPage() {
             <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8 text-center">
               <Users className="w-12 h-12 text-yellow-400 mx-auto mb-6" />
               <h3 className="text-xl font-bold mb-4 text-yellow-400">Expert Team</h3>
-              <p className="text-white/70">Board-certified physicians specializing in hormone optimization and men's health.</p>
+              <p className="text-white/70">Board-certified physicians specializing in hormone optimization and men&apos;s health.</p>
             </div>
 
             <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8 text-center">
