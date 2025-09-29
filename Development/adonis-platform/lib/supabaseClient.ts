@@ -15,5 +15,5 @@ export interface ConsultationSubmission {
   date_of_birth: string
   occupation?: string
   optimization_goals?: string[]
-  medical_history?: any
+  medical_history?: Record<string, unknown>
 }

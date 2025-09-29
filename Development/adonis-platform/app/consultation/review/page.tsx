@@ -4,9 +4,20 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
+interface ConsultationData {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  occupation?: string
+  optimizationGoals?: string[]
+  [key: string]: unknown
+}
+
 export default function ReviewPage() {
   const router = useRouter()
-  const [consultationData, setConsultationData] = useState<any>(null)
+  const [consultationData, setConsultationData] = useState<ConsultationData | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
 
@@ -52,9 +63,10 @@ export default function ReviewPage() {
       alert('Consultation submitted successfully!')
       router.push('/')
 
-    } catch (err: any) {
+    } catch (err) {
       console.error('Submission error:', err)
-      setError(err.message || 'Failed to submit consultation. Please try again.')
+      const errorMessage = err instanceof Error ? err.message : 'Failed to submit consultation. Please try again.'
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
