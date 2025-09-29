@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 interface LabTest {
   id: string;
@@ -48,7 +48,7 @@ export default function LabBuilderPage() {
 
   const fetchData = async () => {
     try {
-      const supabase = createClient();
+      // Using pre-configured supabase client
 
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('lab_categories')

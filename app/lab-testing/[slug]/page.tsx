@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 interface LabPanel {
   id: string;
@@ -44,7 +44,7 @@ export default function PanelDetailPage() {
 
   const fetchPanelDetails = async () => {
     try {
-      const supabase = createClient();
+      // Using pre-configured supabase client
       
       const { data: panelData, error: panelError } = await supabase
         .from('lab_panels')

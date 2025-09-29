@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 interface CartItem {
   type: 'panel' | 'test';
@@ -108,7 +108,7 @@ export default function CartPage() {
     setProcessing(true);
 
     try {
-      const supabase = createClient();
+      // Using pre-configured supabase client
 
       const orderNumber = `ADN-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 interface LabPanel {
   id: string;
@@ -29,7 +29,7 @@ export default function LabTestingPage() {
 
   const fetchPanels = async () => {
     try {
-      const supabase = createClient();
+      // Using pre-configured supabase client
       const { data, error } = await supabase
         .from('lab_panels')
         .select('*')
