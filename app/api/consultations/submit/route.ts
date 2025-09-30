@@ -1,26 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const data = await request.json()
 
-    const submissionData = {
-      first_name: body.firstName,
-      last_name: body.lastName,
-      email: body.email,
-      phone: body.phone,
-      date_of_birth: body.dateOfBirth,
-      occupation: body.occupation || null,
-      optimization_goals: body.optimizationGoals || [],
-      medical_history: body.medicalHistory || {},
+    // Calculate age from date of birth
+    const dob = new Date(data.dateOfBirth)
+    const today = new Date()
+    const age = today.getFullYear() - dob.getFullYear()
+
+    // Prepare data for database
+    const consultationData = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      phone: data.phone || null,
+      date_of_birth: data.dateOfBirth,
+      age: age,
+      height: data.height || null,
+      weight: data.weight || null,
+      occupation: data.occupation || null,
+      optimization_goals: data.optimizationGoals || [],
+      primary_concerns: data.primaryConcerns || null,
+      current_medications: data.currentMedications || null,
+      allergies: data.allergies || null,
+      medical_conditions: data.medicalConditions || [],
+      surgeries: data.surgeries || null,
+      family_history: data.familyHistory || null,
+      previous_hormone_therapy: data.previousHormoneTherapy || null,
+      labs_recent: data.labsRecent || null,
+      exercise_frequency: data.lifestyle?.exerciseFrequency || null,
+      sleep_hours: data.lifestyle?.sleepHours || null,
+      stress_level: data.lifestyle?.stressLevel || null,
+      alcohol_consumption: data.lifestyle?.alcohol || null,
+      smoking: data.lifestyle?.smoking || null,
+      diet: data.lifestyle?.diet || null,
+      symptoms: data.symptoms || [],
       status: 'pending',
-      payment_status: 'unpaid'
+      priority: 'medium'
     }
 
-    const { data, error } = await supabase
-      .from('consultation_submissions')
-      .insert([submissionData])
+    // Insert into Supabase
+    const { data: result, error } = await supabase
+      .from('consultations')
+      .insert([consultationData])
       .select()
       .single()
 
@@ -32,14 +56,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json(
-      { success: true, submissionId: data.id },
-      { status: 201 }
-    )
+    return NextResponse.json({
+      success: true,
+      submissionId: result.id,
+      message: 'Consultation submitted successfully'
+    })
+
   } catch (error) {
-    console.error('Server error:', error)
+    console.error('Submission error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

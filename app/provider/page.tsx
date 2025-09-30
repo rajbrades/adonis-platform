@@ -1,12 +1,12 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Search, Filter, Clock, User, AlertCircle, CheckCircle, FileText, Calendar } from 'lucide-react'
 
 type TabType = 'pending' | 'reviewed'
 
 interface Patient {
-  id: number
+  id: number | string
   name: string
   age: number
   occupation: string
@@ -28,62 +28,37 @@ interface Patient {
 export default function ProviderDashboard() {
   const [selectedTab, setSelectedTab] = useState<TabType>('pending')
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
+  const [patients, setPatients] = useState<Record<TabType, Patient[]>>({
+    pending: [],
+    reviewed: []
+  })
+  const [loading, setLoading] = useState(true)
 
-  // Mock patient data
-  const patients: Record<TabType, Patient[]> = {
-    pending: [
-      {
-        id: 1,
-        name: 'Michael Chen',
-        age: 42,
-        occupation: 'CEO, TechCorp',
-        submitted: '2 hours ago',
-        priority: 'high',
-        goals: ['Increase Energy', 'Optimize Testosterone', 'Better Sleep'],
-        symptoms: ['Low Energy', 'Poor Sleep', 'Brain Fog'],
-        conditions: ['High Blood Pressure'],
-        lifestyle: { exercise: 'Moderate', sleep: '5-6 hours', stress: 'High' }
-      },
-      {
-        id: 2,
-        name: 'Sarah Williams',
-        age: 38,
-        occupation: 'Managing Director',
-        submitted: '4 hours ago',
-        priority: 'medium',
-        goals: ['Weight Management', 'Enhanced Performance'],
-        symptoms: ['Weight Gain', 'Low Energy'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Frequent', sleep: '6-7 hours', stress: 'Moderate' }
-      },
-      {
-        id: 3,
-        name: 'David Rodriguez',
-        age: 45,
-        occupation: 'Founder, StartupX',
-        submitted: '6 hours ago',
-        priority: 'low',
-        goals: ['Anti-Aging', 'Cognitive Function'],
-        symptoms: ['Brain Fog', 'Joint Pain'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Occasional', sleep: '7-8 hours', stress: 'High' }
-      }
-    ],
-    reviewed: [
-      {
-        id: 4,
-        name: 'James Thompson',
-        age: 39,
-        occupation: 'VP Operations',
-        reviewed: '1 day ago',
-        status: 'approved',
-        treatment: 'Testosterone Optimization Protocol',
-        goals: ['Energy Optimization'],
-        symptoms: ['Low Energy'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Regular', sleep: '7-8 hours', stress: 'Moderate' }
-      }
-    ]
+  useEffect(() => {
+    fetchPatients()
+  }, [])
+
+  const fetchPatients = async () => {
+    try {
+      const response = await fetch('/api/consultations')
+      const data = await response.json()
+      setPatients({
+        pending: data.pending || [],
+        reviewed: data.reviewed || []
+      })
+    } catch (error) {
+      console.error('Error fetching patients:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-white/60">Loading consultations...</p>
+      </div>
+    )
   }
 
   return (
@@ -132,14 +107,14 @@ export default function ProviderDashboard() {
           <div className="bg-white/5 border border-white/10 rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <User className="w-5 h-5 text-blue-400" />
-              <span className="text-2xl font-bold">12</span>
+              <span className="text-2xl font-bold">{patients.pending.length + patients.reviewed.length}</span>
             </div>
-            <div className="text-white/60 text-sm">Active Patients</div>
+            <div className="text-white/60 text-sm">Total Patients</div>
           </div>
           <div className="bg-white/5 border border-white/10 rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <AlertCircle className="w-5 h-5 text-red-400" />
-              <span className="text-2xl font-bold">1</span>
+              <span className="text-2xl font-bold">{patients.pending.filter(p => p.priority === 'high').length}</span>
             </div>
             <div className="text-white/60 text-sm">High Priority</div>
           </div>
@@ -177,46 +152,53 @@ export default function ProviderDashboard() {
             </div>
 
             <div className="space-y-4">
-              {patients[selectedTab].map((patient) => (
-                <div
-                  key={patient.id}
-                  onClick={() => setSelectedPatient(patient)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                    selectedPatient?.id === patient.id
-                      ? 'bg-yellow-400/10 border-yellow-400'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-bold text-lg">{patient.name}</h3>
-                      <p className="text-white/60 text-sm">{patient.age} years • {patient.occupation}</p>
-                    </div>
-                    {patient.priority && (
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
-                          patient.priority === 'high'
-                            ? 'bg-red-500/20 text-red-400'
-                            : patient.priority === 'medium'
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-blue-500/20 text-blue-400'
-                        }`}
-                      >
-                        {patient.priority.toUpperCase()}
-                      </span>
-                    )}
-                    {patient.status && (
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400">
-                        {patient.status.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center text-sm text-white/60">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {patient.submitted || patient.reviewed}
-                  </div>
+              {patients[selectedTab].length === 0 ? (
+                <div className="text-center py-12 text-white/60">
+                  <User className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                  <p>No {selectedTab} consultations</p>
                 </div>
-              ))}
+              ) : (
+                patients[selectedTab].map((patient) => (
+                  <div
+                    key={patient.id}
+                    onClick={() => setSelectedPatient(patient)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                      selectedPatient?.id === patient.id
+                        ? 'bg-yellow-400/10 border-yellow-400'
+                        : 'bg-white/5 border-white/10 hover:bg-white/10'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="font-bold text-lg">{patient.name}</h3>
+                        <p className="text-white/60 text-sm">{patient.age} years • {patient.occupation}</p>
+                      </div>
+                      {patient.priority && (
+                        <span
+                          className={`px-2 py-1 rounded text-xs font-semibold ${
+                            patient.priority === 'high'
+                              ? 'bg-red-500/20 text-red-400'
+                              : patient.priority === 'medium'
+                              ? 'bg-yellow-500/20 text-yellow-400'
+                              : 'bg-blue-500/20 text-blue-400'
+                          }`}
+                        >
+                          {patient.priority.toUpperCase()}
+                        </span>
+                      )}
+                      {patient.status && (
+                        <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400">
+                          {patient.status.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center text-sm text-white/60">
+                      <Clock className="w-4 h-4 mr-1" />
+                      {patient.submitted || patient.reviewed}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -267,11 +249,17 @@ export default function ProviderDashboard() {
                       Medical Conditions
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {selectedPatient.conditions.map((condition, index) => (
-                        <span key={index} className="px-3 py-1 bg-blue-400/10 border border-blue-400/20 rounded-full text-sm">
-                          {condition}
+                      {selectedPatient.conditions.length > 0 ? (
+                        selectedPatient.conditions.map((condition, index) => (
+                          <span key={index} className="px-3 py-1 bg-blue-400/10 border border-blue-400/20 rounded-full text-sm">
+                            {condition}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="px-3 py-1 bg-blue-400/10 border border-blue-400/20 rounded-full text-sm">
+                          None reported
                         </span>
-                      ))}
+                      )}
                     </div>
                   </div>
 
