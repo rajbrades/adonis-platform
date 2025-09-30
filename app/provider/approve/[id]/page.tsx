@@ -1,16 +1,17 @@
 'use client'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, use } from 'react'
 import { ChevronLeft, Check, AlertCircle, FileText, TestTube, Package, Calendar } from 'lucide-react'
 
-export default function ApprovePatient({ params }: { params: { id: string } }) {
+export default function ApprovePatient({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [selectedLabs, setSelectedLabs] = useState<string[]>([])
   const [selectedTreatments, setSelectedTreatments] = useState<string[]>([])
   const [notes, setNotes] = useState('')
 
-  // Mock patient data (in real app, this would fetch based on params.id)
+  // Mock patient data (in real app, this would fetch based on id)
   const patient = {
-    id: params.id,
+    id: id,
     name: 'Michael Chen',
     age: 42,
     goals: ['Increase Energy', 'Optimize Testosterone', 'Better Sleep'],
