@@ -13,6 +13,9 @@ export async function POST(
     const body = await request.json()
     const { recommendedLabs, providerNotes, providerName } = body
 
+    console.log('Approving consultation:', id)
+    console.log('Recommended labs:', recommendedLabs)
+
     // Update consultation in database with recommended labs
     const { data: consultation, error: updateError } = await supabase
       .from('consultations')
@@ -35,9 +38,11 @@ export async function POST(
       )
     }
 
+    console.log('Consultation updated, sending email to:', consultation.email)
+
     // Send email to patient
     try {
-      await resend.emails.send({
+      const emailResult = await resend.emails.send({
         from: 'Adonis Health <onboarding@resend.dev>',
         to: consultation.email,
         subject: 'Your Health Optimization Plan is Ready',
@@ -74,8 +79,16 @@ export async function POST(
           </div>
         `
       })
-    } catch (emailError) {
+
+      console.log('Email sent successfully:', emailResult)
+
+    } catch (emailError: any) {
       console.error('Email send error:', emailError)
+      console.error('Email error message:', emailError?.message)
+      console.error('Email error details:', JSON.stringify(emailError, null, 2))
+      console.error('Resend API Key present:', !!process.env.RESEND_API_KEY)
+      console.error('Resend API Key length:', process.env.RESEND_API_KEY?.length)
+      // Don't fail the whole request if email fails
     }
 
     return NextResponse.json({
@@ -83,8 +96,9 @@ export async function POST(
       message: 'Consultation approved and patient notified'
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Approval error:', error)
+    console.error('Approval error message:', error?.message)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
