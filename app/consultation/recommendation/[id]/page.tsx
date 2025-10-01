@@ -1,7 +1,8 @@
 'use client'
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { CheckCircle, Clock, User, FileText } from 'lucide-react'
+import { CheckCircle, Clock, FileText } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export default function RecommendationPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -14,12 +15,14 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
 
   const fetchConsultation = async () => {
     try {
-      const response = await fetch('/api/consultations')
-      const data = await response.json()
-      const found = [...data.pending, ...data.reviewed].find(
-        (c: any) => c.id === resolvedParams.id
-      )
-      setConsultation(found)
+      const { data, error } = await supabase
+        .from('consultations')
+        .select('*')
+        .eq('id', resolvedParams.id)
+        .single()
+
+      if (error) throw error
+      setConsultation(data)
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -47,7 +50,8 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
     )
   }
 
-  const totalPrice = 0 // Will calculate from recommended_labs
+  const recommendedLabs = consultation.recommended_labs || []
+  const totalPrice = recommendedLabs.reduce((sum: number, lab: any) => sum + (lab.price || 0), 0)
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -79,7 +83,7 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
             Provider Recommendations
           </h2>
           <div className="bg-white/5 p-6 rounded-lg">
-            <p className="text-white/90 leading-relaxed">{consultation.treatment}</p>
+            <p className="text-white/90 leading-relaxed">{consultation.provider_notes}</p>
           </div>
         </div>
 
@@ -87,23 +91,33 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
         <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8 mb-8">
           <h2 className="text-2xl font-bold mb-6 text-yellow-400">Recommended Lab Testing</h2>
           <div className="space-y-4">
-            {/* Note: recommended_labs will be populated from database */}
-            <div className="p-6 bg-white/5 border border-white/10 rounded-lg">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Comprehensive Panel</h3>
-                  <p className="text-white/70">Complete hormonal and metabolic assessment</p>
+            {recommendedLabs.map((lab: any, index: number) => (
+              <div key={index} className="p-6 bg-white/5 border border-white/10 rounded-lg">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-bold mb-2">{lab.name}</h3>
+                    <p className="text-white/70">{lab.description}</p>
+                  </div>
+                  <div className="text-right ml-4">
+                    <p className="text-3xl font-bold text-yellow-400">${lab.price}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-3xl font-bold text-yellow-400">$299</p>
+                <div className="flex items-center text-sm text-white/60">
+                  <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                  Comprehensive biomarker analysis included
                 </div>
               </div>
-              <div className="flex items-center text-sm text-white/60">
-                <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-                65 biomarkers included
+            ))}
+          </div>
+
+          {totalPrice > 0 && (
+            <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total Investment:</span>
+                <span className="text-2xl font-bold text-yellow-400">${totalPrice}</span>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Next Steps */}
@@ -143,7 +157,7 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
         {/* CTA */}
         <div className="text-center">
           <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all mb-4">
-            Order Lab Tests - $299
+            Order Lab Tests - ${totalPrice}
           </button>
           <p className="text-white/60 text-sm">
             Questions? Contact our support team

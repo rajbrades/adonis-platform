@@ -13,12 +13,13 @@ export async function POST(
     const body = await request.json()
     const { recommendedLabs, providerNotes, providerName } = body
 
-    // Update consultation in database
+    // Update consultation in database with recommended labs
     const { data: consultation, error: updateError } = await supabase
       .from('consultations')
       .update({
         status: 'approved',
         provider_notes: providerNotes,
+        recommended_labs: recommendedLabs,
         reviewed_at: new Date().toISOString(),
         reviewed_by: providerName
       })
@@ -37,7 +38,7 @@ export async function POST(
     // Send email to patient
     try {
       await resend.emails.send({
-        from: 'Adonis Health <onboarding@resend.dev>', // Change this after domain verification
+        from: 'Adonis Health <onboarding@resend.dev>',
         to: consultation.email,
         subject: 'Your Health Optimization Plan is Ready',
         html: `
@@ -63,7 +64,7 @@ export async function POST(
             <p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${providerNotes}</p>
             
             <div style="margin: 30px 0; text-align: center;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/consultation/recommendation/${id}" 
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://adonis-platform.vercel.app'}/consultation/recommendation/${id}" 
                  style="background: linear-gradient(to right, #EAB308, #CA8A04); color: black; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
                 View Full Recommendations
               </a>
@@ -75,7 +76,6 @@ export async function POST(
       })
     } catch (emailError) {
       console.error('Email send error:', emailError)
-      // Don't fail the request if email fails
     }
 
     return NextResponse.json({
