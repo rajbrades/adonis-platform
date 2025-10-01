@@ -1,350 +1,258 @@
 'use client'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useState, use } from 'react'
-import { ChevronLeft, Check, AlertCircle, FileText, TestTube, Package, Calendar } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
 
-export default function ApprovePatient({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+interface LabPanel {
+  id: string
+  name: string
+  slug: string
+  description: string
+  price: number
+  biomarker_count: number
+}
+
+export default function ApprovalPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const router = useRouter()
+  const [consultation, setConsultation] = useState<any>(null)
+  const [labPanels, setLabPanels] = useState<LabPanel[]>([])
   const [selectedLabs, setSelectedLabs] = useState<string[]>([])
-  const [selectedTreatments, setSelectedTreatments] = useState<string[]>([])
-  const [notes, setNotes] = useState('')
+  const [providerNotes, setProviderNotes] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // Mock patient data (in real app, this would fetch based on id)
-  const patient = {
-    id: id,
-    name: 'Michael Chen',
-    age: 42,
-    goals: ['Increase Energy', 'Optimize Testosterone', 'Better Sleep'],
-    symptoms: ['Low Energy', 'Poor Sleep', 'Brain Fog']
-  }
+  useEffect(() => {
+    fetchData()
+  }, [])
 
-  const labTests = [
-    { id: 'testosterone', name: 'Total Testosterone', category: 'Hormones', price: 49 },
-    { id: 'free-testosterone', name: 'Free Testosterone', category: 'Hormones', price: 59 },
-    { id: 'estradiol', name: 'Estradiol (E2)', category: 'Hormones', price: 45 },
-    { id: 'thyroid', name: 'Thyroid Panel (TSH, T3, T4)', category: 'Thyroid', price: 79 },
-    { id: 'vitamin-d', name: 'Vitamin D', category: 'Vitamins', price: 39 },
-    { id: 'b12', name: 'Vitamin B12', category: 'Vitamins', price: 35 },
-    { id: 'cortisol', name: 'Cortisol', category: 'Stress', price: 55 },
-    { id: 'dhea', name: 'DHEA-S', category: 'Hormones', price: 65 },
-    { id: 'lipid', name: 'Lipid Panel', category: 'Cardiovascular', price: 45 },
-    { id: 'metabolic', name: 'Comprehensive Metabolic Panel', category: 'General', price: 69 },
-    { id: 'psa', name: 'PSA (Prostate)', category: 'General', price: 49 },
-    { id: 'cbc', name: 'Complete Blood Count', category: 'General', price: 39 }
-  ]
+  const fetchData = async () => {
+    try {
+      // Fetch consultation
+      const consultationRes = await fetch(`/api/consultations`)
+      const consultationData = await consultationRes.json()
+      const foundConsultation = [...consultationData.pending, ...consultationData.reviewed]
+        .find((c: any) => c.id === resolvedParams.id)
+      setConsultation(foundConsultation)
 
-  const treatments = [
-    { 
-      id: 'trt-basic', 
-      name: 'Testosterone Replacement Therapy - Basic', 
-      description: 'Weekly injections with monthly monitoring',
-      price: 199 
-    },
-    { 
-      id: 'trt-premium', 
-      name: 'Testosterone Replacement Therapy - Premium', 
-      description: 'Includes HCG and AI, bi-weekly monitoring',
-      price: 299 
-    },
-    { 
-      id: 'peptide-bpc', 
-      name: 'BPC-157 Peptide Therapy', 
-      description: 'For recovery and gut health',
-      price: 249 
-    },
-    { 
-      id: 'peptide-thymosin', 
-      name: 'Thymosin Beta-4', 
-      description: 'Immune support and recovery',
-      price: 279 
-    },
-    { 
-      id: 'nad', 
-      name: 'NAD+ IV Therapy', 
-      description: 'Cellular energy and anti-aging',
-      price: 399 
-    },
-    { 
-      id: 'vitamin-iv', 
-      name: 'Executive Vitamin IV', 
-      description: 'Energy and immune support',
-      price: 199 
+      // Fetch lab panels from Supabase
+      const response = await fetch('/api/lab-panels')
+      const panels = await response.json()
+      setLabPanels(panels)
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
     }
-  ]
+  }
 
   const toggleLab = (labId: string) => {
     setSelectedLabs(prev =>
-      prev.includes(labId) ? prev.filter(id => id !== labId) : [...prev, labId]
+      prev.includes(labId)
+        ? prev.filter(id => id !== labId)
+        : [...prev, labId]
     )
   }
 
-  const toggleTreatment = (treatmentId: string) => {
-    setSelectedTreatments(prev =>
-      prev.includes(treatmentId) ? prev.filter(id => id !== treatmentId) : [...prev, treatmentId]
+  const handleApprove = async () => {
+    if (selectedLabs.length === 0) {
+      alert('Please select at least one lab panel')
+      return
+    }
+
+    if (!providerNotes.trim()) {
+      alert('Please add provider notes')
+      return
+    }
+
+    setIsSubmitting(true)
+
+    try {
+      const recommendedLabs = labPanels
+        .filter(lab => selectedLabs.includes(lab.id))
+        .map(lab => ({
+          id: lab.id,
+          name: lab.name,
+          description: lab.description,
+          price: lab.price
+        }))
+
+      const response = await fetch(`/api/consultations/${resolvedParams.id}/approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recommendedLabs,
+          providerNotes,
+          providerName: 'Dr. Smith'
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to approve consultation')
+
+      alert('Consultation approved and patient notified!')
+      router.push('/provider')
+    } catch (error) {
+      console.error('Approval error:', error)
+      alert('Failed to approve consultation')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
+      </div>
     )
   }
 
-  const calculateTotal = () => {
-    const labTotal = labTests
-      .filter(lab => selectedLabs.includes(lab.id))
-      .reduce((sum, lab) => sum + lab.price, 0)
-    const treatmentTotal = treatments
-      .filter(treatment => selectedTreatments.includes(treatment.id))
-      .reduce((sum, treatment) => sum + treatment.price, 0)
-    return labTotal + treatmentTotal
+  if (!consultation) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-white/60">Consultation not found</p>
+      </div>
+    )
   }
 
-  const handleApprove = () => {
-    // In real app, this would submit to backend
-    alert('Patient approved! Labs and treatment recommendations sent.')
-  }
+  const totalPrice = labPanels
+    .filter(lab => selectedLabs.includes(lab.id))
+    .reduce((sum, lab) => sum + lab.price, 0)
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
       <header className="bg-black border-b border-yellow-500/20">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="text-2xl font-black text-yellow-400">
-              ADONIS
-            </Link>
-            <div className="text-white/60">Provider Portal</div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-white/80">Dr. Smith</div>
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold">
-              DS
-            </div>
-          </div>
+          <Link href="/provider" className="text-2xl font-black text-yellow-400">
+            ADONIS
+          </Link>
+          <div className="text-white/60">Provider Portal</div>
         </nav>
       </header>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Back Button */}
-        <Link href="/provider" className="inline-flex items-center text-yellow-400 hover:text-yellow-300 mb-6">
-          <ChevronLeft className="w-5 h-5 mr-1" />
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <Link
+          href="/provider"
+          className="inline-flex items-center text-white/70 hover:text-yellow-400 transition-colors mb-8"
+        >
+          <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Dashboard
         </Link>
 
-        {/* Patient Info */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Approve Consultation</h1>
+          <p className="text-white/60">Review and recommend lab panels for {consultation.name}</p>
+        </div>
+
+        {/* Patient Summary */}
         <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-          <h1 className="text-3xl font-bold mb-2">{patient.name}</h1>
-          <p className="text-white/60 mb-4">{patient.age} years old</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Patient Summary</h2>
+          <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h3 className="font-bold mb-2 text-yellow-400">Goals:</h3>
-              <ul className="space-y-1">
-                {patient.goals.map((goal, index) => (
-                  <li key={index} className="text-white/80 flex items-start">
-                    <Check className="w-4 h-4 mr-2 mt-1 text-green-400 flex-shrink-0" />
-                    {goal}
-                  </li>
-                ))}
-              </ul>
+              <p className="text-white/60 text-sm mb-1">Name</p>
+              <p className="font-semibold">{consultation.name}</p>
             </div>
             <div>
-              <h3 className="font-bold mb-2 text-red-400">Symptoms:</h3>
-              <ul className="space-y-1">
-                {patient.symptoms.map((symptom, index) => (
-                  <li key={index} className="text-white/80 flex items-start">
-                    <AlertCircle className="w-4 h-4 mr-2 mt-1 text-red-400 flex-shrink-0" />
-                    {symptom}
-                  </li>
-                ))}
-              </ul>
+              <p className="text-white/60 text-sm mb-1">Age</p>
+              <p className="font-semibold">{consultation.age} years</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-sm mb-1">Occupation</p>
+              <p className="font-semibold">{consultation.occupation}</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-sm mb-1">Primary Goals</p>
+              <p className="font-semibold">{consultation.goals.join(', ')}</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Lab Tests Selection */}
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <TestTube className="w-6 h-6 mr-2 text-yellow-400" />
-                Recommended Lab Tests
-              </h2>
-              <p className="text-white/60 mb-6">Select the labs you want to order for this patient</p>
-
-              <div className="space-y-3">
-                {labTests.map((lab) => (
-                  <div
-                    key={lab.id}
-                    onClick={() => toggleLab(lab.id)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      selectedLabs.includes(lab.id)
-                        ? 'bg-yellow-400/10 border-yellow-400'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center">
-                          <div
-                            className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
-                              selectedLabs.includes(lab.id)
-                                ? 'bg-yellow-400 border-yellow-400'
-                                : 'border-white/30'
-                            }`}
-                          >
-                            {selectedLabs.includes(lab.id) && (
-                              <Check className="w-3 h-3 text-black" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{lab.name}</h3>
-                            <p className="text-sm text-white/60">{lab.category}</p>
-                          </div>
-                        </div>
+        {/* Lab Panels Selection */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Select Recommended Lab Panels</h2>
+          <div className="space-y-4">
+            {labPanels.map((lab) => (
+              <div
+                key={lab.id}
+                onClick={() => toggleLab(lab.id)}
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  selectedLabs.includes(lab.id)
+                    ? 'bg-yellow-400/10 border-yellow-400'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
+                        selectedLabs.includes(lab.id)
+                          ? 'bg-yellow-400 border-yellow-400'
+                          : 'border-white/40'
+                      }`}>
+                        {selectedLabs.includes(lab.id) && (
+                          <CheckCircle className="w-4 h-4 text-black" />
+                        )}
                       </div>
-                      <div className="text-lg font-bold">${lab.price}</div>
+                      <h3 className="font-bold text-lg">{lab.name}</h3>
+                    </div>
+                    <p className="text-white/70 text-sm ml-8 mb-2">{lab.description}</p>
+                    <div className="flex items-center ml-8 space-x-4 text-sm text-white/60">
+                      <span>{lab.biomarker_count} biomarkers</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Treatment Recommendations */}
-            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <Package className="w-6 h-6 mr-2 text-yellow-400" />
-                Treatment Recommendations
-              </h2>
-              <p className="text-white/60 mb-6">Select recommended treatments based on anticipated results</p>
-
-              <div className="space-y-3">
-                {treatments.map((treatment) => (
-                  <div
-                    key={treatment.id}
-                    onClick={() => toggleTreatment(treatment.id)}
-                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                      selectedTreatments.includes(treatment.id)
-                        ? 'bg-yellow-400/10 border-yellow-400'
-                        : 'bg-white/5 border-white/10 hover:bg-white/10'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start">
-                          <div
-                            className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center mt-1 ${
-                              selectedTreatments.includes(treatment.id)
-                                ? 'bg-yellow-400 border-yellow-400'
-                                : 'border-white/30'
-                            }`}
-                          >
-                            {selectedTreatments.includes(treatment.id) && (
-                              <Check className="w-3 h-3 text-black" />
-                            )}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{treatment.name}</h3>
-                            <p className="text-sm text-white/60">{treatment.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-lg font-bold ml-4">${treatment.price}/mo</div>
-                    </div>
+                  <div className="text-right ml-4">
+                    <p className="text-2xl font-bold text-yellow-400">${lab.price}</p>
                   </div>
-                ))}
+                </div>
               </div>
-            </div>
-
-            {/* Clinical Notes */}
-            <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-              <h2 className="text-2xl font-bold mb-4 flex items-center">
-                <FileText className="w-6 h-6 mr-2 text-yellow-400" />
-                Clinical Notes
-              </h2>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add any clinical notes or special instructions for the patient..."
-                className="w-full h-32 bg-black border border-white/20 rounded-lg p-4 text-white placeholder-white/40 focus:outline-none focus:border-yellow-400"
-              />
-            </div>
+            ))}
           </div>
 
-          {/* Summary Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white/5 border border-white/10 rounded-lg p-6 sticky top-8">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
-
-              {/* Selected Labs */}
-              {selectedLabs.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-semibold text-yellow-400 mb-2">Lab Tests ({selectedLabs.length})</h3>
-                  <div className="space-y-2">
-                    {labTests
-                      .filter(lab => selectedLabs.includes(lab.id))
-                      .map(lab => (
-                        <div key={lab.id} className="flex justify-between text-sm">
-                          <span className="text-white/80">{lab.name}</span>
-                          <span className="font-semibold">${lab.price}</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Selected Treatments */}
-              {selectedTreatments.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-semibold text-yellow-400 mb-2">Treatments ({selectedTreatments.length})</h3>
-                  <div className="space-y-2">
-                    {treatments
-                      .filter(treatment => selectedTreatments.includes(treatment.id))
-                      .map(treatment => (
-                        <div key={treatment.id} className="flex justify-between text-sm">
-                          <span className="text-white/80">{treatment.name}</span>
-                          <span className="font-semibold">${treatment.price}/mo</span>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Total */}
-              <div className="border-t border-white/20 pt-4 mb-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-bold">Initial Total</span>
-                  <span className="text-2xl font-bold text-yellow-400">${calculateTotal()}</span>
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                <button
-                  onClick={handleApprove}
-                  disabled={selectedLabs.length === 0}
-                  className={`w-full py-3 rounded-lg font-bold transition-all ${
-                    selectedLabs.length > 0
-                      ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black hover:shadow-lg'
-                      : 'bg-white/10 text-white/40 cursor-not-allowed'
-                  }`}
-                >
-                  Approve & Send to Patient
-                </button>
-                <Link
-                  href="/provider"
-                  className="block w-full py-3 bg-white/5 border border-white/10 rounded-lg font-bold hover:bg-white/10 transition-all text-center"
-                >
-                  Cancel
-                </Link>
-              </div>
-
-              {/* Info */}
-              <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <div className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-white/80">
-                    Patient will receive lab orders and treatment recommendations via email and patient portal.
-                  </p>
-                </div>
+          {selectedLabs.length > 0 && (
+            <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total Investment:</span>
+                <span className="text-2xl font-bold text-yellow-400">${totalPrice}</span>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+
+        {/* Provider Notes */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Provider Notes</h2>
+          <textarea
+            value={providerNotes}
+            onChange={(e) => setProviderNotes(e.target.value)}
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-32"
+            placeholder="Enter your recommendations and treatment plan for this patient..."
+            required
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex space-x-4">
+          <button
+            onClick={handleApprove}
+            disabled={isSubmitting || selectedLabs.length === 0 || !providerNotes.trim()}
+            className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Approving...
+              </>
+            ) : (
+              'Approve & Send to Patient'
+            )}
+          </button>
+          <Link
+            href="/provider"
+            className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg font-bold hover:bg-white/10 transition-all text-center"
+          >
+            Cancel
+          </Link>
         </div>
       </div>
     </div>

@@ -1,0 +1,93 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
+import { Resend } from 'resend'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
+
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const body = await request.json()
+    const { recommendedLabs, providerNotes, providerName } = body
+
+    // Update consultation in database
+    const { data: consultation, error: updateError } = await supabase
+      .from('consultations')
+      .update({
+        status: 'approved',
+        provider_notes: providerNotes,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: providerName
+      })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Update error:', updateError)
+      return NextResponse.json(
+        { error: 'Failed to update consultation' },
+        { status: 500 }
+      )
+    }
+
+    // Send email to patient
+    try {
+      await resend.emails.send({
+        from: 'Adonis Health <onboarding@resend.dev>', // Change this after domain verification
+        to: consultation.email,
+        subject: 'Your Health Optimization Plan is Ready',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #EAB308;">Your Personalized Health Plan</h1>
+            
+            <p>Hi ${consultation.first_name},</p>
+            
+            <p>Great news! Our medical team has reviewed your health assessment and created a personalized optimization plan for you.</p>
+            
+            <h2 style="color: #EAB308;">Recommended Lab Tests</h2>
+            <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              ${recommendedLabs.map((lab: any) => `
+                <div style="margin: 15px 0; padding: 15px; background: white; border-radius: 6px;">
+                  <h3 style="margin: 0 0 10px 0;">${lab.name}</h3>
+                  <p style="margin: 5px 0; color: #666;">${lab.description}</p>
+                  <p style="margin: 10px 0; font-size: 18px; font-weight: bold; color: #EAB308;">$${lab.price}</p>
+                </div>
+              `).join('')}
+            </div>
+            
+            <h2 style="color: #EAB308;">Provider Notes</h2>
+            <p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${providerNotes}</p>
+            
+            <div style="margin: 30px 0; text-align: center;">
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/consultation/recommendation/${id}" 
+                 style="background: linear-gradient(to right, #EAB308, #CA8A04); color: black; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                View Full Recommendations
+              </a>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">Questions? Reply to this email or contact our support team.</p>
+          </div>
+        `
+      })
+    } catch (emailError) {
+      console.error('Email send error:', emailError)
+      // Don't fail the request if email fails
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Consultation approved and patient notified'
+    })
+
+  } catch (error) {
+    console.error('Approval error:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
