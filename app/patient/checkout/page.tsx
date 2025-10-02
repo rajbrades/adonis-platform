@@ -128,7 +128,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Shipping Address */}
+              {/* Billing Address */}
               <div className="bg-white/5 border border-white/10 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4 flex items-center">
                   <MapPin className="w-5 h-5 mr-2 text-yellow-400" />
@@ -288,15 +288,27 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
-                <div className="mt-4 text-xs text-white/60 space-y-2">
-                  <p className="text-center font-semibold text-white/80">After ordering:</p>
-                  <ul className="space-y-1">
-                    <li>• Labcorp requisition sent within 24 hours</li>
-                    <li>• Visit any Labcorp location (no appointment needed)</li>
-                    <li>• Results in 5-7 days + consultation call</li>
-                  </ul>
-                  <p className="text-center pt-2 border-t border-white/10">Payment information is secure and encrypted</p>
+                <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <p className="text-center font-bold text-blue-400 mb-3">What Happens Next</p>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-400 font-bold mt-0.5">1.</span>
+                      <p className="text-white/90">Labcorp requisition PDF sent to your email within 24 hours</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-400 font-bold mt-0.5">2.</span>
+                      <p className="text-white/90">Visit any Labcorp location with your requisition (no appointment needed)</p>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <span className="text-blue-400 font-bold mt-0.5">3.</span>
+                      <p className="text-white/90">Results ready in 5-7 days, then we'll schedule your consultation call</p>
+                    </div>
+                  </div>
                 </div>
+                
+                <p className="text-xs text-white/50 text-center mt-4">
+                  Payment information is secure and encrypted
+                </p>
               </div>
             </div>
           </div>
