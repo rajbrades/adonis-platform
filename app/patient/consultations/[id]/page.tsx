@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { ArrowLeft, Clock, CheckCircle, FileText, AlertCircle, User, Calendar, Activity, Pill, Loader2 } from 'lucide-react'
+import { useCart } from '@/app/contexts/CartContext'
 
 interface Consultation {
   id: string
@@ -48,6 +49,7 @@ interface Consultation {
 export default function ConsultationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const { user, isLoaded } = useUser()
+  const { addToCart, items: cartItems } = useCart()
   const [consultation, setConsultation] = useState<Consultation | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -107,6 +109,9 @@ export default function ConsultationDetailPage({ params }: { params: Promise<{ i
   }
 
   const totalLabCost = consultation.recommended_labs?.reduce((sum, lab) => sum + lab.price, 0) || 0
+  const allLabsInCart = consultation.recommended_labs?.every(lab => 
+    cartItems.some(item => item.id === lab.id)
+  ) || false
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -208,9 +213,26 @@ export default function ConsultationDetailPage({ params }: { params: Promise<{ i
                   <span className="font-semibold">Total Investment:</span>
                   <span className="text-2xl font-bold text-yellow-400">${totalLabCost}</span>
                 </div>
-                <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all">
-                  Order Lab Panels
-                </button>
+                
+                {allLabsInCart ? (
+                  <Link 
+                    href="/patient/cart"
+                    className="w-full bg-green-600 text-white px-6 py-3 rounded-lg font-bold hover:bg-green-700 transition-all block text-center"
+                  >
+                    View Cart ({cartItems.length} items)
+                  </Link>
+                ) : (
+                  <button 
+                    onClick={() => {
+                      consultation.recommended_labs?.forEach(lab => {
+                        addToCart(lab, consultation.id)
+                      })
+                    }}
+                    className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
+                  >
+                    Add All to Cart
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -365,4 +387,3 @@ export default function ConsultationDetailPage({ params }: { params: Promise<{ i
     </div>
   )
 }
-
