@@ -19,17 +19,53 @@ export default function PatientDashboard() {
   const { user, isLoaded } = useUser()
   const [consultations, setConsultations] = useState<Consultation[]>([])
   const [loading, setLoading] = useState(true)
+  const [linkingConsultation, setLinkingConsultation] = useState(false)
 
   useEffect(() => {
     console.log('Patient Dashboard - Clerk status:', { isLoaded, user: user?.id })
     if (isLoaded && user) {
       console.log('Fetching consultations for user:', user.id)
-      fetchConsultations()
+      
+      // Check for consultation link query parameter
+      const urlParams = new URLSearchParams(window.location.search)
+      const consultationId = urlParams.get('link')
+      
+      if (consultationId) {
+        linkConsultation(consultationId)
+      } else {
+        fetchConsultations()
+      }
     } else {
       console.log('Not fetching - isLoaded:', isLoaded, 'user:', !!user)
       setLoading(false)
     }
   }, [isLoaded, user])
+
+  const linkConsultation = async (consultationId: string) => {
+    setLinkingConsultation(true)
+    try {
+      const response = await fetch('/api/patient/link-consultation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId })
+      })
+
+      if (response.ok) {
+        // Remove query parameter from URL
+        window.history.replaceState({}, '', '/patient')
+        // Fetch consultations to show the newly linked one
+        await fetchConsultations()
+      } else {
+        console.error('Failed to link consultation')
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Error linking consultation:', error)
+      setLoading(false)
+    } finally {
+      setLinkingConsultation(false)
+    }
+  }
 
   const fetchConsultations = async () => {
     try {
@@ -43,10 +79,17 @@ export default function PatientDashboard() {
     }
   }
 
-  if (!isLoaded || loading) {
+  if (!isLoaded || loading || linkingConsultation) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="text-xl mb-2">
+            {linkingConsultation ? 'Linking your consultation...' : 'Loading...'}
+          </div>
+          {linkingConsultation && (
+            <p className="text-white/60 text-sm">Setting up your personalized health plan</p>
+          )}
+        </div>
       </div>
     )
   }

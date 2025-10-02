@@ -69,12 +69,14 @@ export async function POST(
             <p style="background: #f5f5f5; padding: 15px; border-radius: 8px;">${providerNotes}</p>
             
             <div style="margin: 30px 0; text-align: center;">
-              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://adonis-platform.vercel.app'}/consultation/recommendation/${id}" 
+              <p style="margin-bottom: 20px; font-size: 16px;">Ready to move forward with your personalized health plan?</p>
+              <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'https://adonis-platform.vercel.app'}/patient?link=${id}" 
                  style="background: linear-gradient(to right, #EAB308, #CA8A04); color: black; padding: 15px 40px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
-                View Full Recommendations
+                View Full Details & Proceed
               </a>
             </div>
             
+            <p style="color: #666; font-size: 14px; margin-top: 20px;">This link will create your secure patient account and give you access to your complete treatment plan, lab ordering, and ongoing care.</p>
             <p style="color: #666; font-size: 14px;">Questions? Reply to this email or contact our support team.</p>
           </div>
         `
