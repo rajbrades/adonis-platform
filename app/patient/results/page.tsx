@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, Info, Download } from 'lucide-react'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 
 interface BiomarkerData {
   biomarker: string
@@ -47,7 +49,6 @@ export default function ResultsPage() {
   const [results, setResults] = useState<LabResult[]>([])
   const [biomarkerRanges, setBiomarkerRanges] = useState<Record<string, BiomarkerRange>>({})
   const [loading, setLoading] = useState(true)
-  const [selectedBiomarker, setSelectedBiomarker] = useState<string | null>(null)
 
   useEffect(() => {
     fetchData()
@@ -63,7 +64,6 @@ export default function ResultsPage() {
       const resultsData = await resultsRes.json()
       const rangesData = await rangesRes.json()
       
-      // Convert ranges array to object for easy lookup
       const rangesMap: Record<string, BiomarkerRange> = {}
       rangesData.forEach((range: BiomarkerRange) => {
         rangesMap[range.biomarker_name] = range
@@ -76,6 +76,126 @@ export default function ResultsPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const exportToPDF = (result: LabResult) => {
+    const doc = new jsPDF()
+    
+    // Header
+    doc.setFillColor(254, 215, 0) // Yellow
+    doc.rect(0, 0, 210, 40, 'F')
+    doc.setTextColor(0, 0, 0)
+    doc.setFontSize(24)
+    doc.setFont('helvetica', 'bold')
+    doc.text('ADONIS', 20, 25)
+    
+    // Patient Info
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(100, 100, 100)
+    doc.text(`Patient: ${user?.firstName} ${user?.lastName}`, 20, 35)
+    
+    // Reset text color
+    doc.setTextColor(0, 0, 0)
+    
+    // Report Title
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`${result.lab_panel_name} - Lab Results`, 20, 55)
+    
+    // Test Date
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    const testDate = result.test_date || result.results_received_at || result.created_at
+    doc.text(`Test Date: ${new Date(testDate).toLocaleDateString()}`, 20, 65)
+    doc.text(`Status: ${result.status.toUpperCase()}`, 20, 72)
+    
+    // Biomarkers Table
+    const tableData = result.results_data.map((biomarker) => {
+      const rangeData = biomarkerRanges[biomarker.biomarker]
+      const statusColor = 
+        biomarker.status === 'high' || biomarker.status === 'critical' ? [255, 100, 100] :
+        biomarker.status === 'low' ? [100, 150, 255] :
+        [100, 255, 150]
+      
+      return [
+        biomarker.biomarker,
+        `${biomarker.value} ${biomarker.unit}`,
+        biomarker.reference_range,
+        rangeData ? `${rangeData.optimal_min}-${rangeData.optimal_max}` : '-',
+        biomarker.status.toUpperCase()
+      ]
+    })
+    
+    autoTable(doc, {
+      head: [['Biomarker', 'Value', 'Lab Range', 'Optimal Range', 'Status']],
+      body: tableData,
+      startY: 80,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: [254, 215, 0],
+        fontStyle: 'bold'
+      },
+      styles: {
+        fontSize: 9,
+        cellPadding: 5
+      },
+      columnStyles: {
+        0: { cellWidth: 45 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 35 },
+        3: { cellWidth: 35 },
+        4: { cellWidth: 25, halign: 'center' }
+      },
+      didParseCell: (data) => {
+        if (data.section === 'body' && data.column.index === 4) {
+          const status = data.cell.text[0].toLowerCase()
+          if (status.includes('high') || status.includes('critical')) {
+            data.cell.styles.textColor = [255, 0, 0]
+            data.cell.styles.fontStyle = 'bold'
+          } else if (status.includes('low')) {
+            data.cell.styles.textColor = [0, 100, 255]
+            data.cell.styles.fontStyle = 'bold'
+          } else {
+            data.cell.styles.textColor = [0, 150, 0]
+            data.cell.styles.fontStyle = 'bold'
+          }
+        }
+      }
+    })
+    
+    // Provider Notes
+    if (result.provider_notes) {
+      const finalY = (doc as any).lastAutoTable.finalY || 80
+      doc.setFontSize(12)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Provider Notes', 20, finalY + 15)
+      
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'normal')
+      const splitNotes = doc.splitTextToSize(result.provider_notes, 170)
+      doc.text(splitNotes, 20, finalY + 25)
+      
+      if (result.reviewed_by) {
+        const notesHeight = splitNotes.length * 5
+        doc.setFontSize(9)
+        doc.setTextColor(100, 100, 100)
+        doc.text(`— ${result.reviewed_by}`, 20, finalY + 25 + notesHeight + 5)
+      }
+    }
+    
+    // Footer
+    const pageHeight = doc.internal.pageSize.height
+    doc.setFontSize(8)
+    doc.setTextColor(150, 150, 150)
+    doc.text('ADONIS Health Optimization Platform', 20, pageHeight - 20)
+    doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, pageHeight - 15)
+    doc.text('For questions about your results, contact your healthcare provider.', 20, pageHeight - 10)
+    
+    // Save PDF
+    const fileName = `Adonis_Lab_Results_${result.lab_panel_name.replace(/\s+/g, '_')}_${new Date(testDate).toISOString().split('T')[0]}.pdf`
+    doc.save(fileName)
   }
 
   const getStatusIcon = (status: string) => {
@@ -135,11 +255,9 @@ export default function ResultsPage() {
     const refRange = parseRange(biomarker.reference_range)
     const value = biomarker.value
     
-    // Use optimal range if available, otherwise use reference range
     const optimalMin = rangeData?.optimal_min ?? refRange.min
     const optimalMax = rangeData?.optimal_max ?? refRange.max
     
-    // Calculate positions
     const rangeMin = Math.min(refRange.min, optimalMin, value * 0.8)
     const rangeMax = Math.max(refRange.max, optimalMax, value * 1.2)
     
@@ -151,7 +269,6 @@ export default function ResultsPage() {
 
     return (
       <div className="space-y-4">
-        {/* Value and Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {getBiomarkerStatusIcon(biomarker.status)}
@@ -178,9 +295,7 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Visual Range Indicator */}
         <div className="relative h-16 bg-white/5 rounded-lg overflow-hidden">
-          {/* Reference Range - Light background */}
           <div 
             className="absolute h-full bg-white/10"
             style={{
@@ -193,7 +308,6 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* Optimal Range - Green overlay */}
           <div 
             className="absolute h-full bg-green-500/20"
             style={{
@@ -206,7 +320,6 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* Value Marker */}
           <div 
             className="absolute top-0 h-full w-1 bg-yellow-400 shadow-lg"
             style={{ left: `${valuePos}%` }}
@@ -214,7 +327,6 @@ export default function ResultsPage() {
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full"></div>
           </div>
 
-          {/* Range Labels */}
           <div className="absolute bottom-1 left-2 text-xs text-white/60">
             {rangeMin.toFixed(0)}
           </div>
@@ -223,7 +335,6 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Range Details */}
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="bg-white/5 rounded p-2">
             <div className="text-white/60 text-xs mb-1">Lab Reference Range</div>
@@ -235,7 +346,6 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Historical Trend */}
         {getHistoricalData(biomarker.biomarker).length > 1 && (
           <div className="bg-white/5 rounded-lg p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -317,7 +427,6 @@ export default function ResultsPage() {
           <div className="space-y-6">
             {results.map((result) => (
               <div key={result.id} className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-                {/* Header */}
                 <div className="p-6 border-b border-white/10">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -334,15 +443,24 @@ export default function ResultsPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(result.status)}
-                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                        result.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                        result.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
-                        'bg-yellow-500/20 text-yellow-400'
-                      }`}>
-                        {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => exportToPDF(result)}
+                        className="flex items-center gap-2 bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition"
+                      >
+                        <Download className="w-4 h-4" />
+                        Export PDF
+                      </button>
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(result.status)}
+                        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          result.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                          result.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-yellow-500/20 text-yellow-400'
+                        }`}>
+                          {result.status.charAt(0).toUpperCase() + result.status.slice(1)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -357,7 +475,6 @@ export default function ResultsPage() {
                   )}
                 </div>
 
-                {/* Biomarkers */}
                 <div className="p-6">
                   <h4 className="font-semibold mb-6 flex items-center gap-2">
                     <Info className="w-4 h-4 text-yellow-400" />
