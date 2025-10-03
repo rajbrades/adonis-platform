@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ArrowLeft, CreditCard, MapPin, User as UserIcon, Loader2 } from 'lucide-react'
 import { useCart } from '@/app/contexts/CartContext'
 
 export default function CheckoutPage() {
   const { user } = useUser()
-  const router = useRouter()
   const { items, totalPrice, clearCart } = useCart()
   const [isProcessing, setIsProcessing] = useState(false)
   const [formData, setFormData] = useState({
@@ -39,16 +37,49 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      
+      // Prepare order data
+      const orderData = {
+        consultationId: items[0]?.consultationId || null,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        zipCode: formData.zipCode,
+        items: items.map(item => ({
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          price: item.price
+        })),
+        subtotal: totalPrice,
+        processingFee: 0,
+        total: totalPrice
+      }
+
+      // Save order to database
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to create order')
+      }
+
+      const { order } = await response.json()
+      console.log('Order created:', order)
+
+      // Simulate payment processing delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
       // Clear cart
       clearCart()
       
-      // Wait for cart to clear
-      await new Promise(resolve => setTimeout(resolve, 100))
-      
-      // Hard redirect to confirmation
+      // Redirect to confirmation
       window.location.href = '/patient/order-confirmation'
     } catch (error) {
       console.error('Checkout error:', error)
