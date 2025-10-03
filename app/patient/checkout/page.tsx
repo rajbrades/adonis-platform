@@ -3,13 +3,11 @@
 import { useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { ArrowLeft, CreditCard, MapPin, User as UserIcon, Loader2 } from 'lucide-react'
 import { useCart } from '@/app/contexts/CartContext'
 
 export default function CheckoutPage() {
   const { user } = useUser()
-  const router = useRouter()
   const { items, totalPrice, clearCart } = useCart()
   const [isProcessing, setIsProcessing] = useState(false)
   const [formData, setFormData] = useState({
@@ -38,15 +36,24 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate payment processing
-    setTimeout(() => {
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Clear cart
       clearCart()
-      router.push('/patient/order-confirmation')
-    }, 2000)
+      
+      // Force hard navigation
+      window.location.href = '/patient/order-confirmation'
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('There was an error processing your order. Please try again.')
+      setIsProcessing(false)
+    }
   }
 
   if (items.length === 0) {
-    router.push('/patient/cart')
+    window.location.href = '/patient/cart'
     return null
   }
 
