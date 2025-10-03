@@ -3,45 +3,76 @@
 import { useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react'
+
+interface BiomarkerData {
+  biomarker: string
+  value: number
+  unit: string
+  reference_range: string
+  status: 'normal' | 'high' | 'low' | 'critical'
+  optimal_range?: string
+}
 
 interface LabResult {
   id: string
   order_id: string
   consultation_id: string
   lab_panel_name: string
-  results_data: {
-    biomarker: string
-    value: number
-    unit: string
-    reference_range: string
-    status: 'normal' | 'high' | 'low' | 'critical'
-  }[]
+  results_data: BiomarkerData[]
   status: string
   provider_notes?: string
   reviewed_by?: string
+  test_date?: string
   sample_collected_at?: string
   results_received_at?: string
   reviewed_at?: string
   created_at: string
 }
 
+interface BiomarkerRange {
+  biomarker_name: string
+  unit: string
+  ref_min: number
+  ref_max: number
+  optimal_min: number
+  optimal_max: number
+  critical_low: number
+  critical_high: number
+  description: string
+}
+
 export default function ResultsPage() {
   const { user } = useUser()
   const [results, setResults] = useState<LabResult[]>([])
+  const [biomarkerRanges, setBiomarkerRanges] = useState<Record<string, BiomarkerRange>>({})
   const [loading, setLoading] = useState(true)
+  const [selectedBiomarker, setSelectedBiomarker] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchResults()
+    fetchData()
   }, [])
 
-  const fetchResults = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/lab-results')
-      const data = await response.json()
-      setResults(data)
+      const [resultsRes, rangesRes] = await Promise.all([
+        fetch('/api/lab-results'),
+        fetch('/api/biomarker-ranges')
+      ])
+      
+      const resultsData = await resultsRes.json()
+      const rangesData = await rangesRes.json()
+      
+      // Convert ranges array to object for easy lookup
+      const rangesMap: Record<string, BiomarkerRange> = {}
+      rangesData.forEach((range: BiomarkerRange) => {
+        rangesMap[range.biomarker_name] = range
+      })
+      
+      setResults(resultsData)
+      setBiomarkerRanges(rangesMap)
     } catch (error) {
-      console.error('Error fetching results:', error)
+      console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
@@ -71,6 +102,169 @@ export default function ResultsPage() {
       default:
         return <Minus className="w-4 h-4 text-green-400" />
     }
+  }
+
+  const parseRange = (rangeStr: string): { min: number, max: number } => {
+    const parts = rangeStr.split('-')
+    return {
+      min: parseFloat(parts[0]),
+      max: parseFloat(parts[1])
+    }
+  }
+
+  const calculatePosition = (value: number, min: number, max: number): number => {
+    const position = ((value - min) / (max - min)) * 100
+    return Math.max(0, Math.min(100, position))
+  }
+
+  const getHistoricalData = (biomarkerName: string): { date: string, value: number }[] => {
+    return results
+      .map(result => {
+        const biomarker = result.results_data.find(b => b.biomarker === biomarkerName)
+        if (!biomarker) return null
+        return {
+          date: result.test_date || result.created_at,
+          value: biomarker.value
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime()) as { date: string, value: number }[]
+  }
+
+  const BiomarkerVisual = ({ biomarker, rangeData }: { biomarker: BiomarkerData, rangeData?: BiomarkerRange }) => {
+    const refRange = parseRange(biomarker.reference_range)
+    const value = biomarker.value
+    
+    // Use optimal range if available, otherwise use reference range
+    const optimalMin = rangeData?.optimal_min ?? refRange.min
+    const optimalMax = rangeData?.optimal_max ?? refRange.max
+    
+    // Calculate positions
+    const rangeMin = Math.min(refRange.min, optimalMin, value * 0.8)
+    const rangeMax = Math.max(refRange.max, optimalMax, value * 1.2)
+    
+    const refStart = calculatePosition(refRange.min, rangeMin, rangeMax)
+    const refEnd = calculatePosition(refRange.max, rangeMin, rangeMax)
+    const optStart = calculatePosition(optimalMin, rangeMin, rangeMax)
+    const optEnd = calculatePosition(optimalMax, rangeMin, rangeMax)
+    const valuePos = calculatePosition(value, rangeMin, rangeMax)
+
+    return (
+      <div className="space-y-4">
+        {/* Value and Status */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {getBiomarkerStatusIcon(biomarker.status)}
+            <div>
+              <h4 className="font-bold text-lg">{biomarker.biomarker}</h4>
+              <p className="text-sm text-white/60">{rangeData?.description}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className={`text-2xl font-bold ${
+              biomarker.status === 'high' || biomarker.status === 'critical' ? 'text-red-400' :
+              biomarker.status === 'low' ? 'text-blue-400' :
+              'text-green-400'
+            }`}>
+              {value} <span className="text-lg text-white/60">{biomarker.unit}</span>
+            </div>
+            <div className={`text-xs font-semibold px-2 py-1 rounded-full inline-block mt-1 ${
+              biomarker.status === 'high' || biomarker.status === 'critical' ? 'bg-red-500/20 text-red-400' :
+              biomarker.status === 'low' ? 'bg-blue-500/20 text-blue-400' :
+              'bg-green-500/20 text-green-400'
+            }`}>
+              {biomarker.status === 'normal' ? 'In Range' : biomarker.status.toUpperCase()}
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Range Indicator */}
+        <div className="relative h-16 bg-white/5 rounded-lg overflow-hidden">
+          {/* Reference Range - Light background */}
+          <div 
+            className="absolute h-full bg-white/10"
+            style={{
+              left: `${refStart}%`,
+              width: `${refEnd - refStart}%`
+            }}
+          >
+            <div className="absolute -top-6 left-0 text-xs text-white/40">
+              Lab Range
+            </div>
+          </div>
+
+          {/* Optimal Range - Green overlay */}
+          <div 
+            className="absolute h-full bg-green-500/20"
+            style={{
+              left: `${optStart}%`,
+              width: `${optEnd - optStart}%`
+            }}
+          >
+            <div className="absolute -top-6 left-0 text-xs text-green-400 font-semibold">
+              Optimal
+            </div>
+          </div>
+
+          {/* Value Marker */}
+          <div 
+            className="absolute top-0 h-full w-1 bg-yellow-400 shadow-lg"
+            style={{ left: `${valuePos}%` }}
+          >
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full"></div>
+          </div>
+
+          {/* Range Labels */}
+          <div className="absolute bottom-1 left-2 text-xs text-white/60">
+            {rangeMin.toFixed(0)}
+          </div>
+          <div className="absolute bottom-1 right-2 text-xs text-white/60">
+            {rangeMax.toFixed(0)}
+          </div>
+        </div>
+
+        {/* Range Details */}
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="bg-white/5 rounded p-2">
+            <div className="text-white/60 text-xs mb-1">Lab Reference Range</div>
+            <div className="font-semibold">{refRange.min} - {refRange.max} {biomarker.unit}</div>
+          </div>
+          <div className="bg-green-500/10 rounded p-2">
+            <div className="text-green-400 text-xs mb-1">Adonis Optimal Range</div>
+            <div className="font-semibold">{optimalMin} - {optimalMax} {biomarker.unit}</div>
+          </div>
+        </div>
+
+        {/* Historical Trend */}
+        {getHistoricalData(biomarker.biomarker).length > 1 && (
+          <div className="bg-white/5 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <TrendingUp className="w-4 h-4 text-blue-400" />
+              <h5 className="font-semibold text-sm">Historical Trend</h5>
+            </div>
+            <div className="flex items-end justify-between gap-2 h-20">
+              {getHistoricalData(biomarker.biomarker).map((point, idx) => {
+                const historical = getHistoricalData(biomarker.biomarker)
+                const maxVal = Math.max(...historical.map(p => p.value))
+                const height = (point.value / maxVal) * 100
+                return (
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-1">
+                    <div 
+                      className="w-full bg-blue-400 rounded-t transition-all hover:bg-blue-300"
+                      style={{ height: `${height}%` }}
+                      title={`${point.value} ${biomarker.unit}`}
+                    ></div>
+                    <div className="text-xs text-white/60">
+                      {new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    )
   }
 
   if (loading) {
@@ -104,7 +298,7 @@ export default function ResultsPage() {
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Lab Results</h1>
-          <p className="text-white/60">View and track your biomarker results over time</p>
+          <p className="text-white/60">Track your biomarkers and optimize your health</p>
         </div>
 
         {results.length === 0 ? (
@@ -123,6 +317,7 @@ export default function ResultsPage() {
           <div className="space-y-6">
             {results.map((result) => (
               <div key={result.id} className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                {/* Header */}
                 <div className="p-6 border-b border-white/10">
                   <div className="flex items-start justify-between mb-4">
                     <div>
@@ -130,7 +325,9 @@ export default function ResultsPage() {
                       <div className="flex items-center gap-4 text-sm text-white/60">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          {result.results_received_at 
+                          {result.test_date 
+                            ? new Date(result.test_date).toLocaleDateString()
+                            : result.results_received_at 
                             ? new Date(result.results_received_at).toLocaleDateString()
                             : new Date(result.created_at).toLocaleDateString()
                           }
@@ -160,28 +357,19 @@ export default function ResultsPage() {
                   )}
                 </div>
 
+                {/* Biomarkers */}
                 <div className="p-6">
-                  <h4 className="font-semibold mb-4">Biomarker Results</h4>
-                  <div className="space-y-3">
+                  <h4 className="font-semibold mb-6 flex items-center gap-2">
+                    <Info className="w-4 h-4 text-yellow-400" />
+                    Biomarker Results
+                  </h4>
+                  <div className="space-y-8">
                     {result.results_data.map((biomarker, index) => (
-                      <div key={index} className="bg-white/5 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            {getBiomarkerStatusIcon(biomarker.status)}
-                            <span className="font-semibold">{biomarker.biomarker}</span>
-                          </div>
-                          <span className={`text-lg font-bold ${
-                            biomarker.status === 'high' || biomarker.status === 'critical' ? 'text-red-400' :
-                            biomarker.status === 'low' ? 'text-blue-400' :
-                            'text-green-400'
-                          }`}>
-                            {biomarker.value} {biomarker.unit}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-white/60">Reference Range</span>
-                          <span className="text-white/80">{biomarker.reference_range} {biomarker.unit}</span>
-                        </div>
+                      <div key={index} className="bg-white/5 rounded-lg p-6">
+                        <BiomarkerVisual 
+                          biomarker={biomarker} 
+                          rangeData={biomarkerRanges[biomarker.biomarker]}
+                        />
                       </div>
                     ))}
                   </div>
