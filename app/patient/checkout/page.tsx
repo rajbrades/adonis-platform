@@ -45,9 +45,17 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
+      // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      // Clear cart
       clearCart()
-      router.push('/patient/order-confirmation')
+      
+      // Wait for cart to clear
+      await new Promise(resolve => setTimeout(resolve, 100))
+      
+      // Hard redirect to confirmation
+      window.location.href = '/patient/order-confirmation'
     } catch (error) {
       console.error('Checkout error:', error)
       alert('There was an error processing your order. Please try again.')
