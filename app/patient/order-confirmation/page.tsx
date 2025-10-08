@@ -143,14 +143,12 @@ export default function OrderConfirmationPage() {
                   <p className="text-white/70 mb-3">
                     Find a convenient Labcorp location near you and bring your requisition PDF
                   </p>
-                  
-                    href="https://www.labcorp.com/labs-and-appointments-locations"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-400 px-4 py-2 rounded-lg hover:bg-purple-500/30 transition font-medium text-sm border border-purple-500/30"
-                  >
-                    Find Location <ArrowRight className="w-4 h-4" />
-                  </a>
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
+                    <p className="text-sm text-purple-400 font-medium mb-1">Find Your Lab</p>
+                    <p className="text-sm text-white/70">
+                      Visit labcorp.com to find the nearest location to you
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -243,20 +241,14 @@ export default function OrderConfirmationPage() {
             Our support team is here to assist you with any questions about your order or the lab testing process
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            
-              href="mailto:support@adonis.health"
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition font-medium"
-            >
+            <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-xl font-medium">
               <Mail className="w-5 h-5" />
               support@adonis.health
-            </a>
-            
-              href="tel:+1234567890"
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition font-medium"
-            >
+            </div>
+            <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-xl font-medium">
               <Phone className="w-5 h-5" />
               (123) 456-7890
-            </a>
+            </div>
           </div>
         </div>
       </div>
