@@ -1,111 +1,276 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { CheckCircle, FileText, MapPin, Calendar, CheckSquare } from 'lucide-react'
+import { CheckCircle, Mail, MapPin, Clock, Phone, FileText, ArrowRight, Sparkles } from 'lucide-react'
+import confetti from 'canvas-confetti'
 
 export default function OrderConfirmationPage() {
   const { user } = useUser()
 
+  useEffect(() => {
+    // Trigger confetti celebration
+    const duration = 3000
+    const end = Date.now() + duration
+
+    const colors = ['#FDE047', '#FACC15', '#EAB308']
+
+    ;(function frame() {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors: colors
+      })
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors: colors
+      })
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame)
+      }
+    })()
+  }, [])
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="bg-black border-b border-yellow-500/20">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      {/* Header */}
+      <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20 sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black text-yellow-400">ADONIS</Link>
-          <div className="flex items-center gap-4">
-            <span className="text-white/80">Welcome, {user?.firstName}</span>
-            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-10 h-10" } }} />
+          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+            ADONIS
+          </Link>
+          <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 text-green-400">
+                <CheckCircle className="w-4 h-4" />
+                <span className="font-medium">Cart</span>
+              </div>
+              <div className="w-8 h-0.5 bg-green-400"></div>
+              <div className="flex items-center gap-2 text-green-400">
+                <CheckCircle className="w-4 h-4" />
+                <span className="font-medium">Checkout</span>
+              </div>
+              <div className="w-8 h-0.5 bg-green-400"></div>
+              <div className="flex items-center gap-2 text-green-400">
+                <CheckCircle className="w-4 h-4" />
+                <span className="font-medium">Confirmed</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-sm font-semibold">{user?.firstName}</div>
+                <div className="text-xs text-white/60">Order Complete</div>
+              </div>
+              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-10 h-10 ring-2 ring-yellow-400/50" } }} />
+            </div>
           </div>
         </nav>
       </header>
 
-      <div className="max-w-3xl mx-auto px-6 py-16 text-center">
-        <div className="bg-green-500/10 border border-green-500/20 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle className="w-12 h-12 text-green-400" />
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        {/* Success Animation */}
+        <div className="text-center mb-12">
+          <div className="relative inline-block mb-6">
+            <div className="absolute inset-0 bg-green-500/20 blur-3xl animate-pulse"></div>
+            <div className="relative w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto animate-bounce">
+              <CheckCircle className="w-12 h-12 text-white" strokeWidth={3} />
+            </div>
+          </div>
+          
+          <h1 className="text-5xl font-black mb-4 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+            Order Confirmed!
+          </h1>
+          <p className="text-xl text-white/80 mb-2">
+            Welcome to your optimization journey, {user?.firstName}
+          </p>
+          <p className="text-white/60">
+            Your lab order has been successfully placed
+          </p>
         </div>
 
-        <h1 className="text-4xl font-bold mb-4">Order Confirmed!</h1>
-        <p className="text-xl text-white/70 mb-8">
-          Your lab panels have been ordered. Here's what happens next.
-        </p>
-
-        <div className="bg-white/5 border border-white/10 rounded-lg p-8 mb-8 text-left">
-          <h2 className="text-2xl font-bold mb-6">Next Steps</h2>
-          
-          <div className="space-y-6">
-            <div className="flex items-start gap-4">
-              <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-full p-3 flex-shrink-0">
-                <FileText className="w-6 h-6 text-yellow-400" />
-              </div>
-              <div>
-                <h3 className="font-bold mb-1">1. Receive Your Lab Requisition</h3>
-                <p className="text-white/70 text-sm">
-                  Within 24 hours, you'll receive a Labcorp requisition form (PDF) via email. This authorizes the lab tests.
-                </p>
-              </div>
+        {/* Main Content Card */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden mb-8">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Sparkles className="w-6 h-6 text-green-400" />
+              <h2 className="text-2xl font-bold">What Happens Next</h2>
             </div>
+            <p className="text-sm text-white/70">Follow these simple steps to complete your lab testing</p>
+          </div>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-blue-400/10 border border-blue-400/20 rounded-full p-3 flex-shrink-0">
-                <MapPin className="w-6 h-6 text-blue-400" />
+          {/* Steps */}
+          <div className="p-8">
+            <div className="space-y-8">
+              {/* Step 1 */}
+              <div className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
+                    <Mail className="w-6 h-6 text-blue-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold">Check Your Email</h3>
+                    <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-bold border border-blue-500/30">
+                      WITHIN 24 HOURS
+                    </span>
+                  </div>
+                  <p className="text-white/70 mb-3">
+                    We'll send your Labcorp requisition PDF to <span className="text-yellow-400 font-semibold">{user?.emailAddresses[0]?.emailAddress}</span>
+                  </p>
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                    <p className="text-sm text-blue-400 font-medium mb-1">💡 Pro Tip</p>
+                    <p className="text-sm text-white/70">
+                      Save the PDF to your phone for easy access at the lab. No appointment needed!
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold mb-1">2. Visit Any Labcorp Location</h3>
-                <p className="text-white/70 text-sm">
-                  Present your requisition form at any Labcorp patient service center. No appointment necessary. Find locations at labcorp.com.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-purple-400/10 border border-purple-400/20 rounded-full p-3 flex-shrink-0">
-                <CheckSquare className="w-6 h-6 text-purple-400" />
+              {/* Step 2 */}
+              <div className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30">
+                    <MapPin className="w-6 h-6 text-purple-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold">Visit Any Labcorp</h3>
+                    <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-xs font-bold border border-purple-500/30">
+                      NO APPOINTMENT
+                    </span>
+                  </div>
+                  <p className="text-white/70 mb-3">
+                    Find a convenient Labcorp location near you and bring your requisition PDF
+                  </p>
+                  
+                    href="https://www.labcorp.com/labs-and-appointments-locations"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-400 px-4 py-2 rounded-lg hover:bg-purple-500/30 transition font-medium text-sm border border-purple-500/30"
+                  >
+                    Find Nearest Location <ArrowRight className="w-4 h-4" />
+                  </a>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold mb-1">3. Results Processing</h3>
-                <p className="text-white/70 text-sm">
-                  Lab results will be available in your patient dashboard within 5-7 business days. You'll receive an email notification when they're ready.
-                </p>
-              </div>
-            </div>
 
-            <div className="flex items-start gap-4">
-              <div className="bg-green-400/10 border border-green-400/20 rounded-full p-3 flex-shrink-0">
-                <Calendar className="w-6 h-6 text-green-400" />
+              {/* Step 3 */}
+              <div className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center border border-yellow-500/30">
+                    <Clock className="w-6 h-6 text-yellow-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold">Get Your Results</h3>
+                    <span className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-bold border border-yellow-500/30">
+                      5-7 BUSINESS DAYS
+                    </span>
+                  </div>
+                  <p className="text-white/70 mb-3">
+                    Once Labcorp processes your samples, your results will be available in your dashboard
+                  </p>
+                  <Link
+                    href="/patient/results"
+                    className="inline-flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition font-medium text-sm border border-yellow-500/30"
+                  >
+                    View Results Dashboard <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold mb-1">4. Results Review Call</h3>
-                <p className="text-white/70 text-sm">
-                  Once your results are in, we'll schedule a consultation call to review your biomarkers and provide personalized treatment recommendations.
-                </p>
+
+              {/* Step 4 */}
+              <div className="flex gap-6">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center border border-green-500/30">
+                    <Phone className="w-6 h-6 text-green-400" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold">Consultation Call</h3>
+                    <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-bold border border-green-500/30">
+                      PERSONALIZED
+                    </span>
+                  </div>
+                  <p className="text-white/70 mb-3">
+                    Our providers will review your results and schedule a call to discuss your personalized optimization plan
+                  </p>
+                  <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                    <p className="text-sm text-green-400 font-medium mb-1">📞 What to Expect</p>
+                    <p className="text-sm text-white/70">
+                      We'll analyze your biomarkers and recommend specific interventions to optimize your health
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-6 mb-8 text-left">
-          <h3 className="font-bold mb-2">Important Reminders</h3>
-          <ul className="text-sm text-white/70 space-y-2">
-            <li>• Fasting may be required for certain panels - check your requisition form</li>
-            <li>• Bring a valid photo ID to the lab</li>
-            <li>• Most Labcorp locations accept walk-ins, but you can schedule online</li>
-            <li>• Keep a copy of your requisition for your records</li>
-          </ul>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        {/* Action Cards */}
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Link
             href="/patient"
-            className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
+            className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition"
           >
-            View My Dashboard
+            <FileText className="w-10 h-10 text-blue-400 mb-4" />
+            <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition">View Dashboard</h3>
+            <p className="text-sm text-white/60 mb-4">
+              Track your orders and view your consultation history
+            </p>
+            <div className="flex items-center text-sm font-semibold text-blue-400 group-hover:gap-2 transition-all">
+              Go to Dashboard <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
           </Link>
+
           <Link
-            href="/"
-            className="bg-white/5 border border-white/10 px-8 py-3 rounded-lg font-bold hover:bg-white/10 transition-all"
+            href="/patient/results"
+            className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition"
           >
-            Return Home
+            <Sparkles className="w-10 h-10 text-purple-400 mb-4" />
+            <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition">Lab Results</h3>
+            <p className="text-sm text-white/60 mb-4">
+              View your biomarker results when they're ready
+            </p>
+            <div className="flex items-center text-sm font-semibold text-purple-400 group-hover:gap-2 transition-all">
+              View Results <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </div>
           </Link>
+        </div>
+
+        {/* Support Section */}
+        <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border border-yellow-500/30 rounded-2xl p-8 text-center">
+          <h3 className="text-2xl font-bold mb-3">Need Help?</h3>
+          <p className="text-white/70 mb-6">
+            Our support team is here to assist you with any questions about your order or the lab testing process
+          </p>
+          <div className="flex flex-wrap justify-center gap-4">
+            
+              href="mailto:support@adonis.health"
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition font-medium"
+            >
+              <Mail className="w-5 h-5" />
+              support@adonis.health
+            </a>
+            
+              href="tel:+1234567890"
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition font-medium"
+            >
+              <Phone className="w-5 h-5" />
+              (123) 456-7890
+            </a>
+          </div>
         </div>
       </div>
     </div>
