@@ -201,11 +201,11 @@ export default function ResultsPage() {
       case 'high':
         return <TrendingUp className="w-4 h-4 text-red-400" />
       case 'low':
-        return <TrendingDown className="w-4 h-4 text-blue-400" />
+        return <TrendingDown className="w-4 h-4 text-red-400" />
       case 'critical':
         return <AlertCircle className="w-4 h-4 text-red-600" />
       default:
-        return <Minus className="w-4 h-4 text-green-400" />
+        return <CheckCircle className="w-4 h-4 text-green-400" />
     }
   }
 
@@ -246,11 +246,17 @@ export default function ResultsPage() {
     const rangeMin = Math.min(refRange.min, optimalMin, value * 0.8)
     const rangeMax = Math.max(refRange.max, optimalMax, value * 1.2)
     
-    const refStart = calculatePosition(refRange.min, rangeMin, rangeMax)
-    const refEnd = calculatePosition(refRange.max, rangeMin, rangeMax)
-    const optStart = calculatePosition(optimalMin, rangeMin, rangeMax)
-    const optEnd = calculatePosition(optimalMax, rangeMin, rangeMax)
-    const valuePos = calculatePosition(value, rangeMin, rangeMax)
+    const calculatePos = (val: number) => calculatePosition(val, rangeMin, rangeMax)
+    
+    const positions = {
+      rangeMin: calculatePos(rangeMin),
+      refMin: calculatePos(refRange.min),
+      optMin: calculatePos(optimalMin),
+      value: calculatePos(value),
+      optMax: calculatePos(optimalMax),
+      refMax: calculatePos(refRange.max),
+      rangeMax: calculatePos(rangeMax)
+    }
 
     return (
       <div className="space-y-4">
@@ -258,7 +264,7 @@ export default function ResultsPage() {
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${
               biomarker.status === 'high' || biomarker.status === 'critical' ? 'bg-red-500/20' :
-              biomarker.status === 'low' ? 'bg-blue-500/20' :
+              biomarker.status === 'low' ? 'bg-red-500/20' :
               'bg-green-500/20'
             }`}>
               {getBiomarkerStatusIcon(biomarker.status)}
@@ -271,14 +277,14 @@ export default function ResultsPage() {
           <div className="text-right">
             <div className={`text-3xl font-black ${
               biomarker.status === 'high' || biomarker.status === 'critical' ? 'text-red-400' :
-              biomarker.status === 'low' ? 'text-blue-400' :
+              biomarker.status === 'low' ? 'text-red-400' :
               'text-green-400'
             }`}>
               {value} <span className="text-lg text-white/60">{biomarker.unit}</span>
             </div>
             <div className={`text-xs font-bold px-3 py-1 rounded-full inline-block mt-2 ${
               biomarker.status === 'high' || biomarker.status === 'critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-              biomarker.status === 'low' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+              biomarker.status === 'low' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
               'bg-green-500/20 text-green-400 border border-green-500/30'
             }`}>
               {biomarker.status === 'normal' ? 'OPTIMAL' : biomarker.status.toUpperCase()}
@@ -288,71 +294,129 @@ export default function ResultsPage() {
 
         <div className="relative">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-white/50 font-medium">Range Visualization</span>
+            <span className="text-xs text-white/50 font-medium">Your Position</span>
             <span className="text-xs text-white/50 font-medium">{biomarker.unit}</span>
           </div>
 
-          <div className="relative h-16 bg-gradient-to-r from-white/5 via-white/10 to-white/5 rounded-xl overflow-hidden border border-white/10">
+          <div className="relative h-20 bg-white/5 rounded-xl overflow-hidden border border-white/10">
             <div 
-              className="absolute h-full bg-white/5 border-l border-r border-white/20"
+              className="absolute h-full bg-gradient-to-r from-red-500/40 to-red-500/20"
               style={{
-                left: `${refStart}%`,
-                width: `${refEnd - refStart}%`
+                left: '0%',
+                width: `${positions.refMin}%`
               }}
-            />
+            >
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-red-400 font-bold opacity-50">
+                LOW
+              </div>
+            </div>
+
+            {optimalMin > refRange.min && (
+              <div 
+                className="absolute h-full bg-gradient-to-r from-yellow-500/20 to-yellow-500/30"
+                style={{
+                  left: `${positions.refMin}%`,
+                  width: `${positions.optMin - positions.refMin}%`
+                }}
+              />
+            )}
 
             <div 
-              className="absolute h-full bg-gradient-to-r from-yellow-500/20 via-yellow-400/30 to-yellow-500/20 border-l-2 border-r-2 border-yellow-400/50"
+              className="absolute h-full bg-gradient-to-r from-green-500/30 via-green-400/40 to-green-500/30 border-l-2 border-r-2 border-green-400/50"
               style={{
-                left: `${optStart}%`,
-                width: `${optEnd - optStart}%`
+                left: `${positions.optMin}%`,
+                width: `${positions.optMax - positions.optMin}%`
               }}
             >
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <Sparkles className="w-4 h-4 text-yellow-400 opacity-50" />
+                <CheckCircle className="w-5 h-5 text-green-400" />
+              </div>
+            </div>
+
+            {optimalMax < refRange.max && (
+              <div 
+                className="absolute h-full bg-gradient-to-r from-yellow-500/30 to-yellow-500/20"
+                style={{
+                  left: `${positions.optMax}%`,
+                  width: `${positions.refMax - positions.optMax}%`
+                }}
+              />
+            )}
+
+            <div 
+              className="absolute h-full bg-gradient-to-r from-red-500/20 to-red-500/40"
+              style={{
+                left: `${positions.refMax}%`,
+                width: `${100 - positions.refMax}%`
+              }}
+            >
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-red-400 font-bold opacity-50">
+                HIGH
               </div>
             </div>
 
             <div 
-              className="absolute top-0 h-full w-1 bg-gradient-to-b from-white via-yellow-400 to-white shadow-lg z-10"
-              style={{ left: `${valuePos}%` }}
+              className="absolute top-0 h-full w-0.5 bg-white/30"
+              style={{ left: `${positions.refMin}%` }}
             >
-              <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 ring-2 ring-white/20"></div>
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-3 h-3 bg-yellow-400 rounded-full shadow-lg shadow-yellow-400/50 ring-2 ring-white/20"></div>
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-white/40 whitespace-nowrap">
+                {refRange.min}
+              </div>
+            </div>
+            <div 
+              className="absolute top-0 h-full w-0.5 bg-white/30"
+              style={{ left: `${positions.refMax}%` }}
+            >
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-white/40 whitespace-nowrap">
+                {refRange.max}
+              </div>
             </div>
 
-            <div className="absolute bottom-1 left-2 text-xs text-white/40 font-medium">
+            <div 
+              className="absolute top-0 h-full w-1.5 bg-white shadow-lg z-20"
+              style={{ left: `${positions.value}%` }}
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg ring-2 ring-black/20"></div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg ring-2 ring-black/20"></div>
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-white text-black rounded text-xs font-bold whitespace-nowrap shadow-lg">
+                {value}
+              </div>
+            </div>
+
+            <div className="absolute bottom-1 left-2 text-xs text-white/30 font-medium">
               {rangeMin.toFixed(0)}
             </div>
-            <div className="absolute bottom-1 right-2 text-xs text-white/40 font-medium">
+            <div className="absolute bottom-1 right-2 text-xs text-white/30 font-medium">
               {rangeMax.toFixed(0)}
             </div>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div className="bg-green-500/10 backdrop-blur-sm rounded-xl p-3 border border-green-500/30">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 bg-white/20 rounded border border-white/30"></div>
-              <div className="text-white/60 text-xs font-medium">Lab Range</div>
+              <div className="w-3 h-3 bg-green-400 rounded"></div>
+              <div className="text-green-400 text-xs font-bold">Optimal Zone</div>
             </div>
-            <div className="font-bold text-sm">{refRange.min} - {refRange.max}</div>
-          </div>
-          
-          <div className="bg-yellow-500/10 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="w-3 h-3 text-yellow-400" />
-              <div className="text-yellow-400 text-xs font-bold">Optimal</div>
-            </div>
-            <div className="font-bold text-sm text-yellow-400">{optimalMin} - {optimalMax}</div>
+            <div className="font-bold text-sm text-green-400">{optimalMin} - {optimalMax}</div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+          <div className="bg-yellow-500/10 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30">
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 bg-gradient-to-b from-white to-yellow-400 rounded"></div>
-              <div className="text-white/60 text-xs font-medium">Your Value</div>
+              <div className="w-3 h-3 bg-yellow-400 rounded"></div>
+              <div className="text-yellow-400 text-xs font-bold">Acceptable</div>
             </div>
-            <div className="font-bold text-sm">{value}</div>
+            <div className="font-bold text-sm text-yellow-400">{refRange.min} - {refRange.max}</div>
+          </div>
+          
+          <div className="bg-red-500/10 backdrop-blur-sm rounded-xl p-3 border border-red-500/30">
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-3 h-3 bg-red-400 rounded"></div>
+              <div className="text-red-400 text-xs font-bold">Out of Range</div>
+            </div>
+            <div className="font-bold text-sm text-red-400 whitespace-nowrap">
+              {'<'}{refRange.min} or {'>'}{refRange.max}
+            </div>
           </div>
         </div>
 
@@ -367,10 +431,17 @@ export default function ResultsPage() {
                 const historical = getHistoricalData(biomarker.biomarker)
                 const maxVal = Math.max(...historical.map(p => p.value))
                 const height = (point.value / maxVal) * 100
+                
+                const isOptimal = point.value >= optimalMin && point.value <= optimalMax
+                const isInRange = point.value >= refRange.min && point.value <= refRange.max
+                const barColor = isOptimal ? 'from-green-400 to-green-600' : 
+                                isInRange ? 'from-yellow-400 to-yellow-600' : 
+                                'from-red-400 to-red-600'
+                
                 return (
                   <div key={idx} className="flex-1 flex flex-col items-center gap-2">
                     <div 
-                      className="w-full bg-gradient-to-t from-blue-400 to-blue-600 rounded-t transition-all hover:from-blue-300 hover:to-blue-500 cursor-pointer"
+                      className={`w-full bg-gradient-to-t ${barColor} rounded-t transition-all cursor-pointer`}
                       style={{ height: `${height}%` }}
                       title={`${point.value} ${biomarker.unit}`}
                     ></div>
