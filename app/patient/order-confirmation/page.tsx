@@ -10,10 +10,8 @@ export default function OrderConfirmationPage() {
   const { user } = useUser()
 
   useEffect(() => {
-    // Trigger confetti celebration
     const duration = 3000
     const end = Date.now() + duration
-
     const colors = ['#FDE047', '#FACC15', '#EAB308']
 
     ;(function frame() {
@@ -40,7 +38,6 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      {/* Header */}
       <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20 sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
@@ -75,7 +72,6 @@ export default function OrderConfirmationPage() {
       </header>
 
       <div className="max-w-4xl mx-auto px-6 py-16">
-        {/* Success Animation */}
         <div className="text-center mb-12">
           <div className="relative inline-block mb-6">
             <div className="absolute inset-0 bg-green-500/20 blur-3xl animate-pulse"></div>
@@ -95,9 +91,7 @@ export default function OrderConfirmationPage() {
           </p>
         </div>
 
-        {/* Main Content Card */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden mb-8">
-          {/* Header */}
           <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-b border-green-500/30 p-6">
             <div className="flex items-center gap-3 mb-2">
               <Sparkles className="w-6 h-6 text-green-400" />
@@ -106,10 +100,8 @@ export default function OrderConfirmationPage() {
             <p className="text-sm text-white/70">Follow these simple steps to complete your lab testing</p>
           </div>
 
-          {/* Steps */}
           <div className="p-8">
             <div className="space-y-8">
-              {/* Step 1 */}
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center border border-blue-500/30">
@@ -135,7 +127,6 @@ export default function OrderConfirmationPage() {
                 </div>
               </div>
 
-              {/* Step 2 */}
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center border border-purple-500/30">
@@ -163,7 +154,6 @@ export default function OrderConfirmationPage() {
                 </div>
               </div>
 
-              {/* Step 3 */}
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center border border-yellow-500/30">
@@ -189,7 +179,6 @@ export default function OrderConfirmationPage() {
                 </div>
               </div>
 
-              {/* Step 4 */}
               <div className="flex gap-6">
                 <div className="flex-shrink-0">
                   <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center border border-green-500/30">
@@ -218,7 +207,6 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
-        {/* Action Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           <Link
             href="/patient"
@@ -249,7 +237,6 @@ export default function OrderConfirmationPage() {
           </Link>
         </div>
 
-        {/* Support Section */}
         <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border border-yellow-500/30 rounded-2xl p-8 text-center">
           <h3 className="text-2xl font-bold mb-3">Need Help?</h3>
           <p className="text-white/70 mb-6">
