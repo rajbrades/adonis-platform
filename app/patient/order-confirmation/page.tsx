@@ -116,10 +116,10 @@ export default function OrderConfirmationPage() {
                     </span>
                   </div>
                   <p className="text-white/70 mb-3">
-                    We'll send your Labcorp requisition PDF to <span className="text-yellow-400 font-semibold">{user?.emailAddresses[0]?.emailAddress}</span>
+                    We will send your Labcorp requisition PDF to <span className="text-yellow-400 font-semibold">{user?.emailAddresses[0]?.emailAddress}</span>
                   </p>
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-                    <p className="text-sm text-blue-400 font-medium mb-1">💡 Pro Tip</p>
+                    <p className="text-sm text-blue-400 font-medium mb-1">Pro Tip</p>
                     <p className="text-sm text-white/70">
                       Save the PDF to your phone for easy access at the lab. No appointment needed!
                     </p>
@@ -149,7 +149,7 @@ export default function OrderConfirmationPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 bg-purple-500/20 text-purple-400 px-4 py-2 rounded-lg hover:bg-purple-500/30 transition font-medium text-sm border border-purple-500/30"
                   >
-                    Find Nearest Location <ArrowRight className="w-4 h-4" />
+                    Find Location <ArrowRight className="w-4 h-4" />
                   </a>
                 </div>
               </div>
@@ -174,7 +174,7 @@ export default function OrderConfirmationPage() {
                     href="/patient/results"
                     className="inline-flex items-center gap-2 bg-yellow-500/20 text-yellow-400 px-4 py-2 rounded-lg hover:bg-yellow-500/30 transition font-medium text-sm border border-yellow-500/30"
                   >
-                    View Results Dashboard <ArrowRight className="w-4 h-4" />
+                    View Results <ArrowRight className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -196,9 +196,9 @@ export default function OrderConfirmationPage() {
                     Our providers will review your results and schedule a call to discuss your personalized optimization plan
                   </p>
                   <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                    <p className="text-sm text-green-400 font-medium mb-1">📞 What to Expect</p>
+                    <p className="text-sm text-green-400 font-medium mb-1">What to Expect</p>
                     <p className="text-sm text-white/70">
-                      We'll analyze your biomarkers and recommend specific interventions to optimize your health
+                      We will analyze your biomarkers and recommend specific interventions to optimize your health
                     </p>
                   </div>
                 </div>
@@ -229,7 +229,7 @@ export default function OrderConfirmationPage() {
             <Sparkles className="w-10 h-10 text-purple-400 mb-4" />
             <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition">Lab Results</h3>
             <p className="text-sm text-white/60 mb-4">
-              View your biomarker results when they're ready
+              View your biomarker results when they are ready
             </p>
             <div className="flex items-center text-sm font-semibold text-purple-400 group-hover:gap-2 transition-all">
               View Results <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
