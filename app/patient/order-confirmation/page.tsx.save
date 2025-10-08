@@ -184,45 +184,4 @@ export default function OrderConfirmationPage() {
             <FileText className="w-10 h-10 text-blue-400 mb-4" />
             <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition">View Dashboard</h3>
             <p className="text-sm text-white/60 mb-4">
-              Track your orders and view your consultation history
-            </p>
-            <div className="flex items-center text-sm font-semibold text-blue-400 group-hover:gap-2 transition-all">
-              Go to Dashboard <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          <Link
-            href="/patient/results"
-            className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/10 transition"
-          >
-            <Sparkles className="w-10 h-10 text-purple-400 mb-4" />
-            <h3 className="text-xl font-bold mb-2 group-hover:text-yellow-400 transition">Lab Results</h3>
-            <p className="text-sm text-white/60 mb-4">
-              View your biomarker results when they are ready
-            </p>
-            <div className="flex items-center text-sm font-semibold text-purple-400 group-hover:gap-2 transition-all">
-              View Results <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        </div>
-
-        <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 backdrop-blur-sm border border-yellow-500/30 rounded-2xl p-8 text-center">
-          <h3 className="text-2xl font-bold mb-3">Need Help?</h3>
-          <p className="text-white/70 mb-6">
-            Our support team is here to assist you with any questions about your order or the lab testing process
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-xl font-medium">
-              <Mail className="w-5 h-5" />
-              support@adonis.health
-            </div>
-            <div className="inline-flex items-center gap-2 bg-white/10 px-6 py-3 rounded-xl font-medium">
-              <Phone className="w-5 h-5" />
-              (123) 456-7890
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
+k
