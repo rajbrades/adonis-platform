@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { Clock, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { Clock, FileText, CheckCircle, AlertCircle, ShoppingBag, Calendar, DollarSign } from 'lucide-react'
 
 interface Consultation {
   id: string
@@ -15,9 +15,23 @@ interface Consultation {
   recommended_labs?: any[]
 }
 
+interface Order {
+  id: string
+  items: {
+    id: string
+    name: string
+    price: number
+  }[]
+  total: number
+  status: string
+  payment_status: string
+  created_at: string
+}
+
 export default function PatientDashboard() {
   const { user, isLoaded } = useUser()
   const [consultations, setConsultations] = useState<Consultation[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [linkingConsultation, setLinkingConsultation] = useState(false)
 
@@ -33,7 +47,7 @@ export default function PatientDashboard() {
       if (consultationId) {
         linkConsultation(consultationId)
       } else {
-        fetchConsultations()
+        fetchData()
       }
     } else {
       console.log('Not fetching - isLoaded:', isLoaded, 'user:', !!user)
@@ -51,10 +65,8 @@ export default function PatientDashboard() {
       })
 
       if (response.ok) {
-        // Remove query parameter from URL
         window.history.replaceState({}, '', '/patient')
-        // Fetch consultations to show the newly linked one
-        await fetchConsultations()
+        await fetchData()
       } else {
         console.error('Failed to link consultation')
         setLoading(false)
@@ -67,13 +79,20 @@ export default function PatientDashboard() {
     }
   }
 
-  const fetchConsultations = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch('/api/patient/consultations')
-      const data = await response.json()
-      setConsultations(data)
+      const [consultationsRes, ordersRes] = await Promise.all([
+        fetch('/api/patient/consultations'),
+        fetch('/api/orders')
+      ])
+      
+      const consultationsData = await consultationsRes.json()
+      const ordersData = await ordersRes.json()
+      
+      setConsultations(consultationsData)
+      setOrders(ordersData)
     } catch (error) {
-      console.error('Error fetching consultations:', error)
+      console.error('Error fetching data:', error)
     } finally {
       setLoading(false)
     }
@@ -126,8 +145,26 @@ export default function PatientDashboard() {
           <p className="text-white/60">Track your health optimization journey</p>
         </div>
 
+        {/* Quick Actions */}
+        <div className="flex gap-4 mb-8">
+          <Link
+            href="/patient/results"
+            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition"
+          >
+            <FileText className="w-5 h-5" />
+            View Lab Results
+          </Link>
+          <Link
+            href="/patient/cart"
+            className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-6 py-3 rounded-lg font-semibold hover:bg-white/10 transition"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            View Cart
+          </Link>
+        </div>
+
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white/5 border border-white/10 rounded-lg p-6">
             <div className="flex items-center justify-between mb-2">
               <Clock className="w-8 h-8 text-yellow-400" />
@@ -151,7 +188,99 @@ export default function PatientDashboard() {
             </div>
             <div className="text-white/60 text-sm">Total Consultations</div>
           </div>
+
+          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+            <div className="flex items-center justify-between mb-2">
+              <ShoppingBag className="w-8 h-8 text-purple-400" />
+              <span className="text-3xl font-bold">{orders.length}</span>
+            </div>
+            <div className="text-white/60 text-sm">Lab Orders</div>
+          </div>
         </div>
+
+        {/* Recent Orders Section */}
+        {orders.length > 0 && (
+          <div className="bg-white/5 border border-white/10 rounded-lg mb-8">
+            <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center">
+              <h2 className="text-xl font-bold">Recent Orders</h2>
+              <Link 
+                href="/patient/results"
+                className="text-sm text-yellow-400 hover:text-yellow-300 transition"
+              >
+                View Lab Results →
+              </Link>
+            </div>
+
+            <div className="divide-y divide-white/10">
+              {orders.slice(0, 3).map((order) => (
+                <div key={order.id} className="p-6 hover:bg-white/5 transition">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold">
+                          Lab Order #{order.id.slice(0, 8)}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          order.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                          order.status === 'processing' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-green-500/20 text-green-400'
+                        }`}>
+                          {order.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-white/60 mb-3">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <DollarSign className="w-4 h-4" />
+                          ${order.total}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {order.items.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center text-sm bg-white/5 rounded p-3">
+                        <span className="text-white/80">{item.name}</span>
+                        <span className="font-semibold">${item.price}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                    <div className="text-sm">
+                      <span className="text-white/60">Payment Status: </span>
+                      <span className={`font-semibold ${
+                        order.payment_status === 'paid' ? 'text-green-400' : 'text-yellow-400'
+                      }`}>
+                        {order.payment_status}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href="/patient/results"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+                      >
+                        View Results
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {orders.length > 3 && (
+              <div className="px-6 py-4 border-t border-white/10 text-center">
+                <button className="text-sm text-yellow-400 hover:text-yellow-300 transition">
+                  View All {orders.length} Orders
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Consultations List */}
         <div className="bg-white/5 border border-white/10 rounded-lg">
