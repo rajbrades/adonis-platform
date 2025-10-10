@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 
-const pdfParse = require('pdf-parse')
-
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth()
@@ -18,8 +16,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    const pdf = require('pdf-parse-fork')
     const buffer = Buffer.from(await file.arrayBuffer())
-    const data = await pdfParse(buffer)
+    const data = await pdf(buffer)
 
     return NextResponse.json({ 
       success: true,
