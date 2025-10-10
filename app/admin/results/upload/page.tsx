@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Upload, Check, AlertCircle, FileText, X } from 'lucide-react'
+import { ArrowLeft, Upload, Check, AlertCircle, FileText, X, Plus } from 'lucide-react'
 
 interface ParsedBiomarker {
   biomarker: string
@@ -31,7 +31,7 @@ export default function UploadResultsPage() {
   const [formState, setFormState] = useState({
     patientEmail: '',
     panelName: '',
-    testDate: '',
+    testDate: new Date().toISOString().split('T')[0],
     providerNotes: ''
   })
 
@@ -63,23 +63,49 @@ export default function UploadResultsPage() {
 
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.parsed.biomarkers.length > 0) {
         setParsedData(data.parsed)
         setFormState({
           ...formState,
-          testDate: data.parsed.testDate || new Date().toISOString().split('T')[0],
+          testDate: data.parsed.testDate || formState.testDate,
           panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
         })
         setStep('preview')
       } else {
-        alert('Failed to parse PDF: ' + data.error)
+        // No biomarkers found, go to manual entry
+        alert('Could not extract biomarkers automatically. You can enter them manually.')
+        handleSkipParsing()
       }
     } catch (error) {
       console.error('Parse error:', error)
-      alert('Error parsing PDF. Please check the file and try again.')
+      alert('Error parsing PDF. You can enter results manually.')
+      handleSkipParsing()
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleSkipParsing = () => {
+    setParsedData({
+      biomarkers: [
+        { biomarker: 'Testosterone Total', value: '', unit: 'ng/dL', referenceRange: '264-916', status: 'normal' }
+      ]
+    })
+    setStep('preview')
+  }
+
+  const addBiomarker = () => {
+    if (!parsedData) return
+    setParsedData({
+      ...parsedData,
+      biomarkers: [...parsedData.biomarkers, {
+        biomarker: '',
+        value: '',
+        unit: '',
+        referenceRange: '',
+        status: 'normal'
+      }]
+    })
   }
 
   const updateBiomarker = (index: number, field: keyof ParsedBiomarker, value: string) => {
@@ -109,7 +135,7 @@ export default function UploadResultsPage() {
           panelName: formState.panelName,
           testDate: formState.testDate,
           providerNotes: formState.providerNotes,
-          biomarkers: parsedData?.biomarkers || []
+          biomarkers: parsedData?.biomarkers.filter(b => b.biomarker && b.value) || []
         })
       })
 
@@ -127,6 +153,13 @@ export default function UploadResultsPage() {
       setUploading(false)
     }
   }
+
+  const commonBiomarkers = [
+    'Testosterone Total', 'Testosterone Free', 'Estradiol', 'TSH', 'T4 Free', 'T3 Free',
+    'Cholesterol Total', 'HDL Cholesterol', 'LDL Cholesterol', 'Triglycerides',
+    'Glucose', 'Hemoglobin A1c', 'Vitamin D', 'Vitamin B12', 'Cortisol',
+    'PSA', 'SHBG', 'Prolactin', 'IGF-1', 'DHEA-S', 'Creatinine', 'Hemoglobin', 'Hematocrit'
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
@@ -150,9 +183,9 @@ export default function UploadResultsPage() {
         {step === 'upload' && (
           <div className="space-y-6">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold mb-4">Upload PDF</h2>
+              <h2 className="text-2xl font-bold mb-4">Upload PDF (Optional)</h2>
               <p className="text-white/60 mb-6">
-                Upload a PDF lab report from Labcorp or Quest Diagnostics. We'll automatically extract the biomarker data.
+                Upload a PDF lab report and we'll try to extract data automatically, or skip and enter manually.
               </p>
 
               <div className="border-2 border-dashed border-white/20 rounded-xl p-12 text-center">
@@ -186,15 +219,24 @@ export default function UploadResultsPage() {
                 </label>
               </div>
 
-              {file && (
+              <div className="mt-6 flex gap-4">
+                {file && (
+                  <button
+                    onClick={handleParsePDF}
+                    disabled={uploading}
+                    className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all disabled:opacity-50"
+                  >
+                    {uploading ? 'Parsing PDF...' : 'Try Auto-Extract'}
+                  </button>
+                )}
+                
                 <button
-                  onClick={handleParsePDF}
-                  disabled={uploading}
-                  className="mt-6 w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all disabled:opacity-50"
+                  onClick={handleSkipParsing}
+                  className="flex-1 bg-white/10 border border-white/20 text-white py-4 rounded-xl font-bold hover:bg-white/20 transition-all"
                 >
-                  {uploading ? 'Parsing PDF...' : 'Parse Lab Results'}
+                  Skip & Enter Manually
                 </button>
-              )}
+              </div>
             </div>
           </div>
         )}
@@ -204,8 +246,8 @@ export default function UploadResultsPage() {
             <div className="bg-blue-500/20 border border-blue-500/40 rounded-xl p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
-                <p className="font-semibold text-blue-400 mb-1">Review Parsed Data</p>
-                <p className="text-white/80">We extracted {parsedData.biomarkers.length} biomarkers. Please review and edit as needed before submitting.</p>
+                <p className="font-semibold text-blue-400 mb-1">Review Lab Results</p>
+                <p className="text-white/80">Please review all values before submitting. You can edit, add, or remove biomarkers.</p>
               </div>
             </div>
 
@@ -244,45 +286,61 @@ export default function UploadResultsPage() {
                     value={formState.panelName}
                     onChange={(e) => setFormState({...formState, panelName: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    placeholder="e.g., Comprehensive Metabolic Panel"
                   />
                 </div>
               </div>
             </div>
 
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-4">Biomarkers ({parsedData.biomarkers.length})</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Biomarkers ({parsedData.biomarkers.length})</h2>
+                <button
+                  onClick={addBiomarker}
+                  className="flex items-center gap-2 bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Biomarker
+                </button>
+              </div>
 
               <div className="space-y-3">
                 {parsedData.biomarkers.map((biomarker, index) => (
                   <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-4">
                     <div className="grid md:grid-cols-5 gap-3 items-start">
                       <div>
-                        <label className="block text-xs text-white/40 mb-1">Biomarker</label>
-                        <input
-                          type="text"
+                        <label className="block text-xs text-white/40 mb-1">Biomarker *</label>
+                        <select
                           value={biomarker.biomarker}
                           onChange={(e) => updateBiomarker(index, 'biomarker', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                        />
+                        >
+                          <option value="">Select...</option>
+                          {commonBiomarkers.map(name => (
+                            <option key={name} value={name}>{name}</option>
+                          ))}
+                        </select>
                       </div>
 
                       <div>
-                        <label className="block text-xs text-white/40 mb-1">Value</label>
+                        <label className="block text-xs text-white/40 mb-1">Value *</label>
                         <input
                           type="text"
                           value={biomarker.value}
                           onChange={(e) => updateBiomarker(index, 'value', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          placeholder="650"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-xs text-white/40 mb-1">Unit</label>
+                        <label className="block text-xs text-white/40 mb-1">Unit *</label>
                         <input
                           type="text"
                           value={biomarker.unit}
                           onChange={(e) => updateBiomarker(index, 'unit', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          placeholder="ng/dL"
                         />
                       </div>
 
@@ -293,6 +351,7 @@ export default function UploadResultsPage() {
                           value={biomarker.referenceRange}
                           onChange={(e) => updateBiomarker(index, 'referenceRange', e.target.value)}
                           className="w-full bg-white/5 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                          placeholder="264-916"
                         />
                       </div>
 
@@ -378,7 +437,7 @@ export default function UploadResultsPage() {
                   setFormState({
                     patientEmail: '',
                     panelName: '',
-                    testDate: '',
+                    testDate: new Date().toISOString().split('T')[0],
                     providerNotes: ''
                   })
                 }}
