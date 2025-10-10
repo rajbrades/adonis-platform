@@ -1,4 +1,4 @@
-import * as pdfParse from 'pdf-parse'
+const pdfParse = require('pdf-parse')
 
 interface ParsedBiomarker {
   biomarker: string
