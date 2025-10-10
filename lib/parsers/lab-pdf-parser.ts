@@ -1,5 +1,3 @@
-import type { Buffer } from 'buffer'
-
 interface ParsedBiomarker {
   biomarker: string
   value: number
@@ -16,12 +14,12 @@ interface ParsedLabResult {
 }
 
 export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
-  // @ts-ignore - pdf-parse doesn't have types
-  const pdfParse = (await import('pdf-parse')).default
+  // Use pdf-parse-fork which is better for Next.js
+  const pdf = require('pdf-parse-fork')
   
   const result: ParsedLabResult = { biomarkers: [] }
   
-  const data = await pdfParse(buffer)
+  const data = await pdf(buffer)
   const text = data.text
 
   console.log('PDF extracted successfully, length:', text.length)
