@@ -28,7 +28,7 @@ export default function UploadResultsPage() {
     biomarkers: ParsedBiomarker[]
   } | null>(null)
 
-  const [formData, setFormData] = useState({
+  const [formState, setFormState] = useState({
     patientEmail: '',
     panelName: '',
     testDate: '',
@@ -65,8 +65,8 @@ export default function UploadResultsPage() {
 
       if (data.success) {
         setParsedData(data.parsed)
-        setFormData({
-          ...formData,
+        setFormState({
+          ...formState,
           testDate: data.parsed.testDate || new Date().toISOString().split('T')[0],
           panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
         })
@@ -105,10 +105,10 @@ export default function UploadResultsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientEmail: formData.patientEmail,
-          panelName: formData.panelName,
-          testDate: formData.testDate,
-          providerNotes: formData.providerNotes,
+          patientEmail: formState.patientEmail,
+          panelName: formState.panelName,
+          testDate: formState.testDate,
+          providerNotes: formState.providerNotes,
           biomarkers: parsedData?.biomarkers || []
         })
       })
@@ -218,8 +218,8 @@ export default function UploadResultsPage() {
                   <input
                     type="email"
                     required
-                    value={formData.patientEmail}
-                    onChange={(e) => setFormData({...formData, patientEmail: e.target.value})}
+                    value={formState.patientEmail}
+                    onChange={(e) => setFormState({...formState, patientEmail: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="patient@example.com"
                   />
@@ -230,8 +230,8 @@ export default function UploadResultsPage() {
                   <input
                     type="date"
                     required
-                    value={formData.testDate}
-                    onChange={(e) => setFormData({...formData, testDate: e.target.value})}
+                    value={formState.testDate}
+                    onChange={(e) => setFormState({...formState, testDate: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>
@@ -241,8 +241,8 @@ export default function UploadResultsPage() {
                   <input
                     type="text"
                     required
-                    value={formData.panelName}
-                    onChange={(e) => setFormData({...formData, panelName: e.target.value})}
+                    value={formState.panelName}
+                    onChange={(e) => setFormState({...formState, panelName: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   />
                 </div>
@@ -326,8 +326,8 @@ export default function UploadResultsPage() {
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
               <h2 className="text-xl font-bold mb-4">Provider Notes</h2>
               <textarea
-                value={formData.providerNotes}
-                onChange={(e) => setFormData({...formData, providerNotes: e.target.value})}
+                value={formState.providerNotes}
+                onChange={(e) => setFormState({...formState, providerNotes: e.target.value})}
                 rows={4}
                 className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 placeholder="Add notes or recommendations..."
@@ -337,7 +337,7 @@ export default function UploadResultsPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleSubmit}
-                disabled={uploading || !formData.patientEmail}
+                disabled={uploading || !formState.patientEmail}
                 className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all disabled:opacity-50"
               >
                 {uploading ? 'Submitting...' : (
@@ -375,7 +375,7 @@ export default function UploadResultsPage() {
                   setStep('upload')
                   setFile(null)
                   setParsedData(null)
-                  setFormData({
+                  setFormState({
                     patientEmail: '',
                     panelName: '',
                     testDate: '',

@@ -1,4 +1,4 @@
-import pdf from 'pdf-parse'
+import * as pdfParse from 'pdf-parse'
 
 interface ParsedBiomarker {
   biomarker: string
@@ -17,7 +17,7 @@ interface ParsedLabResult {
 
 export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   try {
-    const data = await pdf(buffer)
+    const data = await pdfParse(buffer)
     const text = data.text
 
     const result: ParsedLabResult = { biomarkers: [] }
