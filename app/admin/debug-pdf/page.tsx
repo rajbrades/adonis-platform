@@ -10,29 +10,47 @@ export default function DebugPDFPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
-    if (selectedFile) setFile(selectedFile)
+    if (selectedFile) {
+      setFile(selectedFile)
+      setError(null)
+      setResult(null)
+    }
   }
 
   const handleDebug = async () => {
     if (!file) return
     setUploading(true)
+    setError(null)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
+
+      console.log('Uploading file:', file.name, file.size)
 
       const response = await fetch('/api/admin/debug-pdf', {
         method: 'POST',
         body: formData
       })
 
+      console.log('Response status:', response.status)
+
       const data = await response.json()
-      setResult(data)
+      
+      console.log('Response data:', data)
+
+      if (data.success) {
+        setResult(data)
+      } else {
+        setError(data.error || 'Unknown error')
+      }
     } catch (error) {
-      console.error('Error:', error)
+      console.error('Fetch error:', error)
+      setError(error instanceof Error ? error.message : 'Failed to process PDF')
     } finally {
       setUploading(false)
     }
@@ -58,6 +76,10 @@ export default function DebugPDFPage() {
         <h1 className="text-4xl font-black mb-8">Debug PDF Parser</h1>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
+          <p className="text-white/60 mb-4">
+            Upload your Quest/Labcorp PDF to see the extracted text
+          </p>
+          
           <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center mb-4">
             <input
               type="file"
@@ -71,6 +93,11 @@ export default function DebugPDFPage() {
               <div className="text-lg font-semibold mb-2">
                 {file ? file.name : 'Click to upload PDF'}
               </div>
+              {file && (
+                <div className="text-sm text-white/40">
+                  {(file.size / 1024).toFixed(1)} KB
+                </div>
+              )}
             </label>
           </div>
 
@@ -83,6 +110,12 @@ export default function DebugPDFPage() {
               {uploading ? 'Extracting...' : 'Extract Text'}
             </button>
           )}
+
+          {error && (
+            <div className="mt-4 bg-red-500/20 border border-red-500/40 rounded-xl p-4 text-red-400">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
         </div>
 
         {result && (
@@ -90,6 +123,17 @@ export default function DebugPDFPage() {
             <h2 className="text-2xl font-bold mb-4">Extracted Text</h2>
             <div className="mb-4 text-sm text-white/60">
               Total length: {result.textLength} characters
+            </div>
+            <div className="mb-4">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(result.text)
+                  alert('Copied to clipboard!')
+                }}
+                className="bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition"
+              >
+                Copy All Text
+              </button>
             </div>
             <pre className="bg-black/40 p-4 rounded-lg text-xs overflow-auto max-h-96 whitespace-pre-wrap font-mono">
               {result.text}
