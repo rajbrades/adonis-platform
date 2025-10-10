@@ -1,3 +1,5 @@
+import type { Buffer } from 'buffer'
+
 interface ParsedBiomarker {
   biomarker: string
   value: number
@@ -14,7 +16,7 @@ interface ParsedLabResult {
 }
 
 export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
-  // Dynamic import of pdf-parse
+  // @ts-ignore - pdf-parse doesn't have types
   const pdfParse = (await import('pdf-parse')).default
   
   const result: ParsedLabResult = { biomarkers: [] }
@@ -34,7 +36,6 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   if (dateMatch) result.testDate = dateMatch[1]
 
   // Parse each test result
-  // Quest format: TEST NAME  value  range unit
   const testPatterns = [
     {
       name: 'Testosterone Total',
