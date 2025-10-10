@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Download, Activity, Sparkles, Info, Target, BarChart3 } from 'lucide-react'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, Download, Activity, TrendingUp, TrendingDown, Minus } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -204,11 +204,6 @@ export default function ResultsPage() {
     }
   }
 
-  const calculatePosition = (value: number, min: number, max: number): number => {
-    const position = ((value - min) / (max - min)) * 100
-    return Math.max(0, Math.min(100, position))
-  }
-
   const getHistoricalData = (biomarkerName: string): { date: string, value: number }[] => {
     return results
       .map(result => {
@@ -223,229 +218,188 @@ export default function ResultsPage() {
       .sort((a, b) => new Date(a!.date).getTime() - new Date(b!.date).getTime()) as { date: string, value: number }[]
   }
 
-  const BiomarkerVisual = ({ biomarker, rangeData }: { biomarker: BiomarkerData, rangeData?: BiomarkerRange }) => {
+  const BiomarkerCard = ({ biomarker, rangeData }: { biomarker: BiomarkerData, rangeData?: BiomarkerRange }) => {
     const refRange = parseRange(biomarker.reference_range)
     const value = biomarker.value
     
     const optimalMin = rangeData?.optimal_min ?? refRange.min
     const optimalMax = rangeData?.optimal_max ?? refRange.max
     
-    const rangeMin = Math.min(refRange.min, optimalMin, value * 0.8)
-    const rangeMax = Math.max(refRange.max, optimalMax, value * 1.2)
-    
-    const calculatePos = (val: number) => calculatePosition(val, rangeMin, rangeMax)
-    
-    const positions = {
-      rangeMin: calculatePos(rangeMin),
-      refMin: calculatePos(refRange.min),
-      optMin: calculatePos(optimalMin),
-      value: calculatePos(value),
-      optMax: calculatePos(optimalMax),
-      refMax: calculatePos(refRange.max),
-      rangeMax: calculatePos(rangeMax)
-    }
-
     const isOptimal = value >= optimalMin && value <= optimalMax
     const isAcceptable = value >= refRange.min && value <= refRange.max
-    const isOutOfRange = !isAcceptable
+    
+    const historicalData = getHistoricalData(biomarker.biomarker)
+    const hasHistory = historicalData.length > 1
+    
+    // Calculate trend
+    let trend: 'up' | 'down' | 'stable' = 'stable'
+    if (hasHistory) {
+      const previous = historicalData[historicalData.length - 2].value
+      const current = value
+      const change = ((current - previous) / previous) * 100
+      if (Math.abs(change) > 5) {
+        trend = change > 0 ? 'up' : 'down'
+      }
+    }
 
     return (
-      <div className="space-y-6">
-        {/* Header with value */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="text-xl font-bold mb-1">{biomarker.biomarker}</h4>
+      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex-1">
+            <h4 className="text-lg font-bold mb-1">{biomarker.biomarker}</h4>
             {rangeData?.description && (
-              <p className="text-sm text-white/50">{rangeData.description}</p>
+              <p className="text-sm text-white/40">{rangeData.description}</p>
             )}
-          </div>
-          <div className="text-right">
-            <div className="text-4xl font-black text-white mb-2">
-              {value}
-              <span className="text-lg text-white/40 ml-1">{biomarker.unit}</span>
-            </div>
-            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${
-              isOptimal ? 'bg-green-500/20 text-green-400' :
-              isAcceptable ? 'bg-yellow-500/20 text-yellow-400' :
-              'bg-red-500/20 text-red-400'
-            }`}>
-              {isOptimal ? (
-                <>
-                  <CheckCircle className="w-3.5 h-3.5" />
-                  OPTIMAL
-                </>
-              ) : isAcceptable ? (
-                <>
-                  <Info className="w-3.5 h-3.5" />
-                  ACCEPTABLE
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  {biomarker.status === 'high' ? 'HIGH' : biomarker.status === 'low' ? 'LOW' : 'OUT OF RANGE'}
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Visual range indicator */}
-        <div className="relative pt-8">
-          <div className="relative h-16 rounded-full overflow-hidden bg-gradient-to-r from-gray-800 to-gray-900 border border-white/10">
-            {/* Red zone - Low */}
-            <div 
-              className="absolute h-full bg-gradient-to-r from-red-500/50 via-red-500/30 to-transparent"
-              style={{
-                left: '0%',
-                width: `${positions.refMin}%`
-              }}
-            />
-
-            {/* Yellow zone - Left side */}
-            {optimalMin > refRange.min && (
-              <div 
-                className="absolute h-full bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"
-                style={{
-                  left: `${positions.refMin}%`,
-                  width: `${positions.optMin - positions.refMin}%`
-                }}
-              />
-            )}
-
-            {/* Green zone - Optimal */}
-            <div 
-              className="absolute h-full bg-gradient-to-r from-green-400/40 via-green-400/50 to-green-400/40"
-              style={{
-                left: `${positions.optMin}%`,
-                width: `${positions.optMax - positions.optMin}%`
-              }}
-            >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Target className="w-6 h-6 text-green-400/60" />
-              </div>
-            </div>
-
-            {/* Yellow zone - Right side */}
-            {optimalMax < refRange.max && (
-              <div 
-                className="absolute h-full bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"
-                style={{
-                  left: `${positions.optMax}%`,
-                  width: `${positions.refMax - positions.optMax}%`
-                }}
-              />
-            )}
-
-            {/* Red zone - High */}
-            <div 
-              className="absolute h-full bg-gradient-to-r from-transparent via-red-500/30 to-red-500/50"
-              style={{
-                left: `${positions.refMax}%`,
-                width: `${100 - positions.refMax}%`
-              }}
-            />
-
-            {/* Value marker */}
-            <div 
-              className="absolute top-0 h-full w-1 bg-white shadow-2xl z-10 transition-all duration-500"
-              style={{ left: `${positions.value}%` }}
-            >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg"></div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg"></div>
-            </div>
-
-            {/* Value label above marker */}
-            <div 
-              className="absolute -top-7 bg-white text-black px-3 py-1 rounded-lg text-sm font-bold shadow-lg"
-              style={{ left: `${positions.value}%`, transform: 'translateX(-50%)' }}
-            >
-              {value}
-            </div>
-
-            {/* Range labels */}
-            <div 
-              className="absolute -bottom-6 text-xs text-white/40 font-medium"
-              style={{ left: `${positions.refMin}%`, transform: 'translateX(-50%)' }}
-            >
-              {refRange.min}
-            </div>
-            <div 
-              className="absolute -bottom-6 text-xs text-white/40 font-medium"
-              style={{ left: `${positions.refMax}%`, transform: 'translateX(-50%)' }}
-            >
-              {refRange.max}
-            </div>
-          </div>
-        </div>
-
-        {/* Range legend */}
-        <div className="grid grid-cols-3 gap-3 pt-4">
-          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20 hover:border-green-500/40 transition">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-              <span className="text-xs font-bold text-green-400">OPTIMAL RANGE</span>
-            </div>
-            <p className="text-lg font-bold text-white">{optimalMin} - {optimalMax}</p>
-            <p className="text-xs text-white/40 mt-1">Target zone</p>
-          </div>
-
-          <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20 hover:border-yellow-500/40 transition">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-              <span className="text-xs font-bold text-yellow-400">ACCEPTABLE</span>
-            </div>
-            <p className="text-lg font-bold text-white">{refRange.min} - {refRange.max}</p>
-            <p className="text-xs text-white/40 mt-1">Lab reference</p>
           </div>
           
-          <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20 hover:border-red-500/40 transition">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-              <span className="text-xs font-bold text-red-400">OUT OF RANGE</span>
-            </div>
-            <p className="text-lg font-bold text-white">
-              {'<'}{refRange.min} or {'>'}{refRange.max}
-            </p>
-            <p className="text-xs text-white/40 mt-1">Needs attention</p>
+          {/* Status Badge */}
+          <div className={`px-3 py-1 rounded-full text-xs font-bold ${
+            isOptimal ? 'bg-green-500/20 text-green-400' :
+            isAcceptable ? 'bg-yellow-500/20 text-yellow-400' :
+            'bg-red-500/20 text-red-400'
+          }`}>
+            {isOptimal ? 'OPTIMIZED' : isAcceptable ? 'NEEDS WORK' : 'AT RISK'}
           </div>
         </div>
 
-        {/* Historical trend */}
-        {getHistoricalData(biomarker.biomarker).length > 1 && (
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/[0.07] transition">
-            <div className="flex items-center gap-2 mb-4">
-              <BarChart3 className="w-5 h-5 text-blue-400" />
-              <h5 className="font-bold">Historical Trend</h5>
+        {/* Value and Trend */}
+        <div className="flex items-end gap-4 mb-6">
+          <div className="text-5xl font-black text-white">
+            {value}
+            <span className="text-xl text-white/40 ml-2">{biomarker.unit}</span>
+          </div>
+          
+          {hasHistory && trend !== 'stable' && (
+            <div className={`flex items-center gap-1 mb-2 ${
+              trend === 'up' ? 'text-blue-400' : 'text-orange-400'
+            }`}>
+              {trend === 'up' ? (
+                <TrendingUp className="w-5 h-5" />
+              ) : (
+                <TrendingDown className="w-5 h-5" />
+              )}
+              <span className="text-sm font-semibold">
+                {trend === 'up' ? 'Increasing' : 'Decreasing'}
+              </span>
             </div>
-            <div className="flex items-end justify-between gap-2 h-32">
-              {getHistoricalData(biomarker.biomarker).map((point, idx) => {
-                const historical = getHistoricalData(biomarker.biomarker)
-                const maxVal = Math.max(...historical.map(p => p.value))
-                const height = (point.value / maxVal) * 100
+          )}
+        </div>
+
+        {/* Ranges - Clean Text-Based */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+            <div className="text-xs text-white/50 mb-1">Your optimal zone</div>
+            <div className="text-sm font-bold text-green-400">
+              {optimalMin} - {optimalMax} {biomarker.unit}
+            </div>
+          </div>
+          
+          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+            <div className="text-xs text-white/50 mb-1">Lab reference range</div>
+            <div className="text-sm font-bold text-white/60">
+              {refRange.min} - {refRange.max} {biomarker.unit}
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline Chart - Minimal */}
+        {hasHistory && (
+          <div className="pt-6 border-t border-white/10">
+            <div className="text-xs text-white/50 mb-4 uppercase tracking-wider font-semibold">Historical Trend</div>
+            
+            <div className="h-32 relative">
+              {/* Y-axis grid lines */}
+              <div className="absolute inset-0 flex flex-col justify-between">
+                <div className="border-t border-white/5" />
+                <div className="border-t border-white/10" />
+                <div className="border-t border-white/5" />
+              </div>
+
+              {/* Chart */}
+              <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id={`gradient-${biomarker.biomarker}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
                 
-                const pointIsOptimal = point.value >= optimalMin && point.value <= optimalMax
-                const pointIsInRange = point.value >= refRange.min && point.value <= refRange.max
-                const barColor = pointIsOptimal ? 'bg-green-400' : 
-                                pointIsInRange ? 'bg-yellow-400' : 
-                                'bg-red-400'
+                {/* Area under curve */}
+                <polygon
+                  points={[
+                    ...historicalData.map((point, idx) => {
+                      const x = (idx / (historicalData.length - 1)) * 100
+                      const minVal = Math.min(...historicalData.map(p => p.value)) * 0.95
+                      const maxVal = Math.max(...historicalData.map(p => p.value)) * 1.05
+                      const range = maxVal - minVal || 1
+                      const y = 100 - ((point.value - minVal) / range) * 100
+                      return `${x},${y}`
+                    }),
+                    '100,100',
+                    '0,100'
+                  ].join(' ')}
+                  fill={`url(#gradient-${biomarker.biomarker})`}
+                  opacity="0.5"
+                />
                 
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
-                    <div 
-                      className={`w-full ${barColor} rounded-t-lg transition-all cursor-pointer hover:opacity-80 relative`}
-                      style={{ height: `${height}%` }}
-                      title={`${point.value} ${biomarker.unit}`}
-                    >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-                        {point.value} {biomarker.unit}
+                {/* Line */}
+                <polyline
+                  points={historicalData.map((point, idx) => {
+                    const x = (idx / (historicalData.length - 1)) * 100
+                    const minVal = Math.min(...historicalData.map(p => p.value)) * 0.95
+                    const maxVal = Math.max(...historicalData.map(p => p.value)) * 1.05
+                    const range = maxVal - minVal || 1
+                    const y = 100 - ((point.value - minVal) / range) * 100
+                    return `${x},${y}`
+                  }).join(' ')}
+                  fill="none"
+                  stroke="rgb(59, 130, 246)"
+                  strokeWidth="2"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+
+              {/* Data points */}
+              <div className="absolute inset-0 flex items-stretch">
+                {historicalData.map((point, idx) => {
+                  const minVal = Math.min(...historicalData.map(p => p.value)) * 0.95
+                  const maxVal = Math.max(...historicalData.map(p => p.value)) * 1.05
+                  const range = maxVal - minVal || 1
+                  const yPos = 100 - ((point.value - minVal) / range) * 100
+                  
+                  const pointIsOptimal = point.value >= optimalMin && point.value <= optimalMax
+
+                  return (
+                    <div key={idx} className="flex-1 relative group">
+                      {/* Point */}
+                      <div 
+                        className="absolute left-1/2 -translate-x-1/2 cursor-pointer"
+                        style={{ top: `${yPos}%` }}
+                      >
+                        <div className={`w-2 h-2 rounded-full transition-all group-hover:w-3 group-hover:h-3 ${
+                          pointIsOptimal ? 'bg-green-400' : 'bg-blue-400'
+                        }`} />
+                        
+                        {/* Hover tooltip */}
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                          <div className="bg-gray-900 text-white px-2 py-1 rounded text-xs whitespace-nowrap font-semibold border border-white/20">
+                            {point.value} {biomarker.unit}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Date */}
+                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 text-xs text-white/40 whitespace-nowrap">
+                        {new Date(point.date).toLocaleDateString('en-US', { 
+                          month: 'short',
+                          year: historicalData.length > 3 ? undefined : '2-digit'
+                        })}
                       </div>
                     </div>
-                    <div className="text-xs text-white/50 font-medium text-center">
-                      {new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
           </div>
         )}
@@ -509,123 +463,84 @@ export default function ResultsPage() {
 
         {/* Page title */}
         <div className="mb-10">
-          <div className="flex items-center gap-4 mb-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-500/30">
-              <Activity className="w-8 h-8 text-blue-400" />
-            </div>
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black">Lab Results</h1>
-              <p className="text-white/60 mt-2">Track your biomarkers and optimize your health</p>
-            </div>
-          </div>
+          <h1 className="text-5xl font-black mb-3">Lab Results</h1>
+          <p className="text-white/60 text-lg">Your biomarkers and personalized optimal zones</p>
         </div>
 
-        {/* Results or empty state */}
+        {/* Results */}
         {results.length === 0 ? (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12 text-center hover:bg-white/[0.07] transition">
-              <div className="w-24 h-24 bg-gradient-to-br from-white/10 to-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-12 h-12 text-white/40" />
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12 text-center">
+              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-10 h-10 text-white/40" />
               </div>
-              <h2 className="text-3xl font-bold mb-3">No Results Yet</h2>
-              <p className="text-white/60 mb-8 max-w-md mx-auto leading-relaxed">
-                Your lab results will appear here once they are processed by Labcorp. 
-                This typically takes 3-5 business days after your sample is collected.
+              <h2 className="text-2xl font-bold mb-3">No Results Yet</h2>
+              <p className="text-white/60 mb-8 max-w-md mx-auto">
+                Your lab results will appear here once processed by Labcorp.
               </p>
               <Link
                 href="/patient"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all hover:scale-105"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all"
               >
                 View Dashboard
-                <ArrowLeft className="w-5 h-5 rotate-180" />
               </Link>
             </div>
           </div>
         ) : (
           <div className="space-y-8">
             {results.map((result) => (
-              <div 
-                key={result.id} 
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden hover:border-white/20 transition-all"
-              >
+              <div key={result.id} className="space-y-6">
                 {/* Result header */}
-                <div className="p-8 border-b border-white/10 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-transparent">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+                  <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-3xl font-black mb-3">{result.lab_panel_name}</h3>
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
+                      <h3 className="text-2xl font-bold mb-2">{result.lab_panel_name}</h3>
+                      <div className="flex items-center gap-4 text-sm text-white/60">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
-                          <span className="font-medium">
-                            {result.test_date 
-                              ? new Date(result.test_date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                              : result.results_received_at 
-                              ? new Date(result.results_received_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                              : new Date(result.created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-                            }
-                          </span>
+                          {new Date(result.test_date || result.created_at).toLocaleDateString('en-US', { 
+                            month: 'long', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })}
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusIcon(result.status)}
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                            result.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                            result.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {result.status.toUpperCase()}
-                          </span>
+                          <span className="capitalize">{result.status}</span>
                         </div>
                       </div>
                     </div>
                     
                     <button
                       onClick={() => exportToPDF(result)}
-                      className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-400/30 transition-all hover:scale-105"
+                      className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20"
                     >
-                      <Download className="w-5 h-5" />
+                      <Download className="w-4 h-4" />
                       Export PDF
                     </button>
                   </div>
 
                   {/* Provider notes */}
                   {result.provider_notes && (
-                    <div className="mt-6 bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-5 hover:bg-blue-500/[0.12] transition">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-500/20 rounded-lg">
-                          <Info className="w-5 h-5 text-blue-400" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-sm font-bold text-blue-400 mb-2">Provider Notes</p>
-                          <p className="text-sm text-white/90 leading-relaxed">{result.provider_notes}</p>
-                          {result.reviewed_by && (
-                            <p className="text-xs text-white/50 mt-3 font-medium">— {result.reviewed_by}</p>
-                          )}
-                        </div>
-                      </div>
+                    <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                      <div className="text-sm font-bold text-blue-400 mb-2">Provider Notes</div>
+                      <p className="text-sm text-white/80 leading-relaxed">{result.provider_notes}</p>
+                      {result.reviewed_by && (
+                        <p className="text-xs text-white/40 mt-2">— {result.reviewed_by}</p>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Biomarkers */}
-                <div className="p-8">
-                  <div className="flex items-center gap-2 mb-8">
-                    <Sparkles className="w-6 h-6 text-yellow-400" />
-                    <h4 className="text-xl font-bold">Biomarker Analysis</h4>
-                  </div>
-                  
-                  <div className="space-y-8">
-                    {result.results_data.map((biomarker, index) => (
-                      <div 
-                        key={index} 
-                        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] hover:border-white/20 transition-all"
-                      >
-                        <BiomarkerVisual 
-                          biomarker={biomarker} 
-                          rangeData={biomarkerRanges[biomarker.biomarker]}
-                        />
-                      </div>
-                    ))}
-                  </div>
+                {/* Biomarker Cards */}
+                <div className="grid gap-6 md:grid-cols-2">
+                  {result.results_data.map((biomarker, index) => (
+                    <BiomarkerCard 
+                      key={index}
+                      biomarker={biomarker} 
+                      rangeData={biomarkerRanges[biomarker.biomarker]}
+                    />
+                  ))}
                 </div>
               </div>
             ))}
