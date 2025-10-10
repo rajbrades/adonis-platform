@@ -1,5 +1,3 @@
-const pdfParse = require('pdf-parse')
-
 interface ParsedBiomarker {
   biomarker: string
   value: number
@@ -16,225 +14,169 @@ interface ParsedLabResult {
 }
 
 export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
+  // Dynamic import of pdf-parse
+  const pdfParse = (await import('pdf-parse')).default
+  
   const result: ParsedLabResult = { biomarkers: [] }
   
-  try {
-    const data = await pdfParse(buffer)
-    const text = data.text
+  const data = await pdfParse(buffer)
+  const text = data.text
 
-    console.log('PDF text extracted, length:', text.length)
+  console.log('PDF extracted successfully, length:', text.length)
 
-    // Detect Quest
-    if (text.match(/quest\s*diagnostics/i)) {
-      result.labName = 'Quest Diagnostics'
-    }
-
-    // Extract collection date
-    const dateMatch = text.match(/Collected:\s*(\d{2}\/\d{2}\/\d{4})/i)
-    if (dateMatch) result.testDate = dateMatch[1]
-
-    // Simple line-by-line parsing for Quest format
-    const lines = text.split('\n')
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
-      // Look for common biomarkers
-      try {
-        // Testosterone Total
-        if (line.includes('TESTOSTERONE') && line.includes('TOTAL') && !line.includes('FREE')) {
-          const match = line.match(/(\d+\.?\d*)\s+(\d+-\d+)\s+ng\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Testosterone Total',
-              value: parseFloat(match[1]),
-              unit: 'ng/dL',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Vitamin D
-        if (line.includes('VITAMIN D') || line.includes('25-OH')) {
-          const match = line.match(/(\d+\.?\d*)\s+(\d+-\d+)\s+ng\/mL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Vitamin D',
-              value: parseFloat(match[1]),
-              unit: 'ng/mL',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-        // TSH
-        if (line.match(/^TSH\s/i)) {
-          const match = line.match(/(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+m[iI]U\/L/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'TSH',
-              value: parseFloat(match[1]),
-              unit: 'mIU/L',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Cholesterol Total
-        if (line.includes('CHOLESTEROL') && line.includes('TOTAL')) {
-          const match = line.match(/(\d+\.?\d*)\s+[HL\s]*<?\s*(\d+)\s+mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Cholesterol Total',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: `<${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // HDL
-        if (line.includes('HDL') && line.includes('CHOLESTEROL')) {
-          const match = line.match(/(\d+\.?\d*)\s+>\s*OR\s*=\s*(\d+)\s+mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'HDL Cholesterol',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: `>=${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // LDL
-        if (line.includes('LDL') && line.includes('CHOLESTEROL')) {
-          const match = line.match(/(\d+\.?\d*)\s+[HL\s]*mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'LDL Cholesterol',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: '<100',
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Triglycerides
-        if (line.includes('TRIGLYCERIDES')) {
-          const match = line.match(/(\d+\.?\d*)\s+[HL\s]*<?\s*(\d+)\s+mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Triglycerides',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: `<${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Glucose
-        if (line.match(/^GLUCOSE\s/i)) {
-          const match = line.match(/(\d+\.?\d*)\s+[HL\s]*(\d+-\d+)\s+mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Glucose',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Hemoglobin A1c
-        if (line.includes('HEMOGLOBIN A1c') || line.includes('A1C')) {
-          const match = line.match(/(\d+\.?\d*)\s+<?\s*(\d+\.?\d*)\s+%/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Hemoglobin A1c',
-              value: parseFloat(match[1]),
-              unit: '%',
-              referenceRange: `<${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // PSA
-        if (line.includes('PSA') && line.includes('TOTAL')) {
-          const match = line.match(/(\d+\.?\d*)\s+<\s*OR\s*=\s*(\d+\.?\d*)\s+ng\/mL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'PSA',
-              value: parseFloat(match[1]),
-              unit: 'ng/mL',
-              referenceRange: `<=${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Estradiol
-        if (line.includes('ESTRADIOL')) {
-          const match = line.match(/(\d+\.?\d*)\s+[HL\s]*<\s*OR\s*=\s*(\d+)\s+pg\/mL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Estradiol',
-              value: parseFloat(match[1]),
-              unit: 'pg/mL',
-              referenceRange: `<=${match[2]}`,
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Hemoglobin
-        if (line.match(/^HEMOGLOBIN\s+\d/i)) {
-          const match = line.match(/(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+g\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Hemoglobin',
-              value: parseFloat(match[1]),
-              unit: 'g/dL',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-        // Creatinine
-        if (line.match(/^CREATININE\s/i)) {
-          const match = line.match(/(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+mg\/dL/i)
-          if (match) {
-            result.biomarkers.push({
-              biomarker: 'Creatinine',
-              value: parseFloat(match[1]),
-              unit: 'mg/dL',
-              referenceRange: match[2],
-              status: 'normal'
-            })
-          }
-        }
-        
-      } catch (lineError) {
-        // Skip this line if there's an error
-        continue
-      }
-    }
-
-    console.log('Extracted biomarkers:', result.biomarkers.length)
-
-  } catch (error) {
-    console.error('PDF parsing error:', error)
-    // Return empty result instead of throwing
+  // Detect Quest
+  if (text.match(/quest\s*diagnostics/i)) {
+    result.labName = 'Quest Diagnostics'
   }
 
+  // Extract collection date
+  const dateMatch = text.match(/Collected:\s*(\d{2}\/\d{2}\/\d{4})/i)
+  if (dateMatch) result.testDate = dateMatch[1]
+
+  // Parse each test result
+  // Quest format: TEST NAME  value  range unit
+  const testPatterns = [
+    {
+      name: 'Testosterone Total',
+      pattern: /TESTOSTERONE,?\s*TOTAL[^\n]*?(\d+)\s+(\d+-\d+)\s+ng\/dL/i,
+      unit: 'ng/dL'
+    },
+    {
+      name: 'Testosterone Free',
+      pattern: /TESTOSTERONE,?\s*FREE[^\n]*?(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+pg\/mL/i,
+      unit: 'pg/mL'
+    },
+    {
+      name: 'Vitamin D',
+      pattern: /VITAMIN\s*D[^\n]*?(\d+)\s+(\d+-\d+)\s+ng\/mL/i,
+      unit: 'ng/mL'
+    },
+    {
+      name: 'TSH',
+      pattern: /TSH\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+m[iI]U\/L/i,
+      unit: 'mIU/L'
+    },
+    {
+      name: 'T4 Free',
+      pattern: /T4,?\s*FREE\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+ng\/dL/i,
+      unit: 'ng/dL'
+    },
+    {
+      name: 'T3 Free',
+      pattern: /T3,?\s*FREE\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+pg\/mL/i,
+      unit: 'pg/mL'
+    },
+    {
+      name: 'Cholesterol Total',
+      pattern: /CHOLESTEROL,?\s*TOTAL[^\n]*?(\d+)\s+[HL\s]*<\s*(\d+)\s+mg\/dL/i,
+      unit: 'mg/dL'
+    },
+    {
+      name: 'HDL Cholesterol',
+      pattern: /HDL\s*CHOLESTEROL\s+(\d+)\s+>\s*OR\s*=\s*(\d+)\s+mg\/dL/i,
+      unit: 'mg/dL'
+    },
+    {
+      name: 'LDL Cholesterol',
+      pattern: /LDL-?CHOLESTEROL[^\n]*?(\d+)\s+[HL\s]*mg\/dL/i,
+      unit: 'mg/dL',
+      defaultRange: '<100'
+    },
+    {
+      name: 'Triglycerides',
+      pattern: /TRIGLYCERIDES[^\n]*?(\d+)\s+[HL\s]*<\s*(\d+)\s+mg\/dL/i,
+      unit: 'mg/dL'
+    },
+    {
+      name: 'Glucose',
+      pattern: /GLUCOSE\s+(\d+)\s+[HL\s]*(\d+-\d+)\s+mg\/dL/i,
+      unit: 'mg/dL'
+    },
+    {
+      name: 'Hemoglobin A1c',
+      pattern: /HEMOGLOBIN\s*A1c\s+(\d+\.?\d*)\s+<\s*(\d+\.?\d*)\s+%/i,
+      unit: '%'
+    },
+    {
+      name: 'Hemoglobin',
+      pattern: /HEMOGLOBIN\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+g\/dL/i,
+      unit: 'g/dL'
+    },
+    {
+      name: 'Hematocrit',
+      pattern: /HEMATOCRIT\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+%/i,
+      unit: '%'
+    },
+    {
+      name: 'Creatinine',
+      pattern: /CREATININE\s+(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+mg\/dL/i,
+      unit: 'mg/dL'
+    },
+    {
+      name: 'PSA',
+      pattern: /PSA,?\s*TOTAL\s+(\d+\.?\d*)\s+<\s*OR\s*=\s*(\d+\.?\d*)\s+ng\/mL/i,
+      unit: 'ng/mL'
+    },
+    {
+      name: 'Estradiol',
+      pattern: /ESTRADIOL[^\n]*?(\d+)\s+[HL\s]*<\s*OR\s*=\s*(\d+)\s+pg\/mL/i,
+      unit: 'pg/mL'
+    },
+    {
+      name: 'Iron Total',
+      pattern: /IRON,?\s*TOTAL\s+(\d+)\s+(\d+-\d+)\s+mcg\/dL/i,
+      unit: 'mcg/dL'
+    },
+    {
+      name: 'Ferritin',
+      pattern: /FERRITIN\s+(\d+)\s+(\d+-\d+)\s+ng\/mL/i,
+      unit: 'ng/mL'
+    },
+    {
+      name: 'SHBG',
+      pattern: /SEX\s*HORMONE\s*BINDING\s*GLOBULIN\s+(\d+)\s+(\d+-\d+)\s+nmol\/L/i,
+      unit: 'nmol/L'
+    },
+    {
+      name: 'DHEA-S',
+      pattern: /DHEA\s*SULFATE\s+(\d+)\s+(\d+-\d+)\s+mcg\/dL/i,
+      unit: 'mcg/dL'
+    },
+    {
+      name: 'Insulin',
+      pattern: /INSULIN\s+(\d+\.?\d*)\s+uIU\/mL/i,
+      unit: 'uIU/mL',
+      defaultRange: '<=18.4'
+    },
+    {
+      name: 'IGF-1',
+      pattern: /IGF\s*1[^\n]*?(\d+)\s+(\d+-\d+)\s+ng\/mL/i,
+      unit: 'ng/mL'
+    },
+    {
+      name: 'Cortisol',
+      pattern: /CORTISOL[^\n]*?(\d+\.?\d*)\s+(\d+\.?\d*-\d+\.?\d*)\s+(?:μg|ug)\/dL/i,
+      unit: 'μg/dL'
+    },
+  ]
+
+  for (const test of testPatterns) {
+    const match = text.match(test.pattern)
+    if (match) {
+      const value = parseFloat(match[1])
+      const referenceRange = match[2] || test.defaultRange || ''
+      
+      result.biomarkers.push({
+        biomarker: test.name,
+        value,
+        unit: test.unit,
+        referenceRange,
+        status: 'normal'
+      })
+    }
+  }
+
+  console.log('Extracted biomarkers:', result.biomarkers.length)
+  
   return result
 }
