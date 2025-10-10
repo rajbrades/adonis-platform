@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
-import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Minus, Info, Download, Activity, Sparkles } from 'lucide-react'
+import { ArrowLeft, FileText, Calendar, CheckCircle, Clock, AlertCircle, TrendingUp, TrendingDown, Download, Activity, Sparkles, Info, Target, BarChart3 } from 'lucide-react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
@@ -196,19 +196,6 @@ export default function ResultsPage() {
     }
   }
 
-  const getBiomarkerStatusIcon = (status: string) => {
-    switch (status) {
-      case 'high':
-        return <TrendingUp className="w-4 h-4 text-red-400" />
-      case 'low':
-        return <TrendingDown className="w-4 h-4 text-red-400" />
-      case 'critical':
-        return <AlertCircle className="w-4 h-4 text-red-600" />
-      default:
-        return <CheckCircle className="w-4 h-4 text-green-400" />
-    }
-  }
-
   const parseRange = (rangeStr: string): { min: number, max: number } => {
     const parts = rangeStr.split('-')
     return {
@@ -258,62 +245,66 @@ export default function ResultsPage() {
       rangeMax: calculatePos(rangeMax)
     }
 
+    const isOptimal = value >= optimalMin && value <= optimalMax
+    const isAcceptable = value >= refRange.min && value <= refRange.max
+    const isOutOfRange = !isAcceptable
+
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
+        {/* Header with value */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-lg ${
-              biomarker.status === 'high' || biomarker.status === 'critical' ? 'bg-red-500/20' :
-              biomarker.status === 'low' ? 'bg-red-500/20' :
-              'bg-green-500/20'
-            }`}>
-              {getBiomarkerStatusIcon(biomarker.status)}
-            </div>
-            <div>
-              <h4 className="font-bold text-lg">{biomarker.biomarker}</h4>
-              <p className="text-sm text-white/60">{rangeData?.description}</p>
-            </div>
+          <div>
+            <h4 className="text-xl font-bold mb-1">{biomarker.biomarker}</h4>
+            {rangeData?.description && (
+              <p className="text-sm text-white/50">{rangeData.description}</p>
+            )}
           </div>
           <div className="text-right">
-            <div className={`text-3xl font-black ${
-              biomarker.status === 'high' || biomarker.status === 'critical' ? 'text-red-400' :
-              biomarker.status === 'low' ? 'text-red-400' :
-              'text-green-400'
-            }`}>
-              {value} <span className="text-lg text-white/60">{biomarker.unit}</span>
+            <div className="text-4xl font-black text-white mb-2">
+              {value}
+              <span className="text-lg text-white/40 ml-1">{biomarker.unit}</span>
             </div>
-            <div className={`text-xs font-bold px-3 py-1 rounded-full inline-block mt-2 ${
-              biomarker.status === 'high' || biomarker.status === 'critical' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-              biomarker.status === 'low' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-              'bg-green-500/20 text-green-400 border border-green-500/30'
+            <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold ${
+              isOptimal ? 'bg-green-500/20 text-green-400' :
+              isAcceptable ? 'bg-yellow-500/20 text-yellow-400' :
+              'bg-red-500/20 text-red-400'
             }`}>
-              {biomarker.status === 'normal' ? 'OPTIMAL' : biomarker.status.toUpperCase()}
+              {isOptimal ? (
+                <>
+                  <CheckCircle className="w-3.5 h-3.5" />
+                  OPTIMAL
+                </>
+              ) : isAcceptable ? (
+                <>
+                  <Info className="w-3.5 h-3.5" />
+                  ACCEPTABLE
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  {biomarker.status === 'high' ? 'HIGH' : biomarker.status === 'low' ? 'LOW' : 'OUT OF RANGE'}
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="relative">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs text-white/50 font-medium">Your Position</span>
-            <span className="text-xs text-white/50 font-medium">{biomarker.unit}</span>
-          </div>
-
-          <div className="relative h-20 bg-white/5 rounded-xl overflow-hidden border border-white/10">
+        {/* Visual range indicator */}
+        <div className="relative pt-8">
+          <div className="relative h-16 rounded-full overflow-hidden bg-gradient-to-r from-gray-800 to-gray-900 border border-white/10">
+            {/* Red zone - Low */}
             <div 
-              className="absolute h-full bg-gradient-to-r from-red-500/40 to-red-500/20"
+              className="absolute h-full bg-gradient-to-r from-red-500/50 via-red-500/30 to-transparent"
               style={{
                 left: '0%',
                 width: `${positions.refMin}%`
               }}
-            >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-red-400 font-bold opacity-50">
-                LOW
-              </div>
-            </div>
+            />
 
+            {/* Yellow zone - Left side */}
             {optimalMin > refRange.min && (
               <div 
-                className="absolute h-full bg-gradient-to-r from-yellow-500/20 to-yellow-500/30"
+                className="absolute h-full bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"
                 style={{
                   left: `${positions.refMin}%`,
                   width: `${positions.optMin - positions.refMin}%`
@@ -321,21 +312,23 @@ export default function ResultsPage() {
               />
             )}
 
+            {/* Green zone - Optimal */}
             <div 
-              className="absolute h-full bg-gradient-to-r from-green-500/30 via-green-400/40 to-green-500/30 border-l-2 border-r-2 border-green-400/50"
+              className="absolute h-full bg-gradient-to-r from-green-400/40 via-green-400/50 to-green-400/40"
               style={{
                 left: `${positions.optMin}%`,
                 width: `${positions.optMax - positions.optMin}%`
               }}
             >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <CheckCircle className="w-5 h-5 text-green-400" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Target className="w-6 h-6 text-green-400/60" />
               </div>
             </div>
 
+            {/* Yellow zone - Right side */}
             {optimalMax < refRange.max && (
               <div 
-                className="absolute h-full bg-gradient-to-r from-yellow-500/30 to-yellow-500/20"
+                className="absolute h-full bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"
                 style={{
                   left: `${positions.optMax}%`,
                   width: `${positions.refMax - positions.optMax}%`
@@ -343,109 +336,111 @@ export default function ResultsPage() {
               />
             )}
 
+            {/* Red zone - High */}
             <div 
-              className="absolute h-full bg-gradient-to-r from-red-500/20 to-red-500/40"
+              className="absolute h-full bg-gradient-to-r from-transparent via-red-500/30 to-red-500/50"
               style={{
                 left: `${positions.refMax}%`,
                 width: `${100 - positions.refMax}%`
               }}
-            >
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xs text-red-400 font-bold opacity-50">
-                HIGH
-              </div>
-            </div>
+            />
 
+            {/* Value marker */}
             <div 
-              className="absolute top-0 h-full w-0.5 bg-white/30"
-              style={{ left: `${positions.refMin}%` }}
-            >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-white/40 whitespace-nowrap">
-                {refRange.min}
-              </div>
-            </div>
-            <div 
-              className="absolute top-0 h-full w-0.5 bg-white/30"
-              style={{ left: `${positions.refMax}%` }}
-            >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-xs text-white/40 whitespace-nowrap">
-                {refRange.max}
-              </div>
-            </div>
-
-            <div 
-              className="absolute top-0 h-full w-1.5 bg-white shadow-lg z-20"
+              className="absolute top-0 h-full w-1 bg-white shadow-2xl z-10 transition-all duration-500"
               style={{ left: `${positions.value}%` }}
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg ring-2 ring-black/20"></div>
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg ring-2 ring-black/20"></div>
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-white text-black rounded text-xs font-bold whitespace-nowrap shadow-lg">
-                {value}
-              </div>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg"></div>
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-3 h-3 bg-white rounded-full shadow-lg"></div>
             </div>
 
-            <div className="absolute bottom-1 left-2 text-xs text-white/30 font-medium">
-              {rangeMin.toFixed(0)}
+            {/* Value label above marker */}
+            <div 
+              className="absolute -top-7 bg-white text-black px-3 py-1 rounded-lg text-sm font-bold shadow-lg"
+              style={{ left: `${positions.value}%`, transform: 'translateX(-50%)' }}
+            >
+              {value}
             </div>
-            <div className="absolute bottom-1 right-2 text-xs text-white/30 font-medium">
-              {rangeMax.toFixed(0)}
+
+            {/* Range labels */}
+            <div 
+              className="absolute -bottom-6 text-xs text-white/40 font-medium"
+              style={{ left: `${positions.refMin}%`, transform: 'translateX(-50%)' }}
+            >
+              {refRange.min}
+            </div>
+            <div 
+              className="absolute -bottom-6 text-xs text-white/40 font-medium"
+              style={{ left: `${positions.refMax}%`, transform: 'translateX(-50%)' }}
+            >
+              {refRange.max}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-green-500/10 backdrop-blur-sm rounded-xl p-3 border border-green-500/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 bg-green-400 rounded"></div>
-              <div className="text-green-400 text-xs font-bold">Optimal Zone</div>
+        {/* Range legend */}
+        <div className="grid grid-cols-3 gap-3 pt-4">
+          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/20 hover:border-green-500/40 transition">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+              <span className="text-xs font-bold text-green-400">OPTIMAL RANGE</span>
             </div>
-            <div className="font-bold text-sm text-green-400">{optimalMin} - {optimalMax}</div>
+            <p className="text-lg font-bold text-white">{optimalMin} - {optimalMax}</p>
+            <p className="text-xs text-white/40 mt-1">Target zone</p>
           </div>
 
-          <div className="bg-yellow-500/10 backdrop-blur-sm rounded-xl p-3 border border-yellow-500/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-              <div className="text-yellow-400 text-xs font-bold">Acceptable</div>
+          <div className="bg-yellow-500/10 rounded-xl p-4 border border-yellow-500/20 hover:border-yellow-500/40 transition">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
+              <span className="text-xs font-bold text-yellow-400">ACCEPTABLE</span>
             </div>
-            <div className="font-bold text-sm text-yellow-400">{refRange.min} - {refRange.max}</div>
+            <p className="text-lg font-bold text-white">{refRange.min} - {refRange.max}</p>
+            <p className="text-xs text-white/40 mt-1">Lab reference</p>
           </div>
           
-          <div className="bg-red-500/10 backdrop-blur-sm rounded-xl p-3 border border-red-500/30">
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-3 h-3 bg-red-400 rounded"></div>
-              <div className="text-red-400 text-xs font-bold">Out of Range</div>
+          <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20 hover:border-red-500/40 transition">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 bg-red-400 rounded-full"></div>
+              <span className="text-xs font-bold text-red-400">OUT OF RANGE</span>
             </div>
-            <div className="font-bold text-sm text-red-400 whitespace-nowrap">
+            <p className="text-lg font-bold text-white">
               {'<'}{refRange.min} or {'>'}{refRange.max}
-            </div>
+            </p>
+            <p className="text-xs text-white/40 mt-1">Needs attention</p>
           </div>
         </div>
 
+        {/* Historical trend */}
         {getHistoricalData(biomarker.biomarker).length > 1 && (
-          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-4">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-5 hover:bg-white/[0.07] transition">
             <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-4 h-4 text-blue-400" />
-              <h5 className="font-bold text-sm">Historical Trend</h5>
+              <BarChart3 className="w-5 h-5 text-blue-400" />
+              <h5 className="font-bold">Historical Trend</h5>
             </div>
-            <div className="flex items-end justify-between gap-2 h-24">
+            <div className="flex items-end justify-between gap-2 h-32">
               {getHistoricalData(biomarker.biomarker).map((point, idx) => {
                 const historical = getHistoricalData(biomarker.biomarker)
                 const maxVal = Math.max(...historical.map(p => p.value))
                 const height = (point.value / maxVal) * 100
                 
-                const isOptimal = point.value >= optimalMin && point.value <= optimalMax
-                const isInRange = point.value >= refRange.min && point.value <= refRange.max
-                const barColor = isOptimal ? 'from-green-400 to-green-600' : 
-                                isInRange ? 'from-yellow-400 to-yellow-600' : 
-                                'from-red-400 to-red-600'
+                const pointIsOptimal = point.value >= optimalMin && point.value <= optimalMax
+                const pointIsInRange = point.value >= refRange.min && point.value <= refRange.max
+                const barColor = pointIsOptimal ? 'bg-green-400' : 
+                                pointIsInRange ? 'bg-yellow-400' : 
+                                'bg-red-400'
                 
                 return (
-                  <div key={idx} className="flex-1 flex flex-col items-center gap-2">
+                  <div key={idx} className="flex-1 flex flex-col items-center gap-2 group">
                     <div 
-                      className={`w-full bg-gradient-to-t ${barColor} rounded-t transition-all cursor-pointer`}
+                      className={`w-full ${barColor} rounded-t-lg transition-all cursor-pointer hover:opacity-80 relative`}
                       style={{ height: `${height}%` }}
                       title={`${point.value} ${biomarker.unit}`}
-                    ></div>
-                    <div className="text-xs text-white/60 font-medium">
+                    >
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/90 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                        {point.value} {biomarker.unit}
+                      </div>
+                    </div>
+                    <div className="text-xs text-white/50 font-medium text-center">
                       {new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </div>
                   </div>
@@ -462,7 +457,10 @@ export default function ResultsPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-yellow-400/20 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-yellow-400 rounded-full border-t-transparent animate-spin"></div>
+          </div>
           <p className="text-white/60 font-medium">Loading your results...</p>
         </div>
       </div>
@@ -471,9 +469,10 @@ export default function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20 sticky top-0 z-50">
+      {/* Header */}
+      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
+          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent hover:scale-105 transition-transform">
             ADONIS
           </Link>
           <div className="flex items-center gap-6">
@@ -481,59 +480,80 @@ export default function ResultsPage() {
               Dashboard
             </Link>
             <div className="flex items-center gap-3">
-              <div className="text-right">
+              <div className="text-right hidden sm:block">
                 <div className="text-sm font-semibold">{user?.firstName}</div>
                 <div className="text-xs text-white/60">Lab Results</div>
               </div>
-              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-10 h-10 ring-2 ring-yellow-400/50" } }} />
+              <UserButton 
+                afterSignOutUrl="/" 
+                appearance={{ 
+                  elements: { 
+                    avatarBox: "w-10 h-10 ring-2 ring-yellow-400/50 hover:ring-yellow-400 transition" 
+                  } 
+                }} 
+              />
             </div>
           </div>
         </nav>
       </header>
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <Link href="/patient" className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group">
+        {/* Back button */}
+        <Link 
+          href="/patient" 
+          className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group"
+        >
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
           Back to Dashboard
         </Link>
 
+        {/* Page title */}
         <div className="mb-10">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 bg-blue-500/20 rounded-xl">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl border border-blue-500/30">
               <Activity className="w-8 h-8 text-blue-400" />
             </div>
             <div>
-              <h1 className="text-4xl font-black">Lab Results</h1>
-              <p className="text-white/60 mt-1">Track your biomarkers and optimize your health</p>
+              <h1 className="text-4xl md:text-5xl font-black">Lab Results</h1>
+              <p className="text-white/60 mt-2">Track your biomarkers and optimize your health</p>
             </div>
           </div>
         </div>
 
+        {/* Results or empty state */}
         {results.length === 0 ? (
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
-              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-10 h-10 text-white/40" />
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl p-12 text-center hover:bg-white/[0.07] transition">
+              <div className="w-24 h-24 bg-gradient-to-br from-white/10 to-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-12 h-12 text-white/40" />
               </div>
-              <h2 className="text-2xl font-bold mb-3">No Results Yet</h2>
-              <p className="text-white/60 mb-8">Your lab results will appear here once they are available from Labcorp</p>
+              <h2 className="text-3xl font-bold mb-3">No Results Yet</h2>
+              <p className="text-white/60 mb-8 max-w-md mx-auto leading-relaxed">
+                Your lab results will appear here once they are processed by Labcorp. 
+                This typically takes 3-5 business days after your sample is collected.
+              </p>
               <Link
                 href="/patient"
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all hover:scale-105"
               >
-                View Dashboard <ArrowLeft className="w-5 h-5 rotate-180" />
+                View Dashboard
+                <ArrowLeft className="w-5 h-5 rotate-180" />
               </Link>
             </div>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {results.map((result) => (
-              <div key={result.id} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
-                <div className="p-6 border-b border-white/10 bg-gradient-to-r from-blue-500/10 to-purple-500/10">
-                  <div className="flex items-start justify-between mb-4">
+              <div 
+                key={result.id} 
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden hover:border-white/20 transition-all"
+              >
+                {/* Result header */}
+                <div className="p-8 border-b border-white/10 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-transparent">
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                     <div className="flex-1">
-                      <h3 className="text-2xl font-black mb-2">{result.lab_panel_name}</h3>
-                      <div className="flex items-center gap-4 text-sm text-white/60">
+                      <h3 className="text-3xl font-black mb-3">{result.lab_panel_name}</h3>
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-white/60">
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
                           <span className="font-medium">
@@ -545,51 +565,60 @@ export default function ResultsPage() {
                             }
                           </span>
                         </div>
+                        <div className="flex items-center gap-2">
+                          {getStatusIcon(result.status)}
+                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                            result.status === 'completed' ? 'bg-green-500/20 text-green-400' :
+                            result.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400' :
+                            'bg-yellow-500/20 text-yellow-400'
+                          }`}>
+                            {result.status.toUpperCase()}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => exportToPDF(result)}
-                        className="flex items-center gap-2 bg-yellow-400 text-black px-5 py-2.5 rounded-xl font-bold hover:bg-yellow-500 transition hover:scale-105 shadow-lg shadow-yellow-400/20"
-                      >
-                        <Download className="w-4 h-4" />
-                        Export PDF
-                      </button>
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(result.status)}
-                        <span className={`px-4 py-2 rounded-full text-sm font-bold border ${
-                          result.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' :
-                          result.status === 'reviewed' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' :
-                          'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                        }`}>
-                          {result.status.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
+                    
+                    <button
+                      onClick={() => exportToPDF(result)}
+                      className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-black px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-400/30 transition-all hover:scale-105"
+                    >
+                      <Download className="w-5 h-5" />
+                      Export PDF
+                    </button>
                   </div>
 
+                  {/* Provider notes */}
                   {result.provider_notes && (
-                    <div className="bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 rounded-xl p-4">
-                      <p className="text-sm font-bold text-blue-400 mb-2 flex items-center gap-2">
-                        <Info className="w-4 h-4" />
-                        Provider Notes
-                      </p>
-                      <p className="text-sm text-white/90 leading-relaxed">{result.provider_notes}</p>
-                      {result.reviewed_by && (
-                        <p className="text-xs text-white/60 mt-3 font-medium">— {result.reviewed_by}</p>
-                      )}
+                    <div className="mt-6 bg-blue-500/10 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-5 hover:bg-blue-500/[0.12] transition">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-blue-500/20 rounded-lg">
+                          <Info className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-sm font-bold text-blue-400 mb-2">Provider Notes</p>
+                          <p className="text-sm text-white/90 leading-relaxed">{result.provider_notes}</p>
+                          {result.reviewed_by && (
+                            <p className="text-xs text-white/50 mt-3 font-medium">— {result.reviewed_by}</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="p-6">
-                  <h4 className="font-bold mb-6 flex items-center gap-2 text-lg">
-                    <Sparkles className="w-5 h-5 text-yellow-400" />
-                    Biomarker Analysis
-                  </h4>
+                {/* Biomarkers */}
+                <div className="p-8">
+                  <div className="flex items-center gap-2 mb-8">
+                    <Sparkles className="w-6 h-6 text-yellow-400" />
+                    <h4 className="text-xl font-bold">Biomarker Analysis</h4>
+                  </div>
+                  
                   <div className="space-y-8">
                     {result.results_data.map((biomarker, index) => (
-                      <div key={index} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/10 transition">
+                      <div 
+                        key={index} 
+                        className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] hover:border-white/20 transition-all"
+                      >
                         <BiomarkerVisual 
                           biomarker={biomarker} 
                           rangeData={biomarkerRanges[biomarker.biomarker]}
