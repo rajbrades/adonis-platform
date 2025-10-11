@@ -38,6 +38,14 @@ export default function UploadResultsPage() {
     providerNotes: ''
   })
 
+  // Convert MM/DD/YYYY to YYYY-MM-DD
+  const convertDateFormat = (date: string): string => {
+    if (!date) return ''
+    const parts = date.split('/')
+    if (parts.length !== 3) return ''
+    return `${parts[2]}-${parts[0]}-${parts[1]}`
+  }
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
     if (!selectedFile) return
@@ -74,11 +82,14 @@ export default function UploadResultsPage() {
         setParsedData(data.parsed)
         
         // Auto-populate form with extracted data
+        const convertedDate = data.parsed.testDate ? convertDateFormat(data.parsed.testDate) : formState.testDate
+        console.log('Converting date:', data.parsed.testDate, 'to', convertedDate)
+        
         setFormState({
           ...formState,
           patientName: data.parsed.patientName || '',
           patientDOB: data.parsed.patientDOB || '',
-          testDate: data.parsed.testDate?.replace(/\//g, '-').split('-').reverse().join('-') || formState.testDate,
+          testDate: convertedDate,
           panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
         })
         
@@ -145,7 +156,7 @@ export default function UploadResultsPage() {
           patientEmail: formState.patientEmail,
           panelName: formState.panelName,
           testDate: formState.testDate,
-          providerNotes: formState.providerNotes,
+          providerNotes: '',
           biomarkers: parsedData?.biomarkers.filter(b => b.biomarker && b.value) || []
         })
       })
@@ -428,17 +439,6 @@ export default function UploadResultsPage() {
                   </div>
                 ))}
               </div>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h2 className="text-xl font-bold mb-4">Provider Notes</h2>
-              <textarea
-                value={formState.providerNotes}
-                onChange={(e) => setFormState({...formState, providerNotes: e.target.value})}
-                rows={4}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                placeholder="Add notes or recommendations..."
-              />
             </div>
 
             <div className="flex items-center gap-4">
