@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Upload, Check, AlertCircle, FileText, X, Plus } from 'lucide-react'
 
@@ -16,7 +15,6 @@ interface ParsedBiomarker {
 
 export default function UploadResultsPage() {
   const { user } = useUser()
-  const router = useRouter()
   const [step, setStep] = useState<'upload' | 'preview' | 'submitted'>('upload')
   const [uploading, setUploading] = useState(false)
   const [file, setFile] = useState<File | null>(null)
@@ -34,8 +32,7 @@ export default function UploadResultsPage() {
     patientDOB: '',
     patientEmail: '',
     panelName: '',
-    testDate: new Date().toISOString().split('T')[0],
-    providerNotes: ''
+    testDate: new Date().toISOString().split('T')[0]
   })
 
   // Convert MM/DD/YYYY to YYYY-MM-DD
@@ -43,7 +40,8 @@ export default function UploadResultsPage() {
     if (!date) return ''
     const parts = date.split('/')
     if (parts.length !== 3) return ''
-    return `${parts[2]}-${parts[0]}-${parts[1]}`
+    const [month, day, year] = parts
+    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
   }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,11 +84,11 @@ export default function UploadResultsPage() {
         console.log('Converting date:', data.parsed.testDate, 'to', convertedDate)
         
         setFormState({
-          ...formState,
           patientName: data.parsed.patientName || '',
           patientDOB: data.parsed.patientDOB || '',
           testDate: convertedDate,
-          panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
+          panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel',
+          patientEmail: ''
         })
         
         setStep('preview')
@@ -182,17 +180,19 @@ export default function UploadResultsPage() {
     'Vitamin D',
     'Cholesterol Total', 'HDL Cholesterol', 'LDL Cholesterol', 'Triglycerides',
     'Non HDL Cholesterol', 'Apolipoprotein B', 'Lipoprotein (a)',
+    'Cholesterol/HDL Ratio', 'LDL/HDL Ratio',
     'Glucose', 'Hemoglobin A1c', 'Insulin',
-    'Creatinine', 'BUN', 'eGFR',
+    'Creatinine', 'BUN', 'eGFR', 'BUN/Creatinine Ratio',
     'Sodium', 'Potassium', 'Chloride', 'Carbon Dioxide', 'Calcium',
     'ALT', 'AST', 'Alkaline Phosphatase', 'Bilirubin Total', 'GGT',
-    'Protein Total', 'Albumin', 'Globulin',
+    'Protein Total', 'Albumin', 'Globulin', 'Albumin/Globulin Ratio',
     'WBC', 'RBC', 'Hemoglobin', 'Hematocrit',
     'MCV', 'MCH', 'MCHC', 'RDW',
     'Platelet Count', 'MPV',
     'Absolute Neutrophils', 'Absolute Lymphocytes', 'Absolute Monocytes', 
     'Absolute Eosinophils', 'Absolute Basophils',
-    'Estradiol', 'PSA', 'SHBG', 'DHEA-S', 'Pregnenolone', 'IGF-1',
+    'Neutrophils %', 'Lymphocytes %', 'Monocytes %', 'Eosinophils %', 'Basophils %',
+    'Estradiol', 'PSA', 'SHBG', 'DHEA-S', 'Pregnenolone', 'IGF-1', 'IGF-1 Z-Score',
     'Iron Total', 'TIBC', 'Iron Saturation', 'Ferritin',
     'HS CRP', 'Homocysteine',
     'Cortisol', 'Prolactin', 'Vitamin B12'
@@ -487,8 +487,7 @@ export default function UploadResultsPage() {
                     patientDOB: '',
                     patientEmail: '',
                     panelName: '',
-                    testDate: new Date().toISOString().split('T')[0],
-                    providerNotes: ''
+                    testDate: new Date().toISOString().split('T')[0]
                   })
                 }}
                 className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all"
