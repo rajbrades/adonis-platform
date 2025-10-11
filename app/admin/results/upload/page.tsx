@@ -50,18 +50,29 @@ export default function UploadResultsPage() {
   const handleParsePDF = async () => {
     if (!file) return
 
+    console.log('🚀 Starting PDF upload...')
+    console.log('📄 File:', file.name, file.size, 'bytes')
+    
     setUploading(true)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
 
+      console.log('📤 Sending to API...')
+      
       const response = await fetch('/api/admin/parse-lab-pdf', {
         method: 'POST',
         body: formData
       })
 
+      console.log('📥 Response status:', response.status)
+
       const data = await response.json()
+      
+      console.log('📊 API Response:', data)
+      console.log('✅ Biomarkers found:', data.parsed?.biomarkers?.length || 0)
+      console.log('📋 Biomarkers:', data.parsed?.biomarkers)
 
       if (data.success && data.parsed.biomarkers.length > 0) {
         setParsedData(data.parsed)
@@ -72,12 +83,12 @@ export default function UploadResultsPage() {
         })
         setStep('preview')
       } else {
-        // No biomarkers found, go to manual entry
-        alert('Could not extract biomarkers automatically. You can enter them manually.')
+        console.warn('⚠️ No biomarkers extracted')
+        alert(`Could not extract biomarkers automatically. Found: ${data.parsed?.biomarkers?.length || 0}. You can enter them manually.`)
         handleSkipParsing()
       }
     } catch (error) {
-      console.error('Parse error:', error)
+      console.error('❌ Parse error:', error)
       alert('Error parsing PDF. You can enter results manually.')
       handleSkipParsing()
     } finally {
