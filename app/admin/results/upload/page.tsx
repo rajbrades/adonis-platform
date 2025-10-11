@@ -166,10 +166,25 @@ export default function UploadResultsPage() {
   }
 
   const commonBiomarkers = [
-    'Testosterone Total', 'Testosterone Free', 'Estradiol', 'TSH', 'T4 Free', 'T3 Free',
+    'Testosterone Total', 'Testosterone Free', 'Testosterone Bioavailable',
+    'TSH', 'T4 Free', 'T3 Free',
+    'Vitamin D',
     'Cholesterol Total', 'HDL Cholesterol', 'LDL Cholesterol', 'Triglycerides',
-    'Glucose', 'Hemoglobin A1c', 'Vitamin D', 'Vitamin B12', 'Cortisol',
-    'PSA', 'SHBG', 'Prolactin', 'IGF-1', 'DHEA-S', 'Creatinine', 'Hemoglobin', 'Hematocrit'
+    'Non HDL Cholesterol', 'Apolipoprotein B', 'Lipoprotein (a)',
+    'Glucose', 'Hemoglobin A1c', 'Insulin',
+    'Creatinine', 'BUN', 'eGFR',
+    'Sodium', 'Potassium', 'Chloride', 'Carbon Dioxide', 'Calcium',
+    'ALT', 'AST', 'Alkaline Phosphatase', 'Bilirubin Total', 'GGT',
+    'Protein Total', 'Albumin', 'Globulin',
+    'WBC', 'RBC', 'Hemoglobin', 'Hematocrit',
+    'MCV', 'MCH', 'MCHC', 'RDW',
+    'Platelet Count', 'MPV',
+    'Absolute Neutrophils', 'Absolute Lymphocytes', 'Absolute Monocytes', 
+    'Absolute Eosinophils', 'Absolute Basophils',
+    'Estradiol', 'PSA', 'SHBG', 'DHEA-S', 'Pregnenolone', 'IGF-1',
+    'Iron Total', 'TIBC', 'Iron Saturation', 'Ferritin',
+    'HS CRP', 'Homocysteine',
+    'Cortisol', 'Prolactin', 'Vitamin B12'
   ]
 
   return (
