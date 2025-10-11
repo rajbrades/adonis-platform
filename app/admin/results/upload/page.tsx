@@ -53,9 +53,66 @@ export default function UploadResultsPage() {
     }
 
     setFile(selectedFile)
+    // Auto-trigger parsing after file selection
+    setTimeout(() => {
+      handleParsePDFWithFile(selectedFile)
+    }, 100)
+  }
+
+  const handleParsePDFWithFile = async (fileToUse: File) => {
+    if (!fileToUse) return
+
+    console.log('🚀 Starting PDF upload...')
+    
+    setUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', fileToUse)
+      
+      const response = await fetch('/api/admin/parse-lab-pdf', {
+        method: 'POST',
+        body: formData
+      })
+
+      const data = await response.json()
+      
+      console.log('📊 API Response:', data)
+
+      if (data.success && data.parsed.biomarkers.length > 0) {
+        setParsedData(data.parsed)
+        
+        // Auto-populate form with extracted data
+        const convertedDate = data.parsed.testDate ? convertDateFormat(data.parsed.testDate) : formState.testDate
+        console.log('Converting date:', data.parsed.testDate, 'to', convertedDate)
+        
+        setFormState({
+          patientName: data.parsed.patientName || '',
+          patientDOB: data.parsed.patientDOB || '',
+          testDate: convertedDate,
+          panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
+        })
+        
+        setStep('preview')
+      } else {
+        alert(`Could not extract biomarkers automatically. You can enter them manually.`)
+        handleSkipParsing()
+      }
+    } catch (error) {
+      console.error('❌ Parse error:', error)
+      alert('Error parsing PDF. You can enter results manually.')
+      handleSkipParsing()
+    } finally {
+      setUploading(false)
+    }
   }
 
   const handleParsePDF = async () => {
+    if (!file) return
+    await handleParsePDFWithFile(file)
+  }
+
+  const handleParsePDF_OLD = async () => {
     if (!file) return
 
     console.log('🚀 Starting PDF upload...')

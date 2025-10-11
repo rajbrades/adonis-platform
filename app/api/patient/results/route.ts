@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(req: NextRequest) {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
   try {
     const body = await req.json()
     const { name, dob } = body
+
+    console.log('🔍 Searching for patient with:', { name, dob })
 
     if (!name || !dob) {
       return NextResponse.json({ 
@@ -17,13 +19,19 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    // Fetch lab results for this specific patient
+    // Fetch lab results - use case-insensitive search
     const { data, error } = await supabase
       .from('lab_results')
       .select('*')
-      .eq('patient_name', name)
+      .ilike('patient_name', name) // Case-insensitive LIKE
       .eq('patient_dob', dob)
       .order('test_date', { ascending: false })
+
+    console.log('📊 Query results:', { 
+      found: data?.length || 0, 
+      error: error?.message,
+      results: data?.map(r => ({ patient_name: r.patient_name, patient_dob: r.patient_dob }))
+    })
 
     if (error) {
       console.error('Error fetching patient results:', error)

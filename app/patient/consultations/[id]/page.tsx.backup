@@ -225,7 +225,7 @@ export default function ConsultationDetailPage({ params }: { params: Promise<{ i
                   <button 
                     onClick={() => {
                       consultation.recommended_labs?.forEach(lab => {
-                        addToCart({ id: lab.id || lab.name, name: lab.name, price: lab.price, quantity: 1 })
+                        addToCart(lab, consultation.id)
                       })
                     }}
                     className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all"
