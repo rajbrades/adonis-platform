@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getFirestore } from '@/lib/firebase-admin'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,65 +24,46 @@ export async function POST(req: NextRequest) {
       }, { status: 400 })
     }
 
-    const db = getFirestore()
+    // Generate a unique patient ID from name + DOB
+    const patientId = `${patientName.replace(/\s+/g, '_')}_${patientDOB.replace(/\//g, '')}`.toLowerCase()
 
-    // Find patient by name and DOB
-    const patientsRef = db.collection('users')
-    const snapshot = await patientsRef
-      .where('fullName', '==', patientName)
-      .where('dateOfBirth', '==', patientDOB)
-      .get()
+    console.log('Creating lab result for patient:', patientId)
 
-    let patientId: string
-
-    if (snapshot.empty) {
-      // Patient doesn't exist, create a new one
-      console.log('Creating new patient:', patientName, patientDOB)
-      
-      const newPatientRef = await db.collection('users').add({
-        fullName: patientName,
-        dateOfBirth: patientDOB,
-        role: 'patient',
-        createdAt: new Date().toISOString(),
-        hasLabResults: true
+    // Create lab result (no need to check/create user - just store the result)
+    const { data: labResult, error: labError } = await supabase
+      .from('lab_results')
+      .insert({
+        user_id: patientId,
+        patient_name: patientName,
+        patient_dob: patientDOB,
+        panel_name: panelName,
+        test_date: testDate,
+        uploaded_at: new Date().toISOString(),
+        uploaded_by: userId,
+        biomarkers: biomarkers.map((b: any) => ({
+          biomarker: b.biomarker,
+          value: parseFloat(b.value) || b.value,
+          unit: b.unit,
+          referenceRange: b.referenceRange,
+          status: b.status
+        }))
       })
-      
-      patientId = newPatientRef.id
-      console.log('Created patient with ID:', patientId)
-    } else {
-      // Patient exists, use their ID
-      patientId = snapshot.docs[0].id
-      console.log('Found existing patient:', patientId)
-      
-      // Update to mark they have lab results
-      await db.collection('users').doc(patientId).update({
-        hasLabResults: true
-      })
+      .select()
+      .single()
+
+    if (labError) {
+      console.error('Error creating lab result:', labError)
+      return NextResponse.json({ 
+        error: 'Failed to create lab result',
+        details: labError.message 
+      }, { status: 500 })
     }
 
-    // Create lab result
-    const labResultRef = await db.collection('labResults').add({
-      userId: patientId,
-      patientName,
-      patientDOB,
-      panelName,
-      testDate,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: userId,
-      biomarkers: biomarkers.map((b: any) => ({
-        biomarker: b.biomarker,
-        value: parseFloat(b.value) || b.value,
-        unit: b.unit,
-        referenceRange: b.referenceRange,
-        status: b.status
-      }))
-    })
-
-    console.log('Created lab result:', labResultRef.id)
+    console.log('Created lab result:', labResult.id)
 
     return NextResponse.json({ 
       success: true,
-      labResultId: labResultRef.id,
+      labResultId: labResult.id,
       patientId
     })
 
