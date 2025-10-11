@@ -23,12 +23,15 @@ export default function UploadResultsPage() {
   
   const [parsedData, setParsedData] = useState<{
     patientName?: string
+    patientDOB?: string
     testDate?: string
     labName?: string
     biomarkers: ParsedBiomarker[]
   } | null>(null)
 
   const [formState, setFormState] = useState({
+    patientName: '',
+    patientDOB: '',
     patientEmail: '',
     panelName: '',
     testDate: new Date().toISOString().split('T')[0],
@@ -51,40 +54,37 @@ export default function UploadResultsPage() {
     if (!file) return
 
     console.log('🚀 Starting PDF upload...')
-    console.log('📄 File:', file.name, file.size, 'bytes')
     
     setUploading(true)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
-
-      console.log('📤 Sending to API...')
       
       const response = await fetch('/api/admin/parse-lab-pdf', {
         method: 'POST',
         body: formData
       })
 
-      console.log('📥 Response status:', response.status)
-
       const data = await response.json()
       
       console.log('📊 API Response:', data)
-      console.log('✅ Biomarkers found:', data.parsed?.biomarkers?.length || 0)
-      console.log('📋 Biomarkers:', data.parsed?.biomarkers)
 
       if (data.success && data.parsed.biomarkers.length > 0) {
         setParsedData(data.parsed)
+        
+        // Auto-populate form with extracted data
         setFormState({
           ...formState,
-          testDate: data.parsed.testDate || formState.testDate,
+          patientName: data.parsed.patientName || '',
+          patientDOB: data.parsed.patientDOB || '',
+          testDate: data.parsed.testDate?.replace(/\//g, '-').split('-').reverse().join('-') || formState.testDate,
           panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
         })
+        
         setStep('preview')
       } else {
-        console.warn('⚠️ No biomarkers extracted')
-        alert(`Could not extract biomarkers automatically. Found: ${data.parsed?.biomarkers?.length || 0}. You can enter them manually.`)
+        alert(`Could not extract biomarkers automatically. You can enter them manually.`)
         handleSkipParsing()
       }
     } catch (error) {
@@ -282,6 +282,28 @@ export default function UploadResultsPage() {
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-white/60 mb-2">Patient Name</label>
+                  <input
+                    type="text"
+                    value={formState.patientName}
+                    onChange={(e) => setFormState({...formState, patientName: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/60 mb-2">Date of Birth</label>
+                  <input
+                    type="text"
+                    value={formState.patientDOB}
+                    onChange={(e) => setFormState({...formState, patientDOB: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                    placeholder="MM/DD/YYYY"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-white/60 mb-2">Patient Email *</label>
                   <input
                     type="email"
@@ -461,6 +483,8 @@ export default function UploadResultsPage() {
                   setFile(null)
                   setParsedData(null)
                   setFormState({
+                    patientName: '',
+                    patientDOB: '',
                     patientEmail: '',
                     panelName: '',
                     testDate: new Date().toISOString().split('T')[0],
