@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Target, TrendingUp, Zap, Shield, Clock, Award } from 'lucide-react'
-import Navigation from '../components/Navigation'
 
 export default function GoalsPage() {
   const goals = [
@@ -50,7 +49,6 @@ export default function GoalsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">

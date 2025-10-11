@@ -61,14 +61,6 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black text-yellow-400">
-            ADONIS
-          </Link>
-        </nav>
-      </header>
-
       <div className="max-w-6xl mx-auto px-6 py-16">
         <Link href="/patient/cart" className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group">
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />

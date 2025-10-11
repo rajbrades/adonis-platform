@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Zap, TrendingUp, Shield, Clock, CheckCircle, Award, Heart } from 'lucide-react'
-import Navigation from '../../components/Navigation'
 
 export default function NutrientTherapyPage() {
   const keyNutrients = [
@@ -122,7 +121,6 @@ export default function NutrientTherapyPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">

@@ -82,10 +82,16 @@ export default function ReviewPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <header className="bg-black border-b border-yellow-500/20">
+        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="text-3xl font-black text-yellow-400">
+            ADONIS
+          </Link>
+          <div className="text-white/60">Step 4 of 4</div>
+        </nav>
+      </header>
+
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-right mb-6">
-          <span className="text-white/60 text-sm">Step 3 of 3</span>
-        </div>
         <div className="text-center mb-12">
           <h1 className="text-4xl font-black mb-6 text-yellow-400">
             Assessment Complete

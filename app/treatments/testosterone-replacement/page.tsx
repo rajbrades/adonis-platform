@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Zap, TrendingUp, Shield, Clock, CheckCircle } from 'lucide-react'
-import Navigation from '../../components/Navigation'
 
 export default function TestosteroneReplacementPage() {
   const benefits = [
@@ -37,7 +36,6 @@ export default function TestosteroneReplacementPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">

@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Calendar, Clock, User } from 'lucide-react'
-import Navigation from '../components/Navigation'
 
 export default function BlogPage() {
   const featuredPost = {
@@ -83,7 +82,6 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">

@@ -1,11 +1,9 @@
 import Link from 'next/link'
 import { ArrowRight, Star, Shield, Clock, Users, CheckCircle, TrendingUp, Award, Zap } from 'lucide-react'
-import Navigation from './components/Navigation'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-6">

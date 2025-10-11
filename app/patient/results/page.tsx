@@ -122,14 +122,7 @@ export default function PatientResultsPage() {
   if (!result) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-        <header className="bg-black/40 backdrop-blur-xl border-b border-white/10">
-          <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-black text-yellow-400">
-              ADONIS
-            </Link>
-          </nav>
-        </header>
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+          <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           <h1 className="text-4xl font-black mb-4">No Results Found</h1>
           <p className="text-white/60 mb-8">
             We couldn't find any lab results for your account.
@@ -156,28 +149,6 @@ export default function PatientResultsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black text-yellow-400">
-            ADONIS
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="text-sm text-white/60 hover:text-white transition">
-              Dashboard
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold">
-                {patientName.charAt(0)}
-              </div>
-              <div className="text-sm">
-                <div className="font-semibold">{patientName.split(',')[1]?.trim() || patientName}</div>
-                <div className="text-white/60 text-xs">Lab Results</div>
-              </div>
-            </div>
-          </div>
-        </nav>
-      </header>
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
           <ArrowLeft className="w-4 h-4" />

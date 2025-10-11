@@ -9,39 +9,6 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20 sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            ADONIS
-          </Link>
-          <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="font-medium">Cart</span>
-              </div>
-              <div className="w-8 h-0.5 bg-green-400"></div>
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="font-medium">Checkout</span>
-              </div>
-              <div className="w-8 h-0.5 bg-green-400"></div>
-              <div className="flex items-center gap-2 text-green-400">
-                <CheckCircle className="w-4 h-4" />
-                <span className="font-medium">Confirmed</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <div className="text-sm font-semibold">{user?.firstName}</div>
-                <div className="text-xs text-white/60">Order Complete</div>
-              </div>
-              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-10 h-10 ring-2 ring-yellow-400/50" } }} />
-            </div>
-          </div>
-        </nav>
-      </header>
-
       <div className="max-w-4xl mx-auto px-6 py-16">
         <div className="text-center mb-12">
           <div className="relative inline-block mb-6">

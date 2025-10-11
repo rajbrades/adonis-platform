@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, Users, FlaskConical, FileText, Calendar, Phone, Shield } from 'lucide-react'
-import Navigation from '../components/Navigation'
 
 export default function HowItWorksPage() {
   const steps = [
@@ -48,7 +47,6 @@ export default function HowItWorksPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">

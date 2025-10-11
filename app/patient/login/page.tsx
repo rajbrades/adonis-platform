@@ -47,17 +47,6 @@ export default function PatientLoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            ADONIS
-          </Link>
-          <Link href="/patient/signup" className="text-sm text-white/60 hover:text-yellow-400 transition">
-            Need an account? Sign up
-          </Link>
-        </nav>
-      </header>
-
       <div className="max-w-md mx-auto px-6 py-16">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center mx-auto mb-4">

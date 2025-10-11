@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { ArrowRight, TrendingUp, Shield, Clock, CheckCircle, Zap } from 'lucide-react'
-import Navigation from '../../components/Navigation'
 
 export default function HairTreatmentPage() {
   const causes = [
@@ -90,7 +89,6 @@ export default function HairTreatmentPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navigation />
 
       {/* Hero Section */}
       <section className="pt-20 pb-16 px-6">
