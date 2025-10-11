@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { createClient } from '@supabase/supabase-js'
+import { getFirestore } from '@/lib/firebase-admin'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth()
     
@@ -10,95 +10,82 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const body = await req.json()
+    const { patientName, patientDOB, panelName, testDate, biomarkers } = body
 
-    const body = await request.json()
-    const { patientEmail, panelName, testDate, providerNotes, biomarkers } = body
-
-    const { data: patient, error: patientError } = await supabase
-      .from('user_profiles')
-      .select('clerk_user_id')
-      .eq('email', patientEmail)
-      .single()
-
-    if (patientError || !patient) {
+    if (!patientName || !patientDOB) {
       return NextResponse.json({ 
-        success: false, 
-        error: 'Patient not found with that email' 
-      }, { status: 404 })
+        error: 'Patient name and date of birth are required' 
+      }, { status: 400 })
     }
 
-    const { data: consultation } = await supabase
-      .from('consultations')
-      .select('id, order_id')
-      .eq('user_id', patient.clerk_user_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
+    const db = getFirestore()
 
-    if (!consultation) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'No consultation found for this patient' 
-      }, { status: 404 })
+    // Find patient by name and DOB
+    const patientsRef = db.collection('users')
+    const snapshot = await patientsRef
+      .where('fullName', '==', patientName)
+      .where('dateOfBirth', '==', patientDOB)
+      .get()
+
+    let patientId: string
+
+    if (snapshot.empty) {
+      // Patient doesn't exist, create a new one
+      console.log('Creating new patient:', patientName, patientDOB)
+      
+      const newPatientRef = await db.collection('users').add({
+        fullName: patientName,
+        dateOfBirth: patientDOB,
+        role: 'patient',
+        createdAt: new Date().toISOString(),
+        hasLabResults: true
+      })
+      
+      patientId = newPatientRef.id
+      console.log('Created patient with ID:', patientId)
+    } else {
+      // Patient exists, use their ID
+      patientId = snapshot.docs[0].id
+      console.log('Found existing patient:', patientId)
+      
+      // Update to mark they have lab results
+      await db.collection('users').doc(patientId).update({
+        hasLabResults: true
+      })
     }
 
-    const { data: ranges } = await supabase
-      .from('biomarker_ranges')
-      .select('*')
-
-    const rangesMap = new Map(ranges?.map(r => [r.biomarker_name, r]) || [])
-
-    const resultsData = biomarkers.map((b: any) => {
-      const range = rangesMap.get(b.biomarker)
-      return {
+    // Create lab result
+    const labResultRef = await db.collection('labResults').add({
+      userId: patientId,
+      patientName,
+      patientDOB,
+      panelName,
+      testDate,
+      uploadedAt: new Date().toISOString(),
+      uploadedBy: userId,
+      biomarkers: biomarkers.map((b: any) => ({
         biomarker: b.biomarker,
-        value: parseFloat(b.value),
+        value: parseFloat(b.value) || b.value,
         unit: b.unit,
-        reference_range: b.referenceRange,
-        status: b.status,
-        optimal_range: range ? `${range.optimal_min}-${range.optimal_max}` : undefined
-      }
+        referenceRange: b.referenceRange,
+        status: b.status
+      }))
     })
 
-    const { data: labResult, error: labError } = await supabase
-      .from('lab_results')
-      .insert({
-        order_id: consultation.order_id,
-        consultation_id: consultation.id,
-        lab_panel_name: panelName,
-        results_data: resultsData,
-        status: 'completed',
-        test_date: testDate,
-        results_received_at: new Date().toISOString(),
-        provider_notes: providerNotes,
-        reviewed_by: userId,
-        reviewed_at: new Date().toISOString()
-      })
-      .select()
-      .single()
-
-    if (labError) {
-      console.error('Error inserting lab result:', labError)
-      return NextResponse.json({ 
-        success: false, 
-        error: labError.message 
-      }, { status: 500 })
-    }
+    console.log('Created lab result:', labResultRef.id)
 
     return NextResponse.json({ 
-      success: true, 
-      labResultId: labResult.id 
+      success: true,
+      labResultId: labResultRef.id,
+      patientId
     })
 
   } catch (error) {
-    console.error('API error:', error)
+    console.error('Error creating lab result:', error)
     return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: 'Failed to create lab result',
+      details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 })
   }
 }

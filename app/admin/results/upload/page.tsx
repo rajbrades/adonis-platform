@@ -30,12 +30,11 @@ export default function UploadResultsPage() {
   const [formState, setFormState] = useState({
     patientName: '',
     patientDOB: '',
-    patientEmail: '',
     panelName: '',
     testDate: new Date().toISOString().split('T')[0]
   })
 
-  // Convert MM/DD/YYYY to YYYY-MM-DD
+  // Convert MM/DD/YYYY to YYYY-MM-DD for date input
   const convertDateFormat = (date: string): string => {
     if (!date) return ''
     const parts = date.split('/')
@@ -87,8 +86,7 @@ export default function UploadResultsPage() {
           patientName: data.parsed.patientName || '',
           patientDOB: data.parsed.patientDOB || '',
           testDate: convertedDate,
-          panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel',
-          patientEmail: ''
+          panelName: data.parsed.labName ? `${data.parsed.labName} Panel` : 'Lab Panel'
         })
         
         setStep('preview')
@@ -144,6 +142,11 @@ export default function UploadResultsPage() {
   }
 
   const handleSubmit = async () => {
+    if (!formState.patientName || !formState.patientDOB) {
+      alert('Patient name and date of birth are required')
+      return
+    }
+
     setUploading(true)
 
     try {
@@ -151,10 +154,10 @@ export default function UploadResultsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          patientEmail: formState.patientEmail,
+          patientName: formState.patientName,
+          patientDOB: formState.patientDOB,
           panelName: formState.panelName,
           testDate: formState.testDate,
-          providerNotes: '',
           biomarkers: parsedData?.biomarkers.filter(b => b.biomarker && b.value) || []
         })
       })
@@ -293,36 +296,26 @@ export default function UploadResultsPage() {
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">Patient Name</label>
+                  <label className="block text-sm font-medium text-white/60 mb-2">Patient Name *</label>
                   <input
                     type="text"
+                    required
                     value={formState.patientName}
                     onChange={(e) => setFormState({...formState, patientName: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    placeholder="John Doe"
+                    placeholder="LASTNAME, FIRSTNAME"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">Date of Birth</label>
+                  <label className="block text-sm font-medium text-white/60 mb-2">Date of Birth *</label>
                   <input
                     type="text"
+                    required
                     value={formState.patientDOB}
                     onChange={(e) => setFormState({...formState, patientDOB: e.target.value})}
                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
                     placeholder="MM/DD/YYYY"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white/60 mb-2">Patient Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formState.patientEmail}
-                    onChange={(e) => setFormState({...formState, patientEmail: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                    placeholder="patient@example.com"
                   />
                 </div>
 
@@ -337,7 +330,7 @@ export default function UploadResultsPage() {
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-medium text-white/60 mb-2">Panel Name *</label>
                   <input
                     type="text"
@@ -444,7 +437,7 @@ export default function UploadResultsPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={handleSubmit}
-                disabled={uploading || !formState.patientEmail}
+                disabled={uploading || !formState.patientName || !formState.patientDOB}
                 className="flex items-center gap-2 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-xl font-bold hover:shadow-lg hover:shadow-yellow-500/50 transition-all disabled:opacity-50"
               >
                 {uploading ? 'Submitting...' : (
@@ -475,7 +468,7 @@ export default function UploadResultsPage() {
               <Check className="w-8 h-8 text-green-400" />
             </div>
             <h2 className="text-3xl font-bold mb-4">Results Uploaded Successfully!</h2>
-            <p className="text-white/60 mb-8">The patient has been notified and can now view their results.</p>
+            <p className="text-white/60 mb-8">The patient can now view their results using their name and date of birth.</p>
             <div className="flex items-center justify-center gap-4">
               <button
                 onClick={() => {
@@ -485,7 +478,6 @@ export default function UploadResultsPage() {
                   setFormState({
                     patientName: '',
                     patientDOB: '',
-                    patientEmail: '',
                     panelName: '',
                     testDate: new Date().toISOString().split('T')[0]
                   })
