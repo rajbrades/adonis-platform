@@ -21,8 +21,7 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   const data = await pdf(buffer)
   const text = data.text
 
-  console.log('=== PDF PARSING DEBUG ===')
-  console.log('PDF text length:', text.length)
+  console.log('=== PDF PARSING ===')
 
   if (text.match(/quest\s*diagnostics/i)) {
     result.labName = 'Quest Diagnostics'
@@ -31,116 +30,215 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   const dateMatch = text.match(/Collected:\s*(\d{2}\/\d{2}\/\d{4})/i)
   if (dateMatch) result.testDate = dateMatch[1]
 
-  const added = new Set<string>()
+  // Extract each biomarker explicitly
+  const biomarkers: ParsedBiomarker[] = []
   
-  // Quest-specific patterns - values often run together with test names
-  const patterns = [
-    // Hormones - Testosterone
-    { name: 'Testosterone Total', regex: /TESTOSTERONE,?\s*TOTAL[\s\S]*?(\d+)\s*(\d+-\d+)\s*ng\/dL/i, unit: 'ng/dL' },
-    { name: 'Testosterone Free', regex: /TESTOSTERONE,?\s*FREE[\s\S]*?(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg\/mL/i, unit: 'pg/mL' },
-    { name: 'Testosterone Bioavailable', regex: /TESTOSTERONE,?BIOAVAILABLE[\s\S]*?(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*ng\/dL/i, unit: 'ng/dL' },
-    
-    // Thyroid
-    { name: 'TSH', regex: /TSH\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mIU\/L/i, unit: 'mIU/L' },
-    { name: 'T4 Free', regex: /T4,?\s*FREE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*ng\/dL/i, unit: 'ng/dL' },
-    { name: 'T3 Free', regex: /T3,?\s*FREE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg\/mL/i, unit: 'pg/mL' },
-    
-    // Vitamins
-    { name: 'Vitamin D', regex: /VITAMIN\s*D[\s\S]*?(\d+)\s*(\d+-\d+)\s*ng\/mL/i, unit: 'ng/mL' },
-    
-    // Lipids
-    { name: 'Cholesterol Total', regex: /CHOLESTEROL,?\s*TOTAL\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'HDL Cholesterol', regex: /HDL\s*CHOLESTEROL\s*(\d+)\s*>\s*OR\s*=\s*(\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'LDL Cholesterol', regex: /LDL-?CHOLESTEROL\s*(\d+)\s*[HL\s]*mg\/dL/i, unit: 'mg/dL', defaultRange: '<100' },
-    { name: 'Triglycerides', regex: /TRIGLYCERIDES\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'Non HDL Cholesterol', regex: /NON\s*HDL\s*CHOLESTEROL\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'Apolipoprotein B', regex: /APOLIPOPROTEIN\s*B\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'Lipoprotein (a)', regex: /LIPOPROTEIN\s*\(a\)\s*<?\s*(\d+)\s*<?\s*(\d+)\s*nmol\/L/i, unit: 'nmol/L' },
-    
-    // Metabolic
-    { name: 'Glucose', regex: /GLUCOSE\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'Hemoglobin A1c', regex: /HEMOGLOBIN\s*A1c\s*(\d+\.?\d*)\s*<?\s*(\d+\.?\d*)\s*%/i, unit: '%' },
-    { name: 'Insulin', regex: /INSULIN\s*(\d+\.?\d*)\s*uIU\/mL/i, unit: 'uIU/mL', defaultRange: '<=18.4' },
-    
-    // Kidney
-    { name: 'Creatinine', regex: /CREATININE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'BUN', regex: /UREA\s*NITROGEN[\s\S]*?(\d+)\s*(\d+-\d+)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'eGFR', regex: /EGFR\s*(\d+)\s*>\s*OR\s*=\s*(\d+)/i, unit: 'mL/min/1.73m2' },
-    
-    // Electrolytes
-    { name: 'Sodium', regex: /SODIUM\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mmol\/L/i, unit: 'mmol/L' },
-    { name: 'Potassium', regex: /POTASSIUM\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mmol\/L/i, unit: 'mmol/L' },
-    { name: 'Chloride', regex: /CHLORIDE\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mmol\/L/i, unit: 'mmol/L' },
-    { name: 'Carbon Dioxide', regex: /CARBON\s*DIOXIDE\s*(\d+)\s*(\d+-\d+)\s*mmol\/L/i, unit: 'mmol/L' },
-    { name: 'Calcium', regex: /CALCIUM\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i, unit: 'mg/dL' },
-    
-    // Liver
-    { name: 'ALT', regex: /ALT\s*(\d+)\s*(\d+-\d+)\s*U\/L/i, unit: 'U/L' },
-    { name: 'AST', regex: /AST\s*(\d+)\s*(\d+-\d+)\s*U\/L/i, unit: 'U/L' },
-    { name: 'Alkaline Phosphatase', regex: /ALKALINE\s*PHOSPHATASE\s*(\d+)\s*(\d+-\d+)\s*U\/L/i, unit: 'U/L' },
-    { name: 'Bilirubin Total', regex: /BILIRUBIN,?\s*TOTAL\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i, unit: 'mg/dL' },
-    { name: 'GGT', regex: /GGT\s*(\d+)\s*(\d+-\d+)\s*U\/L/i, unit: 'U/L' },
-    { name: 'Protein Total', regex: /PROTEIN,?\s*TOTAL\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i, unit: 'g/dL' },
-    { name: 'Albumin', regex: /ALBUMIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i, unit: 'g/dL' },
-    { name: 'Globulin', regex: /GLOBULIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i, unit: 'g/dL' },
-    
-    // CBC
-    { name: 'WBC', regex: /WHITE\s*BLOOD\s*CELL\s*COUNT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*Thousand\/uL/i, unit: 'Thousand/uL' },
-    { name: 'RBC', regex: /RED\s*BLOOD\s*CELL\s*COUNT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*Million\/uL/i, unit: 'Million/uL' },
-    { name: 'Hemoglobin', regex: /HEMOGLOBIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i, unit: 'g/dL' },
-    { name: 'Hematocrit', regex: /HEMATOCRIT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*%/i, unit: '%' },
-    { name: 'MCV', regex: /MCV\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*fL/i, unit: 'fL' },
-    { name: 'MCH', regex: /MCH\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg/i, unit: 'pg' },
-    { name: 'MCHC', regex: /MCHC\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i, unit: 'g/dL' },
-    { name: 'RDW', regex: /RDW\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*%/i, unit: '%' },
-    { name: 'Platelet Count', regex: /PLATELET\s*COUNT\s*(\d+)\s*(\d+-\d+)\s*Thousand\/uL/i, unit: 'Thousand/uL' },
-    { name: 'MPV', regex: /MPV\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*fL/i, unit: 'fL' },
-    { name: 'Absolute Neutrophils', regex: /ABSOLUTE\s*NEUTROPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i, unit: 'cells/uL' },
-    { name: 'Absolute Lymphocytes', regex: /ABSOLUTE\s*LYMPHOCYTES\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i, unit: 'cells/uL' },
-    { name: 'Absolute Monocytes', regex: /ABSOLUTE\s*MONOCYTES\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i, unit: 'cells/uL' },
-    { name: 'Absolute Eosinophils', regex: /ABSOLUTE\s*EOSINOPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i, unit: 'cells/uL' },
-    { name: 'Absolute Basophils', regex: /ABSOLUTE\s*BASOPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i, unit: 'cells/uL' },
-    
-    // Other Hormones
-    { name: 'Estradiol', regex: /ESTRADIOL\s*(\d+)\s*[HL\s]*<\s*OR\s*=\s*(\d+)\s*pg\/mL/i, unit: 'pg/mL' },
-    { name: 'PSA', regex: /PSA,?\s*TOTAL\s*(\d+\.?\d*)\s*<\s*OR\s*=\s*(\d+\.?\d*)\s*ng\/mL/i, unit: 'ng/mL' },
-    { name: 'SHBG', regex: /SEX\s*HORMONE\s*BINDING\s*GLOBULIN\s*(\d+)\s*(\d+-\d+)\s*nmol\/L/i, unit: 'nmol/L' },
-    { name: 'DHEA-S', regex: /DHEA\s*SULFATE\s*(\d+)\s*(\d+-\d+)\s*mcg\/dL/i, unit: 'mcg/dL' },
-    { name: 'Pregnenolone', regex: /PREGNENOLONE[\s\S]*?(\d+)\s*(\d+-\d+)\s*ng\/dL/i, unit: 'ng/dL' },
-    { name: 'IGF-1', regex: /IGF\s*1[\s\S]*?(\d+)\s*(\d+-\d+)\s*ng\/mL/i, unit: 'ng/mL' },
-    
-    // Iron
-    { name: 'Iron Total', regex: /IRON,?\s*TOTAL\s*(\d+)\s*(\d+-\d+)\s*mcg\/dL/i, unit: 'mcg/dL' },
-    { name: 'TIBC', regex: /IRON\s*BINDING\s*CAPACITY\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mcg\/dL/i, unit: 'mcg/dL' },
-    { name: 'Iron Saturation', regex: /%\s*SATURATION\s*(\d+)\s*(\d+-\d+)\s*%/i, unit: '%' },
-    { name: 'Ferritin', regex: /FERRITIN\s*(\d+)\s*(\d+-\d+)\s*ng\/mL/i, unit: 'ng/mL' },
-    
-    // Inflammatory
-    { name: 'HS CRP', regex: /HS\s*CRP\s*(\d+\.?\d*)\s*mg\/L/i, unit: 'mg/L', defaultRange: '<1.0' },
-    { name: 'Homocysteine', regex: /HOMOCYSTEINE\s*(\d+\.?\d*)\s*<\s*or\s*=\s*(\d+\.?\d*)\s*umol\/L/i, unit: 'umol/L' },
-  ]
-
-  for (const pattern of patterns) {
-    if (added.has(pattern.name)) continue
-    
-    const match = text.match(pattern.regex)
-    if (match) {
-      const value = parseFloat(match[1])
-      const referenceRange = match[2] || pattern.defaultRange || ''
-      
-      result.biomarkers.push({
-        biomarker: pattern.name,
-        value,
-        unit: pattern.unit,
-        referenceRange,
-        status: 'normal'
-      })
-      added.add(pattern.name)
-      console.log(`✓ Found ${pattern.name}: ${value} ${pattern.unit}`)
-    }
+  // Helper to add biomarker
+  const addBiomarker = (name: string, value: number, unit: string, range: string) => {
+    biomarkers.push({
+      biomarker: name,
+      value: value,
+      unit: unit,
+      referenceRange: range,
+      status: 'normal'
+    })
+    console.log(`✓ ${name}: ${value} ${unit} (${range})`)
   }
 
-  console.log('Total biomarkers extracted:', result.biomarkers.length)
+  // Testosterone
+  let match = text.match(/TESTOSTERONE,?\s*TOTAL[\s\S]{0,100}?(\d+)\s*(\d+-\d+)\s*ng\/dL/i)
+  if (match) addBiomarker('Testosterone Total', parseFloat(match[1]), 'ng/dL', match[2])
+  
+  match = text.match(/TESTOSTERONE,?\s*FREE[\s\S]{0,100}?(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg\/mL/i)
+  if (match) addBiomarker('Testosterone Free', parseFloat(match[1]), 'pg/mL', match[2])
+  
+  match = text.match(/TESTOSTERONE,?BIOAVAILABLE[\s\S]{0,100}?(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*ng\/dL/i)
+  if (match) addBiomarker('Testosterone Bioavailable', parseFloat(match[1]), 'ng/dL', match[2])
+
+  // Thyroid
+  match = text.match(/TSH\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mIU\/L/i)
+  if (match) addBiomarker('TSH', parseFloat(match[1]), 'mIU/L', match[2])
+  
+  match = text.match(/T4,?\s*FREE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*ng\/dL/i)
+  if (match) addBiomarker('T4 Free', parseFloat(match[1]), 'ng/dL', match[2])
+  
+  match = text.match(/T3,?\s*FREE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg\/mL/i)
+  if (match) addBiomarker('T3 Free', parseFloat(match[1]), 'pg/mL', match[2])
+
+  // Vitamin D
+  match = text.match(/VITAMIN\s*D[\s\S]{0,100}?(\d+)\s*(\d+-\d+)\s*ng\/mL/i)
+  if (match) addBiomarker('Vitamin D', parseFloat(match[1]), 'ng/mL', match[2])
+
+  // Lipids
+  match = text.match(/CHOLESTEROL,?\s*TOTAL\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('Cholesterol Total', parseFloat(match[1]), 'mg/dL', `<${match[2]}`)
+  
+  match = text.match(/HDL\s*CHOLESTEROL\s*(\d+)\s*>\s*OR\s*=\s*(\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('HDL Cholesterol', parseFloat(match[1]), 'mg/dL', `>=${match[2]}`)
+  
+  match = text.match(/LDL-?CHOLESTEROL\s*(\d+)\s*[HL\s]*mg\/dL/i)
+  if (match) addBiomarker('LDL Cholesterol', parseFloat(match[1]), 'mg/dL', '<100')
+  
+  match = text.match(/TRIGLYCERIDES\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('Triglycerides', parseFloat(match[1]), 'mg/dL', `<${match[2]}`)
+  
+  match = text.match(/NON\s*HDL\s*CHOLESTEROL\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('Non HDL Cholesterol', parseFloat(match[1]), 'mg/dL', `<${match[2]}`)
+  
+  match = text.match(/APOLIPOPROTEIN\s*B\s*(\d+)\s*[HL\s]*<?\s*(\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('Apolipoprotein B', parseFloat(match[1]), 'mg/dL', `<${match[2]}`)
+  
+  match = text.match(/LIPOPROTEIN\s*\(a\)\s*<?\s*(\d+)\s*<?\s*(\d+)\s*nmol\/L/i)
+  if (match) addBiomarker('Lipoprotein (a)', parseFloat(match[1]), 'nmol/L', `<${match[2]}`)
+
+  // Metabolic
+  match = text.match(/GLUCOSE\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('Glucose', parseFloat(match[1]), 'mg/dL', match[2])
+  
+  match = text.match(/HEMOGLOBIN\s*A1c\s*(\d+\.?\d*)\s*<?\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Hemoglobin A1c', parseFloat(match[1]), '%', `<${match[2]}`)
+  
+  match = text.match(/INSULIN\s*(\d+\.?\d*)\s*uIU\/mL/i)
+  if (match) addBiomarker('Insulin', parseFloat(match[1]), 'uIU/mL', '<=18.4')
+
+  // Kidney
+  match = text.match(/CREATININE\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i)
+  if (match) addBiomarker('Creatinine', parseFloat(match[1]), 'mg/dL', match[2])
+  
+  match = text.match(/UREA\s*NITROGEN[\s\S]{0,50}?(\d+)\s*(\d+-\d+)\s*mg\/dL/i)
+  if (match) addBiomarker('BUN', parseFloat(match[1]), 'mg/dL', match[2])
+  
+  match = text.match(/EGFR\s*(\d+)\s*>\s*OR\s*=\s*(\d+)/i)
+  if (match) addBiomarker('eGFR', parseFloat(match[1]), 'mL/min/1.73m2', `>=${match[2]}`)
+
+  // Electrolytes  
+  match = text.match(/SODIUM\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mmol\/L/i)
+  if (match) addBiomarker('Sodium', parseFloat(match[1]), 'mmol/L', match[2])
+  
+  match = text.match(/POTASSIUM\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mmol\/L/i)
+  if (match) addBiomarker('Potassium', parseFloat(match[1]), 'mmol/L', match[2])
+  
+  match = text.match(/CHLORIDE\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mmol\/L/i)
+  if (match) addBiomarker('Chloride', parseFloat(match[1]), 'mmol/L', match[2])
+  
+  match = text.match(/CARBON\s*DIOXIDE\s*(\d+)\s*(\d+-\d+)\s*mmol\/L/i)
+  if (match) addBiomarker('Carbon Dioxide', parseFloat(match[1]), 'mmol/L', match[2])
+  
+  match = text.match(/CALCIUM\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i)
+  if (match) addBiomarker('Calcium', parseFloat(match[1]), 'mg/dL', match[2])
+
+  // Liver
+  match = text.match(/ALT\s*(\d+)\s*(\d+-\d+)\s*U\/L/i)
+  if (match) addBiomarker('ALT', parseFloat(match[1]), 'U/L', match[2])
+  
+  match = text.match(/AST\s*(\d+)\s*(\d+-\d+)\s*U\/L/i)
+  if (match) addBiomarker('AST', parseFloat(match[1]), 'U/L', match[2])
+  
+  match = text.match(/ALKALINE\s*PHOSPHATASE\s*(\d+)\s*(\d+-\d+)\s*U\/L/i)
+  if (match) addBiomarker('Alkaline Phosphatase', parseFloat(match[1]), 'U/L', match[2])
+  
+  match = text.match(/BILIRUBIN,?\s*TOTAL\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*mg\/dL/i)
+  if (match) addBiomarker('Bilirubin Total', parseFloat(match[1]), 'mg/dL', match[2])
+  
+  match = text.match(/GGT\s*(\d+)\s*(\d+-\d+)\s*U\/L/i)
+  if (match) addBiomarker('GGT', parseFloat(match[1]), 'U/L', match[2])
+  
+  match = text.match(/PROTEIN,?\s*TOTAL\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
+  if (match) addBiomarker('Protein Total', parseFloat(match[1]), 'g/dL', match[2])
+  
+  match = text.match(/ALBUMIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
+  if (match) addBiomarker('Albumin', parseFloat(match[1]), 'g/dL', match[2])
+  
+  match = text.match(/GLOBULIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
+  if (match) addBiomarker('Globulin', parseFloat(match[1]), 'g/dL', match[2])
+
+  // CBC
+  match = text.match(/WHITE\s*BLOOD\s*CELL\s*COUNT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*Thousand\/uL/i)
+  if (match) addBiomarker('WBC', parseFloat(match[1]), 'Thousand/uL', match[2])
+  
+  match = text.match(/RED\s*BLOOD\s*CELL\s*COUNT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*Million\/uL/i)
+  if (match) addBiomarker('RBC', parseFloat(match[1]), 'Million/uL', match[2])
+  
+  match = text.match(/HEMOGLOBIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
+  if (match) addBiomarker('Hemoglobin', parseFloat(match[1]), 'g/dL', match[2])
+  
+  match = text.match(/HEMATOCRIT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Hematocrit', parseFloat(match[1]), '%', match[2])
+  
+  match = text.match(/MCV\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*fL/i)
+  if (match) addBiomarker('MCV', parseFloat(match[1]), 'fL', match[2])
+  
+  match = text.match(/MCH\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*pg/i)
+  if (match) addBiomarker('MCH', parseFloat(match[1]), 'pg', match[2])
+  
+  match = text.match(/MCHC\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
+  if (match) addBiomarker('MCHC', parseFloat(match[1]), 'g/dL', match[2])
+  
+  match = text.match(/RDW\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('RDW', parseFloat(match[1]), '%', match[2])
+  
+  match = text.match(/PLATELET\s*COUNT\s*(\d+)\s*(\d+-\d+)\s*Thousand\/uL/i)
+  if (match) addBiomarker('Platelet Count', parseFloat(match[1]), 'Thousand/uL', match[2])
+  
+  match = text.match(/MPV\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*fL/i)
+  if (match) addBiomarker('MPV', parseFloat(match[1]), 'fL', match[2])
+  
+  match = text.match(/ABSOLUTE\s*NEUTROPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
+  if (match) addBiomarker('Absolute Neutrophils', parseFloat(match[1]), 'cells/uL', match[2])
+  
+  match = text.match(/ABSOLUTE\s*LYMPHOCYTES\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
+  if (match) addBiomarker('Absolute Lymphocytes', parseFloat(match[1]), 'cells/uL', match[2])
+  
+  match = text.match(/ABSOLUTE\s*MONOCYTES\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
+  if (match) addBiomarker('Absolute Monocytes', parseFloat(match[1]), 'cells/uL', match[2])
+  
+  match = text.match(/ABSOLUTE\s*EOSINOPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
+  if (match) addBiomarker('Absolute Eosinophils', parseFloat(match[1]), 'cells/uL', match[2])
+  
+  match = text.match(/ABSOLUTE\s*BASOPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
+  if (match) addBiomarker('Absolute Basophils', parseFloat(match[1]), 'cells/uL', match[2])
+
+  // Other Hormones
+  match = text.match(/ESTRADIOL\s*(\d+)\s*[HL\s]*<\s*OR\s*=\s*(\d+)\s*pg\/mL/i)
+  if (match) addBiomarker('Estradiol', parseFloat(match[1]), 'pg/mL', `<=${match[2]}`)
+  
+  match = text.match(/PSA,?\s*TOTAL\s*(\d+\.?\d*)\s*<\s*OR\s*=\s*(\d+\.?\d*)\s*ng\/mL/i)
+  if (match) addBiomarker('PSA', parseFloat(match[1]), 'ng/mL', `<=${match[2]}`)
+  
+  match = text.match(/SEX\s*HORMONE\s*BINDING\s*GLOBULIN\s*(\d+)\s*(\d+-\d+)\s*nmol\/L/i)
+  if (match) addBiomarker('SHBG', parseFloat(match[1]), 'nmol/L', match[2])
+  
+  match = text.match(/DHEA\s*SULFATE\s*(\d+)\s*(\d+-\d+)\s*mcg\/dL/i)
+  if (match) addBiomarker('DHEA-S', parseFloat(match[1]), 'mcg/dL', match[2])
+  
+  match = text.match(/PREGNENOLONE[\s\S]{0,50}?(\d+)\s*(\d+-\d+)\s*ng\/dL/i)
+  if (match) addBiomarker('Pregnenolone', parseFloat(match[1]), 'ng/dL', match[2])
+  
+  match = text.match(/IGF\s*1[\s\S]{0,50}?(\d+)\s*(\d+-\d+)\s*ng\/mL/i)
+  if (match) addBiomarker('IGF-1', parseFloat(match[1]), 'ng/mL', match[2])
+
+  // Iron
+  match = text.match(/IRON,?\s*TOTAL\s*(\d+)\s*(\d+-\d+)\s*mcg\/dL/i)
+  if (match) addBiomarker('Iron Total', parseFloat(match[1]), 'mcg/dL', match[2])
+  
+  match = text.match(/IRON\s*BINDING\s*CAPACITY\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mcg\/dL/i)
+  if (match) addBiomarker('TIBC', parseFloat(match[1]), 'mcg/dL', match[2])
+  
+  match = text.match(/%\s*SATURATION\s*(\d+)\s*(\d+-\d+)\s*%/i)
+  if (match) addBiomarker('Iron Saturation', parseFloat(match[1]), '%', match[2])
+  
+  match = text.match(/FERRITIN\s*(\d+)\s*(\d+-\d+)\s*ng\/mL/i)
+  if (match) addBiomarker('Ferritin', parseFloat(match[1]), 'ng/mL', match[2])
+
+  // Inflammatory
+  match = text.match(/HS\s*CRP\s*(\d+\.?\d*)\s*mg\/L/i)
+  if (match) addBiomarker('HS CRP', parseFloat(match[1]), 'mg/L', '<1.0')
+  
+  match = text.match(/HOMOCYSTEINE\s*(\d+\.?\d*)\s*<\s*or\s*=\s*(\d+\.?\d*)\s*umol\/L/i)
+  if (match) addBiomarker('Homocysteine', parseFloat(match[1]), 'umol/L', `<=${match[2]}`)
+
+  result.biomarkers = biomarkers
+  console.log(`Total extracted: ${biomarkers.length}`)
   
   return result
 }
