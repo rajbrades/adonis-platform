@@ -13,6 +13,7 @@
     "@stripe/stripe-js": "^7.9.0",
     "@supabase/supabase-js": "^2.58.0",
     "canvas-confetti": "^1.9.3",
+    "firebase-admin": "^13.5.0",
     "framer-motion": "^12.23.22",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
