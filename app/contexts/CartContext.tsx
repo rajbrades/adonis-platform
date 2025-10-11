@@ -12,6 +12,7 @@ interface CartItem {
 interface CartContextType {
   items: CartItem[]
   addItem: (item: CartItem) => void
+  addToCart: (item: CartItem) => void // Alias for addItem
   removeItem: (id: string) => void
   clearCart: () => void
   total: number
@@ -23,7 +24,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
 
   const addItem = (item: CartItem) => {
-    setItems(prev => [...prev, item])
+    setItems(prev => {
+      const existingItem = prev.find(i => i.id === item.id)
+      if (existingItem) {
+        return prev.map(i => 
+          i.id === item.id 
+            ? { ...i, quantity: i.quantity + item.quantity }
+            : i
+        )
+      }
+      return [...prev, item]
+    })
   }
 
   const removeItem = (id: string) => {
@@ -37,7 +48,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
   return (
-    <CartContext.Provider value={{ items, addItem, removeItem, clearCart, total }}>
+    <CartContext.Provider value={{ 
+      items, 
+      addItem, 
+      addToCart: addItem, // Alias
+      removeItem, 
+      clearCart, 
+      total 
+    }}>
       {children}
     </CartContext.Provider>
   )
