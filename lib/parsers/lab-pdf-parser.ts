@@ -153,6 +153,13 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   match = text.match(/LIPOPROTEIN\s*\(a\)\s*<?\s*(\d+)\s*<?\s*(\d+)\s*nmol\/L/i)
   if (match) addBiomarker('Lipoprotein (a)', parseFloat(match[1]), 'nmol/L', `<${match[2]}`)
 
+  // Lipid Ratios
+  match = text.match(/CHOL\/HDLC?\s*RATIO\s*(\d+\.?\d*)\s*<?\s*(\d+\.?\d*)/i)
+  if (match) addBiomarker('Cholesterol/HDL Ratio', parseFloat(match[1]), 'ratio', `<${match[2]}`)
+  
+  match = text.match(/LDL\/HDL\s*RATIO\s*(\d+\.?\d*)/i)
+  if (match) addBiomarker('LDL/HDL Ratio', parseFloat(match[1]), 'ratio', '')
+
   // Metabolic
   match = text.match(/GLUCOSE\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mg\/dL/i)
   if (match) addBiomarker('Glucose', parseFloat(match[1]), 'mg/dL', match[2])
@@ -172,6 +179,15 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   
   match = text.match(/EGFR\s*(\d+)\s*>\s*OR\s*=\s*(\d+)/i)
   if (match) addBiomarker('eGFR', parseFloat(match[1]), 'mL/min/1.73m2', `>=${match[2]}`)
+
+  match = text.match(/BUN\/CREATININE\s*RATIO[\s\S]{0,50}?(\d+-\d+)/i)
+  if (match) {
+    // Extract the actual ratio value if it's shown, otherwise skip since it says "Not Reported"
+    const ratioValueMatch = text.match(/BUN\/CREATININE\s*RATIO\s*(\d+)\s*(\d+-\d+)/i)
+    if (ratioValueMatch) {
+      addBiomarker('BUN/Creatinine Ratio', parseFloat(ratioValueMatch[1]), 'ratio', ratioValueMatch[2])
+    }
+  }
 
   // Electrolytes  
   match = text.match(/SODIUM\s*(\d+)\s*[HL\s]*(\d+-\d+)\s*mmol\/L/i)
@@ -213,6 +229,9 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   
   match = text.match(/GLOBULIN\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*g\/dL/i)
   if (match) addBiomarker('Globulin', parseFloat(match[1]), 'g/dL', match[2])
+
+  match = text.match(/ALBUMIN\/GLOBULIN\s*RATIO\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)/i)
+  if (match) addBiomarker('Albumin/Globulin Ratio', parseFloat(match[1]), 'ratio', match[2])
 
   // CBC
   match = text.match(/WHITE\s*BLOOD\s*CELL\s*COUNT\s*(\d+\.?\d*)\s*(\d+\.?\d*-\d+\.?\d*)\s*Thousand\/uL/i)
@@ -260,6 +279,22 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   match = text.match(/ABSOLUTE\s*BASOPHILS\s*(\d+)\s*(\d+-\d+)\s*cells\/uL/i)
   if (match) addBiomarker('Absolute Basophils', parseFloat(match[1]), 'cells/uL', match[2])
 
+  // Differential Percentages
+  match = text.match(/NEUTROPHILS\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Neutrophils %', parseFloat(match[1]), '%', '')
+  
+  match = text.match(/LYMPHOCYTES\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Lymphocytes %', parseFloat(match[1]), '%', '')
+  
+  match = text.match(/MONOCYTES\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Monocytes %', parseFloat(match[1]), '%', '')
+  
+  match = text.match(/EOSINOPHILS\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Eosinophils %', parseFloat(match[1]), '%', '')
+  
+  match = text.match(/BASOPHILS\s*(\d+\.?\d*)\s*%/i)
+  if (match) addBiomarker('Basophils %', parseFloat(match[1]), '%', '')
+
   // Other Hormones
   match = text.match(/ESTRADIOL\s*(\d+)\s*[HL\s]*<\s*OR\s*=\s*(\d+)\s*pg\/mL/i)
   if (match) addBiomarker('Estradiol', parseFloat(match[1]), 'pg/mL', `<=${match[2]}`)
@@ -278,6 +313,10 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   
   match = text.match(/IGF\s*1[\s\S]{0,50}?(\d+)\s*(\d+-\d+)\s*ng\/mL/i)
   if (match) addBiomarker('IGF-1', parseFloat(match[1]), 'ng/mL', match[2])
+
+  // IGF-1 Z-Score
+  match = text.match(/Z\s*SCORE[\s\S]{0,50}?(-?\d+\.?\d*)\s*(-?\d+\.?\d*)\s*-\s*\+?(\d+\.?\d*)\s*SD/i)
+  if (match) addBiomarker('IGF-1 Z-Score', parseFloat(match[1]), 'SD', `${match[2]} to +${match[3]}`)
 
   // Iron
   match = text.match(/IRON,?\s*TOTAL\s*(\d+)\s*(\d+-\d+)\s*mcg\/dL/i)
