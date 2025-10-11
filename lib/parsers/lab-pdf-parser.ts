@@ -13,6 +13,45 @@ interface ParsedLabResult {
   biomarkers: ParsedBiomarker[]
 }
 
+function determineStatus(value: number, referenceRange: string): 'normal' | 'high' | 'low' | 'critical' {
+  if (!referenceRange) return 'normal'
+  
+  // Handle different range formats
+  
+  // Format: "100-200"
+  const rangeMatch = referenceRange.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/)
+  if (rangeMatch) {
+    const min = parseFloat(rangeMatch[1])
+    const max = parseFloat(rangeMatch[2])
+    
+    if (value < min * 0.7) return 'critical'  // 30% below minimum
+    if (value < min) return 'low'
+    if (value > max * 1.3) return 'critical'  // 30% above maximum
+    if (value > max) return 'high'
+    return 'normal'
+  }
+  
+  // Format: "<100" or "< 100"
+  const lessThanMatch = referenceRange.match(/<\s*=?\s*(\d+\.?\d*)/)
+  if (lessThanMatch) {
+    const threshold = parseFloat(lessThanMatch[1])
+    if (value > threshold * 1.3) return 'critical'
+    if (value > threshold) return 'high'
+    return 'normal'
+  }
+  
+  // Format: ">40" or ">= 40"
+  const greaterThanMatch = referenceRange.match(/>\s*=?\s*(\d+\.?\d*)/)
+  if (greaterThanMatch) {
+    const threshold = parseFloat(greaterThanMatch[1])
+    if (value < threshold * 0.7) return 'critical'
+    if (value < threshold) return 'low'
+    return 'normal'
+  }
+  
+  return 'normal'
+}
+
 export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   const pdf = require('pdf-parse-fork')
   
@@ -33,16 +72,17 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   // Extract each biomarker explicitly
   const biomarkers: ParsedBiomarker[] = []
   
-  // Helper to add biomarker
+  // Helper to add biomarker with status calculation
   const addBiomarker = (name: string, value: number, unit: string, range: string) => {
+    const status = determineStatus(value, range)
     biomarkers.push({
       biomarker: name,
       value: value,
       unit: unit,
       referenceRange: range,
-      status: 'normal'
+      status: status
     })
-    console.log(`✓ ${name}: ${value} ${unit} (${range})`)
+    console.log(`✓ ${name}: ${value} ${unit} (${range}) - ${status.toUpperCase()}`)
   }
 
   // Testosterone
