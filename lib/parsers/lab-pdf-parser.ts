@@ -8,6 +8,7 @@ interface ParsedBiomarker {
 
 interface ParsedLabResult {
   patientName?: string
+  patientDOB?: string
   testDate?: string
   labName?: string
   biomarkers: ParsedBiomarker[]
@@ -16,17 +17,13 @@ interface ParsedLabResult {
 function determineStatus(value: number, referenceRange: string): 'normal' | 'high' | 'low' | 'critical' {
   if (!referenceRange) return 'normal'
   
-  // Handle different range formats
-  
   // Format: "100-200"
   const rangeMatch = referenceRange.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/)
   if (rangeMatch) {
     const min = parseFloat(rangeMatch[1])
     const max = parseFloat(rangeMatch[2])
     
-    if (value < min * 0.7) return 'critical'  // 30% below minimum
     if (value < min) return 'low'
-    if (value > max * 1.3) return 'critical'  // 30% above maximum
     if (value > max) return 'high'
     return 'normal'
   }
@@ -35,7 +32,6 @@ function determineStatus(value: number, referenceRange: string): 'normal' | 'hig
   const lessThanMatch = referenceRange.match(/<\s*=?\s*(\d+\.?\d*)/)
   if (lessThanMatch) {
     const threshold = parseFloat(lessThanMatch[1])
-    if (value > threshold * 1.3) return 'critical'
     if (value > threshold) return 'high'
     return 'normal'
   }
@@ -44,7 +40,6 @@ function determineStatus(value: number, referenceRange: string): 'normal' | 'hig
   const greaterThanMatch = referenceRange.match(/>\s*=?\s*(\d+\.?\d*)/)
   if (greaterThanMatch) {
     const threshold = parseFloat(greaterThanMatch[1])
-    if (value < threshold * 0.7) return 'critical'
     if (value < threshold) return 'low'
     return 'normal'
   }
@@ -61,13 +56,40 @@ export async function parseLabPDF(buffer: Buffer): Promise<ParsedLabResult> {
   const text = data.text
 
   console.log('=== PDF PARSING ===')
+  console.log('First 500 chars:', text.substring(0, 500))
 
+  // Extract Quest Diagnostics
   if (text.match(/quest\s*diagnostics/i)) {
     result.labName = 'Quest Diagnostics'
+    console.log('✓ Lab: Quest Diagnostics')
   }
 
+  // Extract Patient Name - Quest format: Look for pattern at start
+  const nameMatch = text.match(/^([A-Z]+,\s*[A-Z]+)/m)
+  if (nameMatch) {
+    result.patientName = nameMatch[1]
+    console.log('✓ Patient Name:', result.patientName)
+  } else {
+    console.log('✗ Patient Name not found')
+  }
+
+  // Extract DOB - Quest format: "DOB: 08/06/1972"
+  const dobMatch = text.match(/DOB:\s*(\d{2}\/\d{2}\/\d{4})/i)
+  if (dobMatch) {
+    result.patientDOB = dobMatch[1]
+    console.log('✓ DOB:', result.patientDOB)
+  } else {
+    console.log('✗ DOB not found')
+  }
+
+  // Extract Test Date - Quest format: "Collected:09/19/2025/ 07:08 EDT"
   const dateMatch = text.match(/Collected:\s*(\d{2}\/\d{2}\/\d{4})/i)
-  if (dateMatch) result.testDate = dateMatch[1]
+  if (dateMatch) {
+    result.testDate = dateMatch[1]
+    console.log('✓ Test Date:', result.testDate)
+  } else {
+    console.log('✗ Test Date not found')
+  }
 
   // Extract each biomarker explicitly
   const biomarkers: ParsedBiomarker[] = []
