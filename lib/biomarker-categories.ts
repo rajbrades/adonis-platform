@@ -17,7 +17,7 @@ export const BIOMARKER_CATEGORIES: BiomarkerCategory[] = [
     name: 'Sex Hormones',
     description: 'Male reproductive hormones and sexual health markers',
     icon: '🎯',
-    defaultExpanded: true, // Priority #1 for men's health platform
+    defaultExpanded: true,
     priority: 1,
     biomarkers: [
       'Testosterone Total',
@@ -28,6 +28,8 @@ export const BIOMARKER_CATEGORIES: BiomarkerCategory[] = [
       'DHEA-S',
       'Pregnenolone',
       'Prolactin',
+      'IGF-1',
+      'Cortisol',
     ],
   },
   {
@@ -44,15 +46,13 @@ export const BIOMARKER_CATEGORIES: BiomarkerCategory[] = [
     ],
   },
   {
-    id: 'other-hormones',
-    name: 'Other Hormones',
-    description: 'Stress hormones, growth factors, and prostate markers',
-    icon: '💪',
+    id: 'cancer-screening',
+    name: 'Cancer Screening',
+    description: 'Prostate and cancer markers',
+    icon: '🔬',
     defaultExpanded: false,
     priority: 3,
     biomarkers: [
-      'Cortisol',
-      'IGF-1',
       'PSA',
     ],
   },
@@ -185,8 +185,24 @@ export const BIOMARKER_CATEGORIES: BiomarkerCategory[] = [
   },
 ]
 
+// Biomarkers to exclude from display
+const EXCLUDED_BIOMARKERS = [
+  'IGF-1 Z-Score',
+  'IGF-1Z-Score',
+  'IGF1 Z-Score',
+  'IGF1Z-Score',
+]
+
 // Helper function to find category for a biomarker
 export function getCategoryForBiomarker(biomarkerName: string): BiomarkerCategory | undefined {
+  // Check if biomarker should be excluded
+  if (EXCLUDED_BIOMARKERS.some(excluded => 
+    biomarkerName.toLowerCase().includes(excluded.toLowerCase()) ||
+    excluded.toLowerCase().includes(biomarkerName.toLowerCase())
+  )) {
+    return undefined
+  }
+
   return BIOMARKER_CATEGORIES.find(category =>
     category.biomarkers.some(name => 
       biomarkerName.toLowerCase().includes(name.toLowerCase()) ||
@@ -207,8 +223,15 @@ export function categorizeBiomarkers(biomarkers: any[]): Map<string, any[]> {
   // Add 'uncategorized' for biomarkers that don't match any category
   categorized.set('uncategorized', [])
   
-  // Categorize each biomarker
+  // Categorize each biomarker (excluding IGF-1 Z-Score)
   biomarkers.forEach(biomarker => {
+    // Skip excluded biomarkers
+    if (EXCLUDED_BIOMARKERS.some(excluded => 
+      biomarker.biomarker.toLowerCase().includes(excluded.toLowerCase())
+    )) {
+      return
+    }
+
     const category = getCategoryForBiomarker(biomarker.biomarker)
     if (category) {
       categorized.get(category.id)?.push(biomarker)
