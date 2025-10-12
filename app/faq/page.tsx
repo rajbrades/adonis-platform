@@ -95,15 +95,15 @@ export default function FAQPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
 
       {/* Hero Section */}
-      <section className="pt-20 pb-16 px-6">
+      <section className="pt-32 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-black mb-6 text-yellow-400">
-            Frequently Asked Questions
+          <h1 className="text-5xl md:text-6xl font-black mb-6">
+            Frequently Asked <span className="text-yellow-400">Questions</span>
           </h1>
-          <p className="text-xl text-white/80 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-white/60 mb-8 max-w-3xl mx-auto">
             Get answers to the most common questions about hormone optimization, 
             our treatments, and what to expect.
           </p>
@@ -111,7 +111,7 @@ export default function FAQPage() {
       </section>
 
       {/* FAQ Content */}
-      <section className="py-20 px-6">
+      <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
           {faqs.map((category, categoryIndex) => (
             <div key={categoryIndex} className="mb-12">
@@ -123,10 +123,10 @@ export default function FAQPage() {
                   const isOpen = openItems.includes(itemIndex)
                   
                   return (
-                    <div key={questionIndex} className="bg-white/5 border border-yellow-500/20 rounded-xl overflow-hidden">
+                    <div key={questionIndex} className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl overflow-hidden">
                       <button
                         onClick={() => toggleItem(itemIndex)}
-                        className="w-full flex items-center justify-between p-6 text-left hover:bg-yellow-400/5 transition-colors"
+                        className="w-full flex items-center justify-between p-6 text-left hover:bg-white/[0.07] transition-colors"
                       >
                         <h3 className="text-lg font-bold text-white pr-4">{faq.question}</h3>
                         {isOpen ? (
@@ -138,8 +138,8 @@ export default function FAQPage() {
                       
                       {isOpen && (
                         <div className="px-6 pb-6">
-                          <div className="border-t border-yellow-500/10 pt-4">
-                            <p className="text-white/80 leading-relaxed">{faq.answer}</p>
+                          <div className="border-t border-white/10 pt-4">
+                            <p className="text-white/60 leading-relaxed">{faq.answer}</p>
                           </div>
                         </div>
                       )}
@@ -153,26 +153,28 @@ export default function FAQPage() {
       </section>
 
       {/* Contact Section */}
-      <section className="py-20 bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-black mb-6 text-yellow-400">Still Have Questions?</h2>
-          <p className="text-xl text-white/70 mb-8">
-            Our medical team is here to help. Get personalized answers about your specific situation.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link 
-              href="/consultation"
-              className="inline-flex items-center bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-lg text-lg font-bold hover:shadow-lg transition-all"
-            >
-              Start Your Assessment
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </Link>
-            <a 
-              href="mailto:support@adonishealth.com"
-              className="inline-flex items-center border-2 border-yellow-400 text-yellow-400 px-8 py-3 rounded-lg text-lg font-bold hover:bg-yellow-400 hover:text-black transition-all"
-            >
-              Contact Support
-            </a>
+      <section className="py-24 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-12 text-center">
+            <h2 className="text-4xl font-black mb-6">Still Have <span className="text-yellow-400">Questions?</span></h2>
+            <p className="text-xl text-white/60 mb-8">
+              Our medical team is here to help. Get personalized answers about your specific situation.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link 
+                href="/consultation"
+                className="inline-flex items-center bg-yellow-400 text-black px-8 py-3 rounded-lg text-lg font-bold hover:bg-yellow-500 transition-all"
+              >
+                Start Your Assessment
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </Link>
+              <a 
+                href="mailto:support@adonishealth.com"
+                className="inline-flex items-center bg-white/5 backdrop-blur-sm border border-white/10 text-white px-8 py-3 rounded-lg text-lg font-bold hover:bg-white/10 transition-all"
+              >
+                Contact Support
+              </a>
+            </div>
           </div>
         </div>
       </section>
