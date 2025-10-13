@@ -1,8 +1,12 @@
 'use client'
-import Link from 'next/link'
+
 import { useState, useEffect } from 'react'
-import { ArrowRight, ArrowLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { 
+  ArrowRight, ArrowLeft, Heart, Pill, AlertCircle, Activity,
+  Droplet, Utensils, Moon, Dumbbell, Wine, Cigarette
+} from 'lucide-react'
 
 export default function MedicalHistoryPage() {
   const router = useRouter()
@@ -12,6 +16,8 @@ export default function MedicalHistoryPage() {
     medicalConditions: [] as string[],
     surgeries: '',
     familyHistory: '',
+    previousHormoneTherapy: '',
+    labsRecent: '',
     lifestyle: {
       exerciseFrequency: '',
       sleepHours: '',
@@ -20,61 +26,41 @@ export default function MedicalHistoryPage() {
       smoking: '',
       diet: ''
     },
-    symptoms: [] as string[],
-    previousHormoneTherapy: '',
-    labsRecent: '',
-    primaryConcerns: ''
+    symptoms: [] as string[]
   })
 
-  // Load existing data from sessionStorage on mount
   useEffect(() => {
-    const saved = sessionStorage.getItem('consultationData')
-    if (saved) {
-      const data = JSON.parse(saved)
-      setFormData({
-        currentMedications: data.currentMedications || '',
-        allergies: data.allergies || '',
-        medicalConditions: data.medicalConditions || [],
-        surgeries: data.surgeries || '',
-        familyHistory: data.familyHistory || '',
-        lifestyle: data.lifestyle || {
-          exerciseFrequency: '',
-          sleepHours: '',
-          stressLevel: '',
-          alcohol: '',
-          smoking: '',
-          diet: ''
-        },
-        symptoms: data.symptoms || [],
-        previousHormoneTherapy: data.previousHormoneTherapy || '',
-        labsRecent: data.labsRecent || '',
-        primaryConcerns: data.primaryConcerns || ''
-      })
+    // Check if intake data exists
+    const intakeData = sessionStorage.getItem('consultationData')
+    if (!intakeData) {
+      router.push('/consultation/intake')
     }
-  }, [])
+  }, [router])
 
-  const commonConditions = [
+  const medicalConditionOptions = [
     'High Blood Pressure',
+    'High Cholesterol',
     'Diabetes',
+    'Thyroid Issues',
     'Heart Disease',
-    'Thyroid Disorders',
+    'Liver Disease',
+    'Kidney Disease',
+    'Sleep Apnea',
     'Depression/Anxiety',
-    'Sleep Disorders',
-    'Autoimmune Conditions',
     'None of the above'
   ]
 
-  const commonSymptoms = [
+  const symptomOptions = [
     'Low Energy/Fatigue',
-    'Poor Sleep Quality',
+    'Poor Sleep',
     'Weight Gain',
-    'Muscle Loss',
+    'Difficulty Building Muscle',
     'Low Libido',
-    'Brain Fog',
     'Mood Changes',
+    'Brain Fog',
     'Joint Pain',
     'Hair Loss',
-    'None of the above'
+    'Decreased Performance'
   ]
 
   const handleConditionToggle = (condition: string) => {
@@ -95,282 +81,367 @@ export default function MedicalHistoryPage() {
     }))
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    
-    if (name.startsWith('lifestyle.')) {
-      const lifestyleField = name.split('.')[1]
-      setFormData(prev => ({
-        ...prev,
-        lifestyle: {
-          ...prev.lifestyle,
-          [lifestyleField]: value
-        }
-      }))
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }))
-    }
-  }
-
-  const handleContinue = (e: React.MouseEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Get existing data and merge with medical history
-    const existingData = sessionStorage.getItem('consultationData')
-    const allData = existingData ? JSON.parse(existingData) : {}
+    // Merge with intake data
+    const intakeData = JSON.parse(sessionStorage.getItem('consultationData') || '{}')
+    const fullData = { ...intakeData, ...formData }
     
-    const updatedData = {
-      ...allData,
-      currentMedications: formData.currentMedications,
-      allergies: formData.allergies,
-      medicalConditions: formData.medicalConditions,
-      surgeries: formData.surgeries,
-      familyHistory: formData.familyHistory,
-      lifestyle: formData.lifestyle,
-      symptoms: formData.symptoms,
-      previousHormoneTherapy: formData.previousHormoneTherapy,
-      labsRecent: formData.labsRecent,
-      primaryConcerns: formData.primaryConcerns,
-      medicalHistory: {
-        conditions: formData.medicalConditions,
-        medications: formData.currentMedications ? [formData.currentMedications] : [],
-        allergies: formData.allergies ? [formData.allergies] : [],
-        symptoms: formData.symptoms.join(', '),
-        exerciseFrequency: formData.lifestyle.exerciseFrequency,
-        sleepHours: formData.lifestyle.sleepHours,
-        stressLevel: formData.lifestyle.stressLevel,
-        alcoholConsumption: formData.lifestyle.alcohol
-      }
-    }
-    
-    sessionStorage.setItem('consultationData', JSON.stringify(updatedData))
+    sessionStorage.setItem('consultationData', JSON.stringify(fullData))
     router.push('/consultation/review')
   }
 
-  const isFormValid = formData.lifestyle.exerciseFrequency && formData.lifestyle.sleepHours && 
-                     formData.lifestyle.stressLevel && formData.primaryConcerns
+  const handleBack = () => {
+    // Save current data before going back
+    const intakeData = JSON.parse(sessionStorage.getItem('consultationData') || '{}')
+    const fullData = { ...intakeData, ...formData }
+    sessionStorage.setItem('consultationData', JSON.stringify(fullData))
+    router.push('/consultation/intake')
+  }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-right mb-6">
-          <span className="text-white/60 text-sm">Step 2 of 3</span>
-        </div>
-        <div className="mb-8">
-          <h1 className="text-4xl font-black mb-4 text-yellow-400">
-            Medical History & Lifestyle
+        
+        {/* Header */}
+        <div className="mb-12">
+          <button onClick={handleBack} className="inline-flex items-center gap-2 mb-8 text-white/60 hover:text-white transition">
+            <ArrowLeft className="w-4 h-4" />
+            Back to Personal Info
+          </button>
+          <h1 className="text-4xl md:text-5xl font-black mb-4">
+            Medical <span className="text-yellow-400">History</span>
           </h1>
-          <p className="text-white/70">
-            Help our physicians understand your health background and current lifestyle
-          </p>
+          <p className="text-xl text-white/60">Help us understand your health background</p>
         </div>
 
-        <form className="space-y-8">
-          {/* Current Health Status */}
-          <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Current Health Status</h2>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-white mb-2 font-medium">Current Medications & Supplements</label>
-                <textarea
-                  name="currentMedications"
-                  value={formData.currentMedications}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-24"
-                  placeholder="List all medications, vitamins, and supplements you currently take..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 font-medium">Allergies or Adverse Reactions</label>
-                <textarea
-                  name="allergies"
-                  value={formData.allergies}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-20"
-                  placeholder="Food allergies, drug allergies, or adverse reactions to medications..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-white mb-3 font-medium">Current Medical Conditions</label>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {commonConditions.map((condition) => (
-                    <button
-                      key={condition}
-                      type="button"
-                      onClick={() => handleConditionToggle(condition)}
-                      className={`text-left p-3 rounded-lg border transition-all ${
-                        formData.medicalConditions.includes(condition)
-                          ? 'bg-yellow-400/20 border-yellow-400 text-yellow-400'
-                          : 'bg-white/5 border-white/20 text-white/80 hover:border-yellow-400/50'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <div className={`w-4 h-4 rounded border-2 mr-3 ${
-                          formData.medicalConditions.includes(condition)
-                            ? 'bg-yellow-400 border-yellow-400'
-                            : 'border-white/40'
-                        }`}></div>
-                        {condition}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+        {/* Progress Bar */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-sm font-semibold text-yellow-400">Step 2 of 3</span>
+            <span className="text-sm text-white/50">Medical Information</span>
           </div>
-
-          {/* Lifestyle Factors */}
-          <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Lifestyle Assessment</h2>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-white mb-2 font-medium">Exercise Frequency</label>
-                <select
-                  name="lifestyle.exerciseFrequency"
-                  value={formData.lifestyle.exerciseFrequency}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-yellow-400 focus:outline-none"
-                >
-                  <option value="">Select frequency</option>
-                  <option value="daily">Daily (7+ times/week)</option>
-                  <option value="frequent">Frequent (4-6 times/week)</option>
-                  <option value="moderate">Moderate (2-3 times/week)</option>
-                  <option value="occasional">Occasional (1 time/week)</option>
-                  <option value="sedentary">Sedentary (rarely exercise)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 font-medium">Average Sleep Hours</label>
-                <select
-                  name="lifestyle.sleepHours"
-                  value={formData.lifestyle.sleepHours}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-yellow-400 focus:outline-none"
-                >
-                  <option value="">Select hours</option>
-                  <option value="less-than-5">Less than 5 hours</option>
-                  <option value="5-6">5-6 hours</option>
-                  <option value="6-7">6-7 hours</option>
-                  <option value="7-8">7-8 hours</option>
-                  <option value="8-9">8-9 hours</option>
-                  <option value="more-than-9">More than 9 hours</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 font-medium">Stress Level</label>
-                <select
-                  name="lifestyle.stressLevel"
-                  value={formData.lifestyle.stressLevel}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-yellow-400 focus:outline-none"
-                >
-                  <option value="">Select level</option>
-                  <option value="low">Low stress</option>
-                  <option value="moderate">Moderate stress</option>
-                  <option value="high">High stress</option>
-                  <option value="extreme">Extreme stress</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-white mb-2 font-medium">Alcohol Consumption</label>
-                <select
-                  name="lifestyle.alcohol"
-                  value={formData.lifestyle.alcohol}
-                  onChange={handleInputChange}
-                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-yellow-400 focus:outline-none"
-                >
-                  <option value="">Select frequency</option>
-                  <option value="none">None</option>
-                  <option value="occasional">Occasional (1-2 drinks/week)</option>
-                  <option value="moderate">Moderate (3-7 drinks/week)</option>
-                  <option value="frequent">Frequent (8-14 drinks/week)</option>
-                  <option value="heavy">Heavy (15+ drinks/week)</option>
-                </select>
-              </div>
-            </div>
+          <div className="w-full bg-white/10 rounded-full h-2">
+            <div className="bg-yellow-400 h-2 rounded-full transition-all duration-300" style={{width: '66%'}}></div>
           </div>
+        </div>
 
-          {/* Current Symptoms */}
-          <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Current Symptoms</h2>
-            <p className="text-white/70 mb-6">Select any symptoms you are currently experiencing:</p>
+        <form onSubmit={handleSubmit} className="space-y-8">
+          
+          {/* Medical Conditions */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
+              <Heart className="w-6 h-6 text-yellow-400" />
+              Medical Conditions
+            </h2>
+            <p className="text-white/60 mb-6">Select any that apply to you</p>
             
-            <div className="grid md:grid-cols-2 gap-3">
-              {commonSymptoms.map((symptom) => (
+            <div className="grid md:grid-cols-2 gap-4">
+              {medicalConditionOptions.map((condition) => (
                 <button
-                  key={symptom}
+                  key={condition}
                   type="button"
-                  onClick={() => handleSymptomToggle(symptom)}
-                  className={`text-left p-3 rounded-lg border transition-all ${
-                    formData.symptoms.includes(symptom)
-                      ? 'bg-yellow-400/20 border-yellow-400 text-yellow-400'
-                      : 'bg-white/5 border-white/20 text-white/80 hover:border-yellow-400/50'
+                  onClick={() => handleConditionToggle(condition)}
+                  className={`text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+                    formData.medicalConditions.includes(condition)
+                      ? 'bg-yellow-400/10 border-yellow-400 text-yellow-400'
+                      : 'bg-white/5 border-white/10 text-white/80 hover:border-yellow-400/50 hover:bg-white/10'
                   }`}
                 >
-                  <div className="flex items-center">
-                    <div className={`w-4 h-4 rounded border-2 mr-3 ${
-                      formData.symptoms.includes(symptom)
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      formData.medicalConditions.includes(condition)
                         ? 'bg-yellow-400 border-yellow-400'
-                        : 'border-white/40'
-                    }`}></div>
-                    {symptom}
+                        : 'border-white/30'
+                    }`}>
+                      {formData.medicalConditions.includes(condition) && (
+                        <svg className="w-3 h-3 text-black" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-medium">{condition}</span>
                   </div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Primary Concerns */}
-          <div className="bg-white/5 border border-yellow-500/20 rounded-xl p-8">
-            <h2 className="text-2xl font-bold mb-6 text-yellow-400">Primary Health Concerns</h2>
+          {/* Current Symptoms */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-2 flex items-center gap-3">
+              <Activity className="w-6 h-6 text-yellow-400" />
+              Current Symptoms
+            </h2>
+            <p className="text-white/60 mb-6">What are you experiencing?</p>
             
-            <div>
-              <label className="block text-white mb-2 font-medium">What are your main health and performance concerns?</label>
-              <textarea
-                name="primaryConcerns"
-                value={formData.primaryConcerns}
-                onChange={handleInputChange}
-                className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-32"
-                placeholder="Describe your primary concerns, goals, and what you hope to achieve with optimization..."
-                required
-              />
+            <div className="grid md:grid-cols-2 gap-4">
+              {symptomOptions.map((symptom) => (
+                <button
+                  key={symptom}
+                  type="button"
+                  onClick={() => handleSymptomToggle(symptom)}
+                  className={`text-left p-4 rounded-lg border-2 transition-all duration-200 ${
+                    formData.symptoms.includes(symptom)
+                      ? 'bg-yellow-400/10 border-yellow-400 text-yellow-400'
+                      : 'bg-white/5 border-white/10 text-white/80 hover:border-yellow-400/50 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                      formData.symptoms.includes(symptom)
+                        ? 'bg-yellow-400 border-yellow-400'
+                        : 'border-white/30'
+                    }`}>
+                      {formData.symptoms.includes(symptom) && (
+                        <svg className="w-3 h-3 text-black" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M5 13l4 4L19 7"></path>
+                        </svg>
+                      )}
+                    </div>
+                    <span className="font-medium">{symptom}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Medications & Allergies */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Pill className="w-6 h-6 text-yellow-400" />
+              Medications & Allergies
+            </h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Current Medications
+                </label>
+                <textarea
+                  value={formData.currentMedications}
+                  onChange={(e) => setFormData({...formData, currentMedications: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="List any medications you're currently taking..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Allergies
+                </label>
+                <textarea
+                  value={formData.allergies}
+                  onChange={(e) => setFormData({...formData, allergies: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="List any allergies (medications, foods, etc.)..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Medical History */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-yellow-400" />
+              Additional Medical History
+            </h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Previous Surgeries
+                </label>
+                <textarea
+                  value={formData.surgeries}
+                  onChange={(e) => setFormData({...formData, surgeries: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="List any previous surgeries..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Family Medical History
+                </label>
+                <textarea
+                  value={formData.familyHistory}
+                  onChange={(e) => setFormData({...formData, familyHistory: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="Notable family medical history (heart disease, diabetes, etc.)..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Previous Hormone Therapy
+                </label>
+                <textarea
+                  value={formData.previousHormoneTherapy}
+                  onChange={(e) => setFormData({...formData, previousHormoneTherapy: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="Any previous hormone therapy or TRT experience..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Recent Lab Work
+                </label>
+                <textarea
+                  value={formData.labsRecent}
+                  onChange={(e) => setFormData({...formData, labsRecent: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                  placeholder="Recent lab results or tests (if available)..."
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Lifestyle */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Dumbbell className="w-6 h-6 text-yellow-400" />
+              Lifestyle
+            </h2>
+            
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Exercise Frequency
+                </label>
+                <select
+                  value={formData.lifestyle.exerciseFrequency}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, exerciseFrequency: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select frequency</option>
+                  <option value="none">None</option>
+                  <option value="1-2">1-2 times per week</option>
+                  <option value="3-4">3-4 times per week</option>
+                  <option value="5+">5+ times per week</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80 flex items-center gap-2">
+                  <Moon className="w-4 h-4" />
+                  Sleep Hours per Night
+                </label>
+                <select
+                  value={formData.lifestyle.sleepHours}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, sleepHours: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select hours</option>
+                  <option value="<5">Less than 5 hours</option>
+                  <option value="5-6">5-6 hours</option>
+                  <option value="7-8">7-8 hours</option>
+                  <option value="9+">9+ hours</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Stress Level
+                </label>
+                <select
+                  value={formData.lifestyle.stressLevel}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, stressLevel: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select level</option>
+                  <option value="low">Low</option>
+                  <option value="moderate">Moderate</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80 flex items-center gap-2">
+                  <Wine className="w-4 h-4" />
+                  Alcohol Consumption
+                </label>
+                <select
+                  value={formData.lifestyle.alcohol}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, alcohol: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select consumption</option>
+                  <option value="none">None</option>
+                  <option value="occasional">Occasional (1-2 drinks/week)</option>
+                  <option value="moderate">Moderate (3-7 drinks/week)</option>
+                  <option value="heavy">Heavy (8+ drinks/week)</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80 flex items-center gap-2">
+                  <Cigarette className="w-4 h-4" />
+                  Smoking Status
+                </label>
+                <select
+                  value={formData.lifestyle.smoking}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, smoking: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select status</option>
+                  <option value="never">Never</option>
+                  <option value="former">Former smoker</option>
+                  <option value="current">Current smoker</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80 flex items-center gap-2">
+                  <Utensils className="w-4 h-4" />
+                  Diet Type
+                </label>
+                <select
+                  value={formData.lifestyle.diet}
+                  onChange={(e) => setFormData({...formData, lifestyle: {...formData.lifestyle, diet: e.target.value}})}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition"
+                >
+                  <option value="">Select diet</option>
+                  <option value="standard">Standard</option>
+                  <option value="high-protein">High Protein</option>
+                  <option value="low-carb">Low Carb</option>
+                  <option value="keto">Keto</option>
+                  <option value="vegetarian">Vegetarian</option>
+                  <option value="vegan">Vegan</option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Navigation */}
           <div className="flex justify-between items-center pt-8">
-            <Link
-              href="/consultation/intake"
-              className="flex items-center text-white/70 hover:text-yellow-400 transition-colors"
+            <button
+              type="button"
+              onClick={handleBack}
+              className="flex items-center gap-2 text-white/60 hover:text-white transition"
             >
-              <ArrowLeft className="w-5 h-5 mr-2" />
+              <ArrowLeft className="w-5 h-5" />
               Back
-            </Link>
+            </button>
             
             <button
-              onClick={handleContinue}
-              disabled={!isFormValid}
-              className={`flex items-center px-8 py-3 rounded-lg font-bold transition-all ${
-                isFormValid
-                  ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black hover:shadow-lg'
-                  : 'bg-white/10 text-white/50 cursor-not-allowed'
-              }`}
+              type="submit"
+              className="bg-yellow-400 text-black px-8 py-4 rounded-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300 flex items-center gap-2"
             >
               Continue to Review
-              <ArrowRight className="w-5 h-5 ml-2" />
+              <ArrowRight className="w-5 h-5" />
             </button>
           </div>
         </form>
+
       </div>
     </div>
   )
