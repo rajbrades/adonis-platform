@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import { Resend } from 'resend'
+import { ConsultationSubmittedEmail } from '@/lib/emails/consultation-submitted'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
@@ -54,6 +58,35 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to submit consultation', details: error.message },
         { status: 500 }
       )
+    }
+
+    // Send confirmation email to patient
+    try {
+      console.log('Attempting to send email to:', data.email)
+      
+      const emailResult = await resend.emails.send({
+        from: 'Adonis Health <onboarding@resend.dev>',
+        to: data.email,
+        subject: 'Consultation Submitted Successfully - Adonis Health',
+        html: ConsultationSubmittedEmail({
+          patientName: data.firstName,
+          consultationId: result.id,
+          goals: data.optimizationGoals || [],
+          submittedDate: new Date().toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          })
+        })
+      })
+      
+      console.log('✅ Confirmation email sent to:', data.email)
+      console.log('Email result:', emailResult)
+    } catch (emailError) {
+      // Log email error but don't fail the request
+      console.error('❌ Failed to send confirmation email:', emailError)
     }
 
     return NextResponse.json({
