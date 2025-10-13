@@ -63,22 +63,22 @@ export default function ConsultationPage() {
           </div>
         </div>
 
-        <div className="bg-yellow-400/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-8 mb-12 text-center">
-          <h2 className="text-3xl font-bold mb-4 text-yellow-400">$199 Consultation Fee</h2>
-          <p className="text-white/60 mb-6">
-            Fully refundable if we cannot help you achieve your optimization goals
+        <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-8 mb-12 text-center">
+          <h2 className="text-3xl font-bold mb-4 text-yellow-400">Free Health Assessment</h2>
+          <p className="text-white/70 mb-6 text-lg">
+            Get personalized recommendations from our licensed medical team at no cost
           </p>
-          <div className="flex justify-center items-center space-x-4 text-sm text-white/50">
+          <div className="flex justify-center items-center space-x-6 text-sm text-white/60">
             <div className="flex items-center">
-              <Shield className="w-4 h-4 mr-2" />
+              <Shield className="w-4 h-4 mr-2 text-yellow-400" />
               HIPAA Compliant
             </div>
             <div className="flex items-center">
-              <Users className="w-4 h-4 mr-2" />
+              <Users className="w-4 h-4 mr-2 text-yellow-400" />
               Licensed Providers
             </div>
             <div className="flex items-center">
-              <Clock className="w-4 h-4 mr-2" />
+              <Clock className="w-4 h-4 mr-2 text-yellow-400" />
               24-48h Response
             </div>
           </div>
@@ -89,11 +89,11 @@ export default function ConsultationPage() {
             href="/consultation/intake"
             className="inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-xl font-bold hover:bg-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all transform hover:scale-105"
           >
-            Begin Assessment
+            Begin Free Assessment
             <ArrowRight className="ml-3 w-6 h-6" />
           </Link>
           <p className="text-white/50 mt-4 text-sm">
-            Takes 10-15 minutes to complete • Secure & confidential
+            Takes 10-15 minutes • No credit card required • 100% confidential
           </p>
         </div>
       </div>
