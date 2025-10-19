@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, CheckCircle, Download, Activity, TrendingUp, TrendingDown } from 'lucide-react'
 import { AccordionContainer, AccordionSection } from '@/app/components/AccordionSection'
@@ -12,10 +11,6 @@ interface BiomarkerData {
   value: number
   unit: string
   status: 'optimized' | 'needs-work' | 'at-risk' | 'normal'
-  optimalMin?: number
-  optimalMax?: number
-  labMin?: number
-  labMax?: number
   referenceRange: string
   optimalRange?: string
   description: string
@@ -510,17 +505,17 @@ const mockBiomarkers: BiomarkerData[] = [
   // VITAMINS
   {
     biomarker: 'Vitamin D',
-    value: 52,
+    value: 38,
     unit: 'ng/mL',
-    status: 'optimized',
+    status: 'needs-work',
     referenceRange: '30 - 100',
     optimalRange: '40 - 80',
     description: 'Vitamin D (25-hydroxyvitamin D)',
     history: [
-      { date: '2024-07-15', value: 38 },
-      { date: '2024-08-20', value: 45 },
-      { date: '2024-09-18', value: 48 },
-      { date: '2024-10-02', value: 52 },
+      { date: '2024-07-15', value: 28 },
+      { date: '2024-08-20', value: 32 },
+      { date: '2024-09-18', value: 35 },
+      { date: '2024-10-02', value: 38 },
     ]
   },
   {
@@ -540,7 +535,6 @@ const mockBiomarkers: BiomarkerData[] = [
 ]
 
 export default function ResultsDemoPage() {
-  const { user } = useUser()
   const [hoveredPoint, setHoveredPoint] = useState<{biomarker: string, index: number} | null>(null)
 
   const getOptimalRange = (biomarkerName: string): string => {
@@ -561,8 +555,8 @@ export default function ResultsDemoPage() {
     return { label: 'NORMAL', color: 'bg-green-500/20 text-green-400' }
   }
 
-  const BiomarkerCard = ({ biomarker }: { biomarker: BiomarkerData }) => {
-    const { value, history } = biomarker
+  const BiomarkerCard = ({ biomarker, history }: { biomarker: BiomarkerData, history: { date: string, value: number }[] }) => {
+    const { value } = biomarker
     const containerRef = useRef<HTMLDivElement>(null)
     const [dimensions, setDimensions] = useState({ width: 0, height: 128 })
 
@@ -596,24 +590,25 @@ export default function ResultsDemoPage() {
     })
 
     const badge = getStatusBadge(biomarker)
+    const optimalRange = getOptimalRange(biomarker.biomarker)
 
     return (
-      <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all">
-        <div className="flex items-start justify-between mb-6">
-          <div className="flex-1">
-            <h4 className="text-lg font-bold mb-1">{biomarker.biomarker}</h4>
-            <p className="text-sm text-white/40">{biomarker.description}</p>
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-xl font-bold mb-1">{biomarker.biomarker}</h3>
+            <p className="text-sm text-white/60">
+              {biomarker.description || 'Biomarker measurement'}
+            </p>
           </div>
-          
-          <div className={`px-3 py-1 rounded-full text-xs font-bold ${badge.color}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${badge.color}`}>
             {badge.label}
-          </div>
+          </span>
         </div>
 
         <div className="flex items-end gap-4 mb-6">
-          <div className="text-5xl font-black text-white">
-            {value}
-            <span className="text-xl text-white/40 ml-2">{biomarker.unit}</span>
+          <div className="text-5xl font-bold">
+            {biomarker.value} <span className="text-2xl text-white/60">{biomarker.unit}</span>
           </div>
           
           {trend !== 'stable' && (
@@ -633,98 +628,97 @@ export default function ResultsDemoPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-            <div className="text-xs text-white/50 mb-1">Your optimal zone</div>
-            <div className="text-sm font-bold text-green-400">
-              {biomarker.optimalRange || 'Within range'}
+          <div className="bg-white/5 rounded-lg p-3">
+            <div className="text-xs text-white/40 mb-1">Your optimal zone</div>
+            <div className="text-sm font-semibold text-green-400">
+              {optimalRange ? `${optimalRange} ${biomarker.unit}` : 'Within range'}
             </div>
           </div>
-          
-          <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-            <div className="text-xs text-white/50 mb-1">Lab reference range</div>
-            <div className="text-sm font-bold text-white/60">
-              {biomarker.referenceRange}
+          <div className="bg-white/5 rounded-lg p-3">
+            <div className="text-xs text-white/40 mb-1">Lab reference range</div>
+            <div className="text-sm font-semibold text-white/60">
+              {biomarker.referenceRange || 'Not specified'} {biomarker.unit}
             </div>
           </div>
         </div>
 
-        <div className="pt-6 border-t border-white/10">
-          <div className="text-xs text-white/50 mb-4 uppercase tracking-wider font-semibold">Historical Trend</div>
-          
-          <div ref={containerRef} className="h-32 relative">
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
-              <div className="border-t border-white/5" />
-              <div className="border-t border-white/10" />
-              <div className="border-t border-white/5" />
-            </div>
+        {history.length > 1 && (
+          <div className="pt-6 border-t border-white/10">
+            <div className="text-xs text-white/50 mb-4 uppercase tracking-wider font-semibold">Historical Trend</div>
+            
+            <div ref={containerRef} className="h-32 relative">
+              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                <div className="border-t border-white/5" />
+                <div className="border-t border-white/10" />
+                <div className="border-t border-white/5" />
+              </div>
 
-            {dimensions.width > 0 && (
-              <>
-                <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                  <polyline
-                    points={points.map(p => `${p.x},${p.y}`).join(' ')}
-                    fill="none"
-                    stroke="rgb(59, 130, 246)"
-                    strokeWidth="2.5"
-                  />
-                </svg>
+              {dimensions.width > 0 && (
+                <>
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none">
+                    <polyline
+                      points={points.map(p => `${p.x},${p.y}`).join(' ')}
+                      fill="none"
+                      stroke="rgb(59, 130, 246)"
+                      strokeWidth="2.5"
+                    />
+                  </svg>
 
-                {points.map((point, idx) => {
-                  const pointIsOptimal = biomarker.optimalMin && biomarker.optimalMax ? 
-                    point.value >= biomarker.optimalMin && point.value <= biomarker.optimalMax : 
-                    true
-                  const isHovered = hoveredPoint?.biomarker === biomarker.biomarker && hoveredPoint?.index === idx
+                  {points.map((point, idx) => {
+                    const pointIsOptimal = optimalRange ? true : true
+                    const isHovered = hoveredPoint?.biomarker === biomarker.biomarker && hoveredPoint?.index === idx
 
-                  return (
-                    <div
-                      key={idx}
-                      className="absolute"
-                      style={{
-                        left: `${point.x}px`,
-                        top: `${point.y}px`,
-                        transform: 'translate(-50%, -50%)'
-                      }}
-                    >
+                    return (
                       <div
-                        className={`w-2.5 h-2.5 rounded-full ring-2 ring-gray-900 cursor-pointer transition-all ${
-                          pointIsOptimal ? 'bg-green-400' : 'bg-blue-400'
-                        } ${isHovered ? 'scale-150' : ''}`}
-                        onMouseEnter={() => setHoveredPoint({biomarker: biomarker.biomarker, index: idx})}
-                        onMouseLeave={() => setHoveredPoint(null)}
-                      />
-                      
-                      {isHovered && (
-                        <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none z-10">
-                          <div className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-semibold border border-white/20 shadow-xl">
-                            {point.value} {biomarker.unit}
+                        key={idx}
+                        className="absolute"
+                        style={{
+                          left: `${point.x}px`,
+                          top: `${point.y}px`,
+                          transform: 'translate(-50%, -50%)'
+                        }}
+                      >
+                        <div
+                          className={`w-2.5 h-2.5 rounded-full ring-2 ring-gray-900 cursor-pointer transition-all ${
+                            pointIsOptimal ? 'bg-green-400' : 'bg-blue-400'
+                          } ${isHovered ? 'scale-150' : ''}`}
+                          onMouseEnter={() => setHoveredPoint({biomarker: biomarker.biomarker, index: idx})}
+                          onMouseLeave={() => setHoveredPoint(null)}
+                        />
+                        
+                        {isHovered && (
+                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 pointer-events-none z-10">
+                            <div className="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs whitespace-nowrap font-semibold border border-white/20 shadow-xl">
+                              {point.value} {biomarker.unit}
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </>
-            )}
-
-            <div className="absolute inset-x-0 flex justify-between" style={{ top: 'calc(100% + 8px)' }}>
-              {history.map((point, idx) => (
-                <div 
-                  key={idx}
-                  className="text-xs text-white/40"
-                  style={{ 
-                    marginLeft: idx === 0 ? '0' : 'auto',
-                    marginRight: idx === history.length - 1 ? '0' : 'auto'
-                  }}
-                >
-                  {new Date(point.date).toLocaleDateString('en-US', { 
-                    month: 'short',
-                    day: 'numeric'
+                        )}
+                      </div>
+                    )
                   })}
-                </div>
-              ))}
+                </>
+              )}
+
+              <div className="absolute inset-x-0 flex justify-between" style={{ top: 'calc(100% + 8px)' }}>
+                {history.map((point, idx) => (
+                  <div 
+                    key={idx}
+                    className="text-xs text-white/40"
+                    style={{ 
+                      marginLeft: idx === 0 ? '0' : 'auto',
+                      marginRight: idx === history.length - 1 ? '0' : 'auto'
+                    }}
+                  >
+                    {new Date(point.date).toLocaleDateString('en-US', { 
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     )
   }
@@ -734,92 +728,67 @@ export default function ResultsDemoPage() {
     optimalRange: getOptimalRange(b.biomarker)
   })))
 
+  const biomarkerHistory = new Map<string, { date: string, value: number }[]>()
+  
+  mockBiomarkers.forEach(biomarker => {
+    biomarkerHistory.set(biomarker.biomarker, biomarker.history)
+  })
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent hover:scale-105 transition-transform">
-            ADONIS
-          </Link>
-          <div className="flex items-center gap-6">
-            <Link href="/patient" className="text-white/70 hover:text-yellow-400 transition text-sm font-medium">
-              Dashboard
-            </Link>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <div className="text-sm font-semibold">{user?.firstName || 'Demo'}</div>
-                <div className="text-xs text-white/60">Lab Results Demo</div>
-              </div>
-              <UserButton 
-                afterSignOutUrl="/" 
-                appearance={{ 
-                  elements: { 
-                    avatarBox: "w-10 h-10 ring-2 ring-yellow-400/50 hover:ring-yellow-400 transition" 
-                  } 
-                }} 
-              />
-            </div>
-          </div>
-        </nav>
-      </header>
-
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Link 
           href="/patient" 
-          className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group"
+          className="inline-flex items-center gap-2 text-white/60 hover:text-white transition mb-6"
         >
-          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+          <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </Link>
 
-        <div className="bg-blue-500/20 border border-blue-500/40 rounded-2xl p-4 mb-8">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-8">
           <div className="flex items-center gap-3">
             <Activity className="w-5 h-5 text-blue-400" />
             <div>
-              <p className="text-sm font-bold text-blue-400">Demo Mode - Comprehensive Panel with Historical Data</p>
-              <p className="text-xs text-white/60">This shows 40+ biomarkers across all categories with trend analysis over time</p>
+              <p className="text-sm font-semibold text-blue-400">Demo Mode - Comprehensive Panel</p>
+              <p className="text-xs text-white/60">This shows 40+ biomarkers across all categories with historical trend data</p>
             </div>
           </div>
         </div>
 
-        <div className="mb-10">
-          <h1 className="text-5xl font-black mb-3">Lab Results</h1>
-          <p className="text-white/60 text-lg">Your biomarkers and personalized optimal zones</p>
+        <div className="mb-8">
+          <h1 className="text-5xl font-black mb-2">Lab Results</h1>
+          <p className="text-xl text-white/60">Your biomarkers and personalized optimal zones</p>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h3 className="text-2xl font-bold mb-2">Complete Comprehensive Panel</h3>
-              <div className="flex items-center gap-4 text-sm text-white/60">
+        <div className="bg-white/5 border border-white/10 rounded-2xl p-8 mb-6">
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h2 className="text-3xl font-bold mb-2">Complete Comprehensive Panel</h2>
+              <div className="flex items-center gap-4 text-white/60">
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
                   October 2, 2024
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
-                  <span>Completed</span>
-                </div>
-                <div className="text-yellow-400 font-semibold">
-                  {mockBiomarkers.length} Biomarkers
+                  Completed
                 </div>
               </div>
             </div>
-            
-            <button className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg font-medium transition-all border border-white/20">
+            <button className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition">
               <Download className="w-4 h-4" />
               Export PDF
             </button>
           </div>
 
-          <div className="mt-6 bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
-            <div className="text-sm font-bold text-blue-400 mb-2">Provider Notes</div>
-            <p className="text-sm text-white/80 leading-relaxed">
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-6">
+            <h3 className="text-blue-400 font-semibold mb-3">Provider Notes</h3>
+            <p className="text-white/80 leading-relaxed mb-2">
               Excellent progress across the board! Your testosterone optimization protocol is working beautifully. 
               Continue current supplementation for Vitamin D (5000 IU daily). LDL cholesterol is improving - 
               keep up the omega-3 intake. All thyroid markers are in optimal range. Blood count and liver function excellent.
             </p>
-            <p className="text-xs text-white/40 mt-2">— Dr. Sarah Johnson, MD</p>
+            <p className="text-xs text-white/40">— Dr. Sarah Johnson, MD</p>
           </div>
         </div>
 
@@ -846,7 +815,11 @@ export default function ResultsDemoPage() {
               >
                 <div className="grid gap-6 md:grid-cols-2">
                   {biomarkersInCategory.map((biomarker, index) => (
-                    <BiomarkerCard key={index} biomarker={biomarker} />
+                    <BiomarkerCard
+                      key={index}
+                      biomarker={biomarker}
+                      history={biomarkerHistory.get(biomarker.biomarker) || []}
+                    />
                   ))}
                 </div>
               </AccordionSection>
