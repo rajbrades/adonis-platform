@@ -1,6 +1,6 @@
 'use client'
 
-import { useUser } from '@clerk/nextjs'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import Link from 'next/link'
@@ -8,6 +8,7 @@ import { Upload, FileText, LogOut } from 'lucide-react'
 
 export default function AdminDashboard() {
   const { user, isLoaded } = useUser()
+  const { signOut } = useClerk()
   const router = useRouter()
 
   useEffect(() => {
@@ -17,7 +18,8 @@ export default function AdminDashboard() {
   }, [isLoaded, user, router])
 
   const handleSignOut = async () => {
-    router.push('/api/auth/signout')
+    await signOut()
+    router.push('/')
   }
 
   if (!isLoaded || !user) {
