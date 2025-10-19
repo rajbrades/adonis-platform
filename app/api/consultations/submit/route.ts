@@ -3,18 +3,14 @@ import { supabase } from '@/lib/supabase'
 import { Resend } from 'resend'
 import { ConsultationSubmittedEmail } from '@/lib/emails/consultation-submitted'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
-    // Calculate age from date of birth
     const dob = new Date(data.dateOfBirth)
     const today = new Date()
     const age = today.getFullYear() - dob.getFullYear()
 
-    // Prepare data for database
     const consultationData = {
       first_name: data.firstName,
       last_name: data.lastName,
@@ -45,7 +41,6 @@ export async function POST(request: NextRequest) {
       priority: 'medium'
     }
 
-    // Insert into Supabase
     const { data: result, error } = await supabase
       .from('consultations')
       .insert([consultationData])
@@ -60,33 +55,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Send confirmation email to patient
-    try {
-      console.log('Attempting to send email to:', data.email)
-      
-      const emailResult = await resend.emails.send({
-        from: 'Adonis Health <onboarding@resend.dev>',
-        to: data.email,
-        subject: 'Consultation Submitted Successfully - Adonis Health',
-        html: ConsultationSubmittedEmail({
-          patientName: data.firstName,
-          consultationId: result.id,
-          goals: data.optimizationGoals || [],
-          submittedDate: new Date().toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit'
+    if (process.env.RESEND_API_KEY) {
+      try {
+        console.log('Attempting to send email to:', data.email)
+        
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        const emailResult = await resend.emails.send({
+          from: 'Adonis Health <onboarding@resend.dev>',
+          to: data.email,
+          subject: 'Consultation Submitted Successfully - Adonis Health',
+          html: ConsultationSubmittedEmail({
+            patientName: data.firstName,
+            consultationId: result.id,
+            goals: data.optimizationGoals || [],
+            submittedDate: new Date().toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit'
+            })
           })
         })
-      })
-      
-      console.log('✅ Confirmation email sent to:', data.email)
-      console.log('Email result:', emailResult)
-    } catch (emailError) {
-      // Log email error but don't fail the request
-      console.error('❌ Failed to send confirmation email:', emailError)
+        
+        console.log('✅ Confirmation email sent')
+      } catch (emailError) {
+        console.error('❌ Failed to send confirmation email:', emailError)
+      }
     }
 
     return NextResponse.json({
