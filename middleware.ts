@@ -5,7 +5,7 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)'])
 const isProviderRoute = createRouteMatcher(['/provider(.*)'])
 
 export default clerkMiddleware(async (auth, req) => {
-  const { userId } = await auth()
+  const { userId, sessionClaims } = await auth()
   
   // If not logged in and trying to access protected routes, redirect to sign-in
   if (!userId && (isAdminRoute(req) || isProviderRoute(req))) {
@@ -15,9 +15,8 @@ export default clerkMiddleware(async (auth, req) => {
   }
 
   // If logged in, check roles
-  if (userId) {
-    const { sessionClaims } = await auth()
-    const role = sessionClaims?.metadata?.role as string | undefined
+  if (userId && sessionClaims) {
+    const role = (sessionClaims.publicMetadata as { role?: string })?.role
 
     // Protect admin routes
     if (isAdminRoute(req) && role !== 'admin') {
