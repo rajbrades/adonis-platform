@@ -120,19 +120,6 @@ export default function HomePage() {
                 Natural testosterone optimization while preserving fertility and testicular function.
               </p>
             </div>
-
-            {/* Longevity Protocol */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Award className="w-7 h-7 text-yellow-400" />
-              </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
-                Longevity Protocol
-              </h3>
-              <p className="text-white/60 text-sm leading-relaxed">
-                Comprehensive anti-aging and longevity optimization for peak healthspan.
-              </p>
-            </div>
           </div>
 
           <div className="text-center mt-12">
