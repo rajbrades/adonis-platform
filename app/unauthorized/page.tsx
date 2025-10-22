@@ -1,8 +1,18 @@
-import Link from 'next/link';
-import { getCurrentUserWithRole } from '@/lib/auth';
+'use client'
 
-export default async function UnauthorizedPage() {
-  const user = await getCurrentUserWithRole();
+import Link from 'next/link'
+import { useClerk, useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
+
+export default function UnauthorizedPage() {
+  const { user } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-6">
@@ -22,11 +32,11 @@ export default async function UnauthorizedPage() {
         {user && (
           <div className="mb-6 p-4 bg-white/5 rounded-xl border border-white/10">
             <p className="text-sm text-white/40 mb-1">Logged in as:</p>
-            <p className="text-white font-medium">{user.email}</p>
-            {user.role ? (
-              <p className="text-sm text-white/60 mt-1">Role: {user.role}</p>
+            <p className="text-white font-medium">{user.emailAddresses[0]?.emailAddress}</p>
+            {user.publicMetadata?.role ? (
+              <p className="text-sm text-white/60 mt-1">Role: {user.publicMetadata.role as string}</p>
             ) : (
-              <p className="text-sm text-yellow-400 mt-1">No role assigned</p>
+              <p className="text-sm text-yellow-400 mt-1">⚠️ No role assigned</p>
             )}
           </div>
         )}
@@ -39,18 +49,29 @@ export default async function UnauthorizedPage() {
             Go to Homepage
           </Link>
           
-          <Link
-            href="/sign-in"
-            className="block w-full bg-white/10 text-white font-medium py-3 px-6 rounded-xl hover:bg-white/20 transition-colors"
-          >
-            Sign In
-          </Link>
+          {user && (
+            <button
+              onClick={handleSignOut}
+              className="block w-full bg-red-500/20 text-red-400 font-medium py-3 px-6 rounded-xl hover:bg-red-500/30 transition-colors"
+            >
+              Sign Out & Refresh Session
+            </button>
+          )}
+          
+          {!user && (
+            <Link
+              href="/sign-in"
+              className="block w-full bg-white/10 text-white font-medium py-3 px-6 rounded-xl hover:bg-white/20 transition-colors"
+            >
+              Sign In
+            </Link>
+          )}
         </div>
 
         <p className="mt-6 text-xs text-white/40">
-          If you believe this is an error, please contact your administrator.
+          If you just updated your role, sign out and back in to refresh your session.
         </p>
       </div>
     </div>
-  );
+  )
 }
