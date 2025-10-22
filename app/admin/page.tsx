@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import Link from 'next/link'
 import { Upload, FileText, LogOut } from 'lucide-react'
 
@@ -12,12 +13,24 @@ export default function AdminDashboard() {
   const { signOut } = useClerk()
   const router = useRouter()
 
+  useEffect(() => {
+    console.log('🔍 Admin Page Mount:', {
+      isLoaded,
+      hasUser: !!user,
+      userId: user?.id,
+      email: user?.emailAddresses[0]?.emailAddress,
+      metadata: user?.publicMetadata,
+      pathname: window.location.pathname
+    })
+  }, [user, isLoaded])
+
   const handleSignOut = async () => {
     await signOut()
     router.push('/')
   }
 
   if (!isLoaded) {
+    console.log('⏳ Still loading...')
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -29,11 +42,13 @@ export default function AdminDashboard() {
   }
 
   if (!user) {
+    console.log('❌ No user, redirecting to sign-in')
     router.push('/sign-in')
     return null
   }
 
-  // NO ROLE CHECK - Just show the page if logged in
+  console.log('✅ User loaded, showing admin dashboard')
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
