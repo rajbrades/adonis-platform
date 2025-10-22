@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRight, Award, Users, Shield, Target, Clock, TrendingUp, Activity, Microscope, LineChart } from 'lucide-react'
 
