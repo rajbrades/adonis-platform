@@ -4,7 +4,6 @@ export const dynamic = 'force-dynamic'
 
 import { useUser, useClerk } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 import Link from 'next/link'
 import { Upload, FileText, LogOut } from 'lucide-react'
 
@@ -13,25 +12,12 @@ export default function AdminDashboard() {
   const { signOut } = useClerk()
   const router = useRouter()
 
-  useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
-        router.push('/sign-in')
-      } else {
-        const role = user.publicMetadata?.role
-        if (role !== 'admin') {
-          router.push('/unauthorized')
-        }
-      }
-    }
-  }, [user, isLoaded, router])
-
   const handleSignOut = async () => {
     await signOut()
     router.push('/')
   }
 
-  if (!isLoaded || !user) {
+  if (!isLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
@@ -42,18 +28,20 @@ export default function AdminDashboard() {
     )
   }
 
-  const role = user.publicMetadata?.role
-  if (role !== 'admin') {
+  if (!user) {
+    router.push('/sign-in')
     return null
   }
 
+  // NO ROLE CHECK - Just show the page if logged in
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-black mb-2">Admin Dashboard</h1>
-            <p className="text-white/60">Welcome back, {user.firstName || 'Admin'}</p>
+            <p className="text-white/60">Welcome, {user.emailAddresses[0]?.emailAddress}</p>
+            <p className="text-xs text-yellow-400 mt-2">DEBUG: Role = {JSON.stringify(user.publicMetadata)}</p>
           </div>
           <button
             onClick={handleSignOut}
