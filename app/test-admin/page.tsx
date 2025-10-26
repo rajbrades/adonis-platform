@@ -5,9 +5,9 @@ export const dynamic = 'force-dynamic'
 import { useUser } from '@clerk/nextjs'
 
 export default function TestAdmin() {
-  console.log('🎯 TEST PAGE WITH CLERK IMPORT - NOT CALLING HOOKS YET')
+  const { user, isLoaded } = useUser()
   
-  // NOT calling useUser() yet
+  console.log('🎯 CALLING useUser():', { isLoaded, hasUser: !!user })
   
   return (
     <div style={{ 
@@ -17,10 +17,16 @@ export default function TestAdmin() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      fontSize: '24px',
-      fontWeight: 'bold'
+      flexDirection: 'column',
+      fontSize: '18px',
+      padding: '20px'
     }}>
-      ✅ CLERK IMPORTED BUT NOT USED
+      <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
+        ✅ CALLING useUser() HOOK
+      </div>
+      <div>isLoaded: {String(isLoaded)}</div>
+      <div>hasUser: {String(!!user)}</div>
+      {user && <div>Email: {user.emailAddresses[0]?.emailAddress}</div>}
     </div>
   )
 }
