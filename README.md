@@ -37,3 +37,4 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 # Updated Wed Oct 22 11:10:16 EDT 2025
 
 # Fresh build Wed Oct 22 17:58:34 EDT 2025
+# Test redirect to test-admin
