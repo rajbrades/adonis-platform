@@ -2,103 +2,31 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useUser, useClerk } from '@clerk/nextjs'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import Link from 'next/link'
-import { Upload, FileText, LogOut } from 'lucide-react'
+import { useUser } from '@clerk/nextjs'
 
-export default function AdminDashboard() {
+export default function TestAdmin() {
   const { user, isLoaded } = useUser()
-  const { signOut } = useClerk()
-  const router = useRouter()
-
-  useEffect(() => {
-    console.log('🔍 Admin Page Mount:', {
-      isLoaded,
-      hasUser: !!user,
-      userId: user?.id,
-      email: user?.emailAddresses[0]?.emailAddress,
-      metadata: user?.publicMetadata,
-      pathname: window.location.pathname
-    })
-  }, [user, isLoaded])
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
-  if (!isLoaded) {
-    console.log('⏳ Still loading...')
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-white/60">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    console.log('❌ No user, redirecting to sign-in')
-    router.push('/sign-in')
-    return null
-  }
-
-  console.log('✅ User loaded, showing admin dashboard')
-
+  
+  console.log('🎯 CALLING useUser():', { isLoaded, hasUser: !!user })
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-black mb-2">Admin Dashboard</h1>
-            <p className="text-white/60">Welcome, {user.emailAddresses[0]?.emailAddress}</p>
-            <p className="text-xs text-yellow-400 mt-2">DEBUG: Role = {JSON.stringify(user.publicMetadata)}</p>
-          </div>
-          <button
-            onClick={handleSignOut}
-            className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition text-sm"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link
-            href="/admin/results/upload"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-8 transition group"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-yellow-400/20 rounded-xl flex items-center justify-center group-hover:bg-yellow-400/30 transition">
-                <Upload className="w-6 h-6 text-yellow-400" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">Upload Lab Results</h2>
-                <p className="text-white/60">Parse PDF lab reports</p>
-              </div>
-            </div>
-          </Link>
-
-          <Link
-            href="/admin/results/view"
-            className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-8 transition group"
-          >
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-blue-400/20 rounded-xl flex items-center justify-center group-hover:bg-blue-400/30 transition">
-                <FileText className="w-6 h-6 text-blue-400" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">View All Results</h2>
-                <p className="text-white/60">Browse uploaded results</p>
-              </div>
-            </div>
-          </Link>
-        </div>
+    <div style={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(to bottom right, black, #1a1a1a)',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      fontSize: '18px',
+      padding: '20px'
+    }}>
+      <div style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '20px' }}>
+        ✅ CALLING useUser() HOOK
       </div>
+      <div>isLoaded: {String(isLoaded)}</div>
+      <div>hasUser: {String(!!user)}</div>
+      {user && <div>Email: {user.emailAddresses[0]?.emailAddress}</div>}
     </div>
   )
 }
