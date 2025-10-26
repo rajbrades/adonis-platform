@@ -1,7 +1,13 @@
+'use client'
+
 export const dynamic = 'force-dynamic'
 
+import { useUser } from '@clerk/nextjs'
+
 export default function TestAdmin() {
-  console.log('🎯 TEST PAGE LOADED!')
+  console.log('🎯 TEST PAGE WITH CLERK IMPORT - NOT CALLING HOOKS YET')
+  
+  // NOT calling useUser() yet
   
   return (
     <div style={{ 
@@ -14,7 +20,7 @@ export default function TestAdmin() {
       fontSize: '24px',
       fontWeight: 'bold'
     }}>
-      ✅ TEST PAGE WORKING - NO CLERK CHECKS
+      ✅ CLERK IMPORTED BUT NOT USED
     </div>
   )
 }
