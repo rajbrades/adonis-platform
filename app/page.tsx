@@ -1,21 +1,23 @@
 import Link from 'next/link'
 import { ArrowRight, Star, Shield, Clock, Users, CheckCircle, TrendingUp, Award, Zap, Sparkles, Heart, Brain } from 'lucide-react'
 
+import { getTenantConfig } from '@/lib/tenant-config'
 export default function HomePage() {
+  const tenant = getTenantConfig()
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className={`min-h-screen bg-gradient-to-br ${tenant.colors.background} text-white`}>
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-6">
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 via-transparent to-transparent" />
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="inline-block bg-yellow-400/10 border border-yellow-400/20 rounded-full px-6 py-2 mb-8 backdrop-blur-sm">
-            <span className="text-yellow-400 font-semibold tracking-wide">HUMAN OPTIMIZATION MEDICINE</span>
+          <div className="inline-block style={{ backgroundColor: tenant.colors.primary }}/10 border style={{ borderColor: tenant.colors.primary }}/20 rounded-full px-6 py-2 mb-8 backdrop-blur-sm">
+            <span className="style={{ color: tenant.colors.primary }} font-semibold tracking-wide">HUMAN OPTIMIZATION MEDICINE</span>
           </div>
           
           <h1 className="text-6xl md:text-7xl font-black mb-8 leading-tight">
-            Unlock Your <span className="text-yellow-400">Peak</span><br />
+            Unlock Your <span style={{ color: tenant.colors.primary }}>Peak</span><br />
             Human Performance
           </h1>
           
@@ -27,7 +29,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link 
               href="/consultation"
-              className="group inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="group inline-flex items-center style={{ backgroundColor: tenant.colors.primary }} text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
             >
               START YOUR TRANSFORMATION
               <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -48,7 +50,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Advanced <span className="text-yellow-400">Optimization</span> Solutions
+              Advanced <span className="style={{ color: tenant.colors.primary }}">Optimization</span> Solutions
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               Comprehensive therapies designed to enhance your performance, recovery, and longevity.
@@ -57,11 +59,11 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Testosterone */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Zap className="w-7 h-7 text-yellow-400" />
+            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:style={{ borderColor: tenant.colors.primary }}/30 transition-all duration-300">
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Zap className="w-7 h-7 style={{ color: tenant.colors.primary }}" />
               </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
+              <h3 className="text-xl font-bold mb-3 group-hover:style={{ color: tenant.colors.primary }} transition-colors">
                 Testosterone Replacement
               </h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -70,11 +72,11 @@ export default function HomePage() {
             </div>
 
             {/* Peptide Therapy */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <TrendingUp className="w-7 h-7 text-yellow-400" />
+            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:style={{ borderColor: tenant.colors.primary }}/30 transition-all duration-300">
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="w-7 h-7 style={{ color: tenant.colors.primary }}" />
               </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
+              <h3 className="text-xl font-bold mb-3 group-hover:style={{ color: tenant.colors.primary }} transition-colors">
                 Peptide Therapy
               </h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -83,11 +85,11 @@ export default function HomePage() {
             </div>
 
             {/* NAD+ */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Sparkles className="w-7 h-7 text-yellow-400" />
+            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:style={{ borderColor: tenant.colors.primary }}/30 transition-all duration-300">
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Sparkles className="w-7 h-7 style={{ color: tenant.colors.primary }}" />
               </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
+              <h3 className="text-xl font-bold mb-3 group-hover:style={{ color: tenant.colors.primary }} transition-colors">
                 NAD+ Therapy
               </h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -96,11 +98,11 @@ export default function HomePage() {
             </div>
 
             {/* Glutathione */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Shield className="w-7 h-7 text-yellow-400" />
+            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:style={{ borderColor: tenant.colors.primary }}/30 transition-all duration-300">
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Shield className="w-7 h-7 style={{ color: tenant.colors.primary }}" />
               </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
+              <h3 className="text-xl font-bold mb-3 group-hover:style={{ color: tenant.colors.primary }} transition-colors">
                 Glutathione
               </h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -109,11 +111,11 @@ export default function HomePage() {
             </div>
 
             {/* Enclomiphene */}
-            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Heart className="w-7 h-7 text-yellow-400" />
+            <div className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:style={{ borderColor: tenant.colors.primary }}/30 transition-all duration-300">
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <Heart className="w-7 h-7 style={{ color: tenant.colors.primary }}" />
               </div>
-              <h3 className="text-xl font-bold mb-3 group-hover:text-yellow-400 transition-colors">
+              <h3 className="text-xl font-bold mb-3 group-hover:style={{ color: tenant.colors.primary }} transition-colors">
                 Enclomiphene Citrate
               </h3>
               <p className="text-white/60 text-sm leading-relaxed">
@@ -125,7 +127,7 @@ export default function HomePage() {
           <div className="text-center mt-12">
             <Link 
               href="/goals"
-              className="inline-flex items-center text-yellow-400 font-semibold hover:text-yellow-300 transition-colors"
+              className="inline-flex items-center style={{ color: tenant.colors.primary }} font-semibold hover:text-yellow-300 transition-colors"
             >
               Explore All Optimization Goals
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -139,7 +141,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Your Path to <span className="text-yellow-400">Peak Performance</span>
+              Your Path to <span className="style={{ color: tenant.colors.primary }}">Peak Performance</span>
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               A systematic, science-backed approach to optimizing your health and vitality.
@@ -148,8 +150,8 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-                <Clock className="w-8 h-8 text-yellow-400" />
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <Clock className="w-8 h-8 style={{ color: tenant.colors.primary }}" />
               </div>
               <h3 className="text-2xl font-bold mb-4">1. Complete Assessment</h3>
               <p className="text-white/60 leading-relaxed">
@@ -158,8 +160,8 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-                <Users className="w-8 h-8 text-yellow-400" />
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <Users className="w-8 h-8 style={{ color: tenant.colors.primary }}" />
               </div>
               <h3 className="text-2xl font-bold mb-4">2. Get Tested & Reviewed</h3>
               <p className="text-white/60 leading-relaxed">
@@ -168,8 +170,8 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
-                <TrendingUp className="w-8 h-8 text-yellow-400" />
+              <div className="style={{ backgroundColor: tenant.colors.primary }}/10 w-16 h-16 rounded-xl flex items-center justify-center mb-6">
+                <TrendingUp className="w-8 h-8 style={{ color: tenant.colors.primary }}" />
               </div>
               <h3 className="text-2xl font-bold mb-4">3. Optimize & Thrive</h3>
               <p className="text-white/60 leading-relaxed">
@@ -185,7 +187,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Why Choose <span className="text-yellow-400">ADONIS</span>
+              Why Choose <span className="style={{ color: tenant.colors.primary }}">ADONIS</span>
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               The most advanced human optimization platform designed for high-performers.
@@ -194,7 +196,7 @@ export default function HomePage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all duration-300">
-              <Shield className="w-10 h-10 text-yellow-400 mb-4" />
+              <Shield className="w-10 h-10 style={{ color: tenant.colors.primary }} mb-4" />
               <h3 className="text-lg font-bold mb-2">Licensed Physicians</h3>
               <p className="text-white/60 text-sm leading-relaxed">
                 All treatments prescribed by board-certified US physicians.
@@ -202,7 +204,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all duration-300">
-              <Star className="w-10 h-10 text-yellow-400 mb-4" />
+              <Star className="w-10 h-10 style={{ color: tenant.colors.primary }} mb-4" />
               <h3 className="text-lg font-bold mb-2">Premium Quality</h3>
               <p className="text-white/60 text-sm leading-relaxed">
                 Pharmaceutical-grade medications from top US compounding pharmacies.
@@ -210,7 +212,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all duration-300">
-              <Clock className="w-10 h-10 text-yellow-400 mb-4" />
+              <Clock className="w-10 h-10 style={{ color: tenant.colors.primary }} mb-4" />
               <h3 className="text-lg font-bold mb-2">Fast Results</h3>
               <p className="text-white/60 text-sm leading-relaxed">
                 Get your assessment reviewed and recommendations within 24-48 hours.
@@ -218,7 +220,7 @@ export default function HomePage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 hover:bg-white/[0.07] transition-all duration-300">
-              <Brain className="w-10 h-10 text-yellow-400 mb-4" />
+              <Brain className="w-10 h-10 style={{ color: tenant.colors.primary }} mb-4" />
               <h3 className="text-lg font-bold mb-2">Personalized Care</h3>
               <p className="text-white/60 text-sm leading-relaxed">
                 Custom protocols designed specifically for your goals and biomarkers.
@@ -241,25 +243,25 @@ export default function HomePage() {
             
             <div className="grid md:grid-cols-4 gap-8 text-center">
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black text-yellow-400 mb-2">10K+</div>
+                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">10K+</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Patients Optimized
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black text-yellow-400 mb-2">24-48h</div>
+                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">24-48h</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Assessment Review Time
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black text-yellow-400 mb-2">98%</div>
+                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">98%</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Patient Satisfaction
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black text-yellow-400 mb-2">100%</div>
+                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">100%</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Licensed US Physicians
                 </div>
@@ -272,14 +274,14 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-12 text-center">
+          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border style={{ borderColor: tenant.colors.primary }}/20 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-black mb-6">Ready to Optimize Your Life?</h2>
             <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
               Take the first step toward peak performance, energy, and longevity with a free health assessment.
             </p>
             <Link 
               href="/consultation"
-              className="group inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="group inline-flex items-center style={{ backgroundColor: tenant.colors.primary }} text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
             >
               Start Free Assessment
               <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
