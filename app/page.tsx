@@ -9,11 +9,11 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center px-6">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-transparent" />
         
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="inline-block style={{ backgroundColor: tenant.colors.primary }}/10 border style={{ borderColor: tenant.colors.primary }}/20 rounded-full px-6 py-2 mb-8 backdrop-blur-sm">
-            <span className="style={{ color: tenant.colors.primary }} font-semibold tracking-wide">HUMAN OPTIMIZATION MEDICINE</span>
+            <span className="font-semibold tracking-wide" style={{ color: tenant.colors.primary }}>HUMAN OPTIMIZATION MEDICINE</span>
           </div>
           
           <h1 className="text-6xl md:text-7xl font-black mb-8 leading-tight">
@@ -29,7 +29,8 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link 
               href="/consultation"
-              className="group inline-flex items-center style={{ backgroundColor: tenant.colors.primary }} text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              style={{ backgroundColor: tenant.colors.primary }}
+              className="group inline-flex items-center text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-xl transition-all duration-300 transform hover:scale-105"
             >
               START YOUR TRANSFORMATION
               <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
@@ -50,7 +51,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Advanced <span className="style={{ color: tenant.colors.primary }}">Optimization</span> Solutions
+              Advanced <span style={{ color: tenant.colors.primary }}>Optimization</span> Solutions
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               Comprehensive therapies designed to enhance your performance, recovery, and longevity.
@@ -127,7 +128,7 @@ export default function HomePage() {
           <div className="text-center mt-12">
             <Link 
               href="/goals"
-              className="inline-flex items-center style={{ color: tenant.colors.primary }} font-semibold hover:text-yellow-300 transition-colors"
+              className="inline-flex items-center font-semibold transition-colors" style={{ color: tenant.colors.primary }}
             >
               Explore All Optimization Goals
               <ArrowRight className="ml-2 w-5 h-5" />
@@ -141,7 +142,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Your Path to <span className="style={{ color: tenant.colors.primary }}">Peak Performance</span>
+              Your Path to <span style={{ color: tenant.colors.primary }}>Peak Performance</span>
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               A systematic, science-backed approach to optimizing your health and vitality.
@@ -187,7 +188,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-5xl font-black mb-6">
-              Why Choose <span className="style={{ color: tenant.colors.primary }}">ADONIS</span>
+              Why Choose <span style={{ color: tenant.colors.primary }}>{tenant.name}</span>
             </h2>
             <p className="text-xl text-white/60 max-w-3xl mx-auto">
               The most advanced human optimization platform designed for high-performers.
@@ -243,25 +244,25 @@ export default function HomePage() {
             
             <div className="grid md:grid-cols-4 gap-8 text-center">
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">10K+</div>
+                <div className="text-5xl font-black mb-2" style={{ color: tenant.colors.primary }}>10K+</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Patients Optimized
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">24-48h</div>
+                <div className="text-5xl font-black mb-2" style={{ color: tenant.colors.primary }}>24-48h</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Assessment Review Time
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">98%</div>
+                <div className="text-5xl font-black mb-2" style={{ color: tenant.colors.primary }}>98%</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Patient Satisfaction
                 </div>
               </div>
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <div className="text-5xl font-black style={{ color: tenant.colors.primary }} mb-2">100%</div>
+                <div className="text-5xl font-black mb-2" style={{ color: tenant.colors.primary }}>100%</div>
                 <div className="text-white/60 font-semibold text-sm uppercase tracking-wide">
                   Licensed US Physicians
                 </div>
@@ -274,14 +275,14 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border style={{ borderColor: tenant.colors.primary }}/20 rounded-2xl p-12 text-center">
+          <div className="backdrop-blur-sm border rounded-2xl p-12 text-center" style={{ borderColor: tenant.colors.primary, background: `linear-gradient(to right, ${tenant.colors.primary}10, ${tenant.colors.primary}10)` }}>
             <h2 className="text-4xl font-black mb-6">Ready to Optimize Your Life?</h2>
             <p className="text-xl text-white/60 mb-8 max-w-2xl mx-auto">
               Take the first step toward peak performance, energy, and longevity with a free health assessment.
             </p>
             <Link 
               href="/consultation"
-              className="group inline-flex items-center style={{ backgroundColor: tenant.colors.primary }} text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="group inline-flex items-center text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl transition-all duration-300 transform hover:scale-105" style={{ backgroundColor: tenant.colors.primary }}
             >
               Start Free Assessment
               <ArrowRight className="ml-3 w-5 h-5 group-hover:translate-x-1 transition-transform duration-300" />
