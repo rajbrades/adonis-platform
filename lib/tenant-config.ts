@@ -1,50 +1,39 @@
-// lib/tenant-config.ts
-// Multi-tenant configuration system
-
-export type TenantConfig = {
-  id: string;
-  name: string;
+interface TenantConfig {
+  name: string
+  logo: string
   colors: {
-    primary: string;
-    primaryDark: string;
-    accent: string;
-    background: string;
-  };
-  pricing: {
-    consultation: number;
-  };
-};
+    primary: string
+    secondary: string
+  }
+  domain: string
+}
 
-const tenants: Record<string, TenantConfig> = {
+const tenantConfigs: Record<string, TenantConfig> = {
   adonis: {
-    id: 'adonis',
-    name: 'ADONIS',
+    name: "ADONIS",
+    logo: "/adonis-logo.svg",
     colors: {
-      primary: '#FBBF24',
-      primaryDark: '#F59E0B',
-      accent: '#FCD34D',
-      background: 'from-black via-gray-900 to-black',
+      primary: "#facc15", // Tailwind yellow-400 - matches treatment pages
+      secondary: "#1a1a1a",
     },
-    pricing: {
-      consultation: 199,
-    },
+    domain: "adonis-project.vercel.app",
   },
-  '10x': {
-    id: '10x',
-    name: '10X Health',
+  "10x": {
+    name: "10X HEALTH",
+    logo: "/10x-logo.svg",
     colors: {
-      primary: '#3B82F6',
-      primaryDark: '#2563EB',
-      accent: '#60A5FA',
-      background: 'from-blue-950 via-gray-900 to-black',
+      primary: "#ef4444", // Tailwind red-500
+      secondary: "#1a1a1a",
     },
-    pricing: {
-      consultation: 299,
-    },
+    domain: "10xhealth.vercel.app",
   },
-};
+}
 
 export function getTenantConfig(): TenantConfig {
-  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || 'adonis';
-  return tenants[tenantId] || tenants.adonis;
+  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID || "adonis"
+  return tenantConfigs[tenantId] || tenantConfigs.adonis
+}
+
+export function getTenantId(): string {
+  return process.env.NEXT_PUBLIC_TENANT_ID || "adonis"
 }

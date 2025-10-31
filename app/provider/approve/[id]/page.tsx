@@ -1,4 +1,8 @@
 'use client'
+
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -125,7 +129,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
       <header className="bg-black border-b border-yellow-500/20">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/provider" className="text-2xl font-black text-yellow-400">
-            ADONIS
+            {tenant.name}
           </Link>
           <div className="text-white/60">Provider Portal</div>
         </nav>

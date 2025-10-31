@@ -1,4 +1,8 @@
 'use client'
+
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { CheckCircle, Clock, FileText } from 'lucide-react'
@@ -58,7 +62,7 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
       <header className="bg-black border-b border-yellow-500/20">
         <nav className="max-w-7xl mx-auto px-6 py-4">
           <Link href="/" className="text-3xl font-black text-yellow-400">
-            ADONIS
+            {tenant.name}
           </Link>
         </nav>
       </header>

@@ -1,7 +1,9 @@
 import Link from 'next/link'
+import { getTenantConfig } from "@/lib/tenant-config"
 import { ArrowRight, Zap, TrendingUp, Shield, Clock, CheckCircle, Award, Heart, Brain } from 'lucide-react'
 
 export default function LongevityPage() {
+  const tenant = getTenantConfig()
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <section className="pt-32 pb-16 px-6">
@@ -24,7 +26,7 @@ export default function LongevityPage() {
             </p>
             <Link 
               href="/consultation"
-              className="inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300 transform hover:scale-105"
             >
               Start Your Assessment
               <ArrowRight className="ml-3 w-5 h-5" />

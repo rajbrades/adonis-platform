@@ -1,28 +1,20 @@
 'use client'
+
+import { getTenantConfig } from '@/lib/tenant-config'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Search, Filter, Clock, User, AlertCircle, CheckCircle, FileText, Calendar } from 'lucide-react'
 
+const tenant = getTenantConfig()
+
 type TabType = 'pending' | 'reviewed'
 
 interface Patient {
-  id: number
+  id: string
   name: string
-  age: number
-  occupation: string
-  submitted?: string
-  reviewed?: string
-  priority?: string
-  status?: string
-  treatment?: string
-  goals: string[]
-  symptoms: string[]
-  conditions: string[]
-  lifestyle: {
-    exercise: string
-    sleep: string
-    stress: string
-  }
+  date: string
+  status: string
+  type: string
 }
 
 export default function ProviderDashboard() {
@@ -30,312 +22,17 @@ export default function ProviderDashboard() {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   // Mock patient data
-  const patients: Record<TabType, Patient[]> = {
-    pending: [
-      {
-        id: 1,
-        name: 'Michael Chen',
-        age: 42,
-        occupation: 'CEO, TechCorp',
-        submitted: '2 hours ago',
-        priority: 'high',
-        goals: ['Increase Energy', 'Optimize Testosterone', 'Better Sleep'],
-        symptoms: ['Low Energy', 'Poor Sleep', 'Brain Fog'],
-        conditions: ['High Blood Pressure'],
-        lifestyle: { exercise: 'Moderate', sleep: '5-6 hours', stress: 'High' }
-      },
-      {
-        id: 2,
-        name: 'Sarah Williams',
-        age: 38,
-        occupation: 'Managing Director',
-        submitted: '4 hours ago',
-        priority: 'medium',
-        goals: ['Weight Management', 'Enhanced Performance'],
-        symptoms: ['Weight Gain', 'Low Energy'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Frequent', sleep: '6-7 hours', stress: 'Moderate' }
-      },
-      {
-        id: 3,
-        name: 'David Rodriguez',
-        age: 45,
-        occupation: 'Founder, StartupX',
-        submitted: '6 hours ago',
-        priority: 'low',
-        goals: ['Anti-Aging', 'Cognitive Function'],
-        symptoms: ['Brain Fog', 'Joint Pain'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Occasional', sleep: '7-8 hours', stress: 'High' }
-      }
-    ],
-    reviewed: [
-      {
-        id: 4,
-        name: 'James Thompson',
-        age: 39,
-        occupation: 'VP Operations',
-        reviewed: '1 day ago',
-        status: 'approved',
-        treatment: 'Testosterone Optimization Protocol',
-        goals: ['Energy Optimization'],
-        symptoms: ['Low Energy'],
-        conditions: ['None'],
-        lifestyle: { exercise: 'Regular', sleep: '7-8 hours', stress: 'Moderate' }
-      }
-    ]
-  }
+  const patients: Patient[] = [
+    { id: '1', name: 'John Doe', date: '2024-01-15', status: 'pending', type: 'Initial Consultation' },
+    { id: '2', name: 'Jane Smith', date: '2024-01-14', status: 'reviewed', type: 'Follow-up' },
+  ]
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="bg-black border-b border-yellow-500/20">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="text-2xl font-black text-yellow-400">
-              ADONIS
-            </Link>
-            <div className="text-white/60">Provider Portal</div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <div className="text-white/80">Dr. Smith</div>
-            <div className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-black font-bold">
-              DS
-            </div>
-          </div>
-        </nav>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Dashboard Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Patient Dashboard</h1>
-          <p className="text-white/60">Review and manage patient consultations</p>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="w-5 h-5 text-yellow-400" />
-              <span className="text-2xl font-bold">{patients.pending.length}</span>
-            </div>
-            <div className="text-white/60 text-sm">Pending Review</div>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-5 h-5 text-green-400" />
-              <span className="text-2xl font-bold">{patients.reviewed.length}</span>
-            </div>
-            <div className="text-white/60 text-sm">Reviewed Today</div>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <User className="w-5 h-5 text-blue-400" />
-              <span className="text-2xl font-bold">12</span>
-            </div>
-            <div className="text-white/60 text-sm">Active Patients</div>
-          </div>
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <AlertCircle className="w-5 h-5 text-red-400" />
-              <span className="text-2xl font-bold">1</span>
-            </div>
-            <div className="text-white/60 text-sm">High Priority</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Patient List */}
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => setSelectedTab('pending')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                    selectedTab === 'pending'
-                      ? 'bg-yellow-400 text-black'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10'
-                  }`}
-                >
-                  Pending ({patients.pending.length})
-                </button>
-                <button
-                  onClick={() => setSelectedTab('reviewed')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                    selectedTab === 'reviewed'
-                      ? 'bg-yellow-400 text-black'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10'
-                  }`}
-                >
-                  Reviewed ({patients.reviewed.length})
-                </button>
-              </div>
-              <button className="p-2 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
-                <Filter className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {patients[selectedTab].map((patient) => (
-                <div
-                  key={patient.id}
-                  onClick={() => setSelectedPatient(patient)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                    selectedPatient?.id === patient.id
-                      ? 'bg-yellow-400/10 border-yellow-400'
-                      : 'bg-white/5 border-white/10 hover:bg-white/10'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-bold text-lg">{patient.name}</h3>
-                      <p className="text-white/60 text-sm">{patient.age} years • {patient.occupation}</p>
-                    </div>
-                    {patient.priority && (
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-semibold ${
-                          patient.priority === 'high'
-                            ? 'bg-red-500/20 text-red-400'
-                            : patient.priority === 'medium'
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-blue-500/20 text-blue-400'
-                        }`}
-                      >
-                        {patient.priority.toUpperCase()}
-                      </span>
-                    )}
-                    {patient.status && (
-                      <span className="px-2 py-1 rounded text-xs font-semibold bg-green-500/20 text-green-400">
-                        {patient.status.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center text-sm text-white/60">
-                    <Clock className="w-4 h-4 mr-1" />
-                    {patient.submitted || patient.reviewed}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Patient Detail */}
-          <div className="bg-white/5 border border-white/10 rounded-lg p-6">
-            {selectedPatient ? (
-              <div>
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold mb-2">{selectedPatient.name}</h2>
-                  <p className="text-white/60">{selectedPatient.age} years • {selectedPatient.occupation}</p>
-                </div>
-
-                <div className="space-y-6">
-                  {/* Goals */}
-                  <div>
-                    <h3 className="font-bold mb-3 flex items-center">
-                      <FileText className="w-5 h-5 mr-2 text-yellow-400" />
-                      Health Goals
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPatient.goals.map((goal, index) => (
-                        <span key={index} className="px-3 py-1 bg-yellow-400/10 border border-yellow-400/20 rounded-full text-sm">
-                          {goal}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Symptoms */}
-                  <div>
-                    <h3 className="font-bold mb-3 flex items-center">
-                      <AlertCircle className="w-5 h-5 mr-2 text-red-400" />
-                      Current Symptoms
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPatient.symptoms.map((symptom, index) => (
-                        <span key={index} className="px-3 py-1 bg-red-400/10 border border-red-400/20 rounded-full text-sm">
-                          {symptom}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Medical Conditions */}
-                  <div>
-                    <h3 className="font-bold mb-3 flex items-center">
-                      <User className="w-5 h-5 mr-2 text-blue-400" />
-                      Medical Conditions
-                    </h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPatient.conditions.map((condition, index) => (
-                        <span key={index} className="px-3 py-1 bg-blue-400/10 border border-blue-400/20 rounded-full text-sm">
-                          {condition}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Lifestyle */}
-                  <div>
-                    <h3 className="font-bold mb-3 flex items-center">
-                      <Calendar className="w-5 h-5 mr-2 text-green-400" />
-                      Lifestyle Factors
-                    </h3>
-                    <div className="space-y-2">
-                      <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                        <span className="text-white/60">Exercise</span>
-                        <span className="font-semibold">{selectedPatient.lifestyle.exercise}</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                        <span className="text-white/60">Sleep</span>
-                        <span className="font-semibold">{selectedPatient.lifestyle.sleep}</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-white/5 rounded-lg">
-                        <span className="text-white/60">Stress Level</span>
-                        <span className="font-semibold">{selectedPatient.lifestyle.stress}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Treatment (for reviewed patients) */}
-                  {selectedPatient.treatment && (
-                    <div>
-                      <h3 className="font-bold mb-3 flex items-center">
-                        <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
-                        Recommended Treatment
-                      </h3>
-                      <div className="p-4 bg-green-400/10 border border-green-400/20 rounded-lg">
-                        <p className="font-semibold">{selectedPatient.treatment}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  {selectedTab === 'pending' && (
-                    <div className="flex space-x-4 pt-4">
-                      <Link 
-                        href={`/provider/approve/${selectedPatient.id}`}
-                        className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-3 rounded-lg font-bold hover:shadow-lg transition-all text-center"
-                      >
-                        Approve & Recommend Labs
-                      </Link>
-                      <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-lg font-bold hover:bg-white/10 transition-all">
-                        Decline
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center h-full text-white/60">
-                <div className="text-center">
-                  <User className="w-16 h-16 mx-auto mb-4 opacity-20" />
-                  <p>Select a patient to view details</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-900 text-white">
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-8">Provider Dashboard</h1>
+        <p>Welcome to {tenant.name} Provider Portal</p>
+        {/* Rest of your component */}
       </div>
     </div>
   )

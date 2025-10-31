@@ -1,11 +1,13 @@
 import Link from 'next/link'
+import { getTenantConfig } from "@/lib/tenant-config"
 import { ArrowRight, Users, FlaskConical, FileText, Calendar, Phone, Shield } from 'lucide-react'
 
 export default function HowItWorksPage() {
+  const tenant = getTenantConfig()
   const steps = [
     {
       number: "01",
-      icon: <FileText className="w-8 h-8 text-yellow-400" />,
+      icon: <FileText className="w-8 h-8 " style={{ color: tenant.colors.primary }} />,
       title: "Complete Assessment",
       description: "Fill out our comprehensive health questionnaire covering your goals, medical history, and lifestyle factors.",
       duration: "10-15 minutes",
@@ -13,7 +15,7 @@ export default function HowItWorksPage() {
     },
     {
       number: "02",
-      icon: <Users className="w-8 h-8 text-yellow-400" />,
+      icon: <Users className="w-8 h-8 " style={{ color: tenant.colors.primary }} />,
       title: "Physician Review",
       description: "A licensed physician reviews your assessment and determines if you're a candidate for treatment.",
       duration: "24-48 hours",
@@ -21,7 +23,7 @@ export default function HowItWorksPage() {
     },
     {
       number: "03",
-      icon: <FlaskConical className="w-8 h-8 text-yellow-400" />,
+      icon: <FlaskConical className="w-8 h-8 " style={{ color: tenant.colors.primary }} />,
       title: "Lab Testing",
       description: "Get comprehensive lab work done at a location convenient to you, covered by most insurance plans.",
       duration: "Same day results",
@@ -29,7 +31,7 @@ export default function HowItWorksPage() {
     },
     {
       number: "04",
-      icon: <Phone className="w-8 h-8 text-yellow-400" />,
+      icon: <Phone className="w-8 h-8 " style={{ color: tenant.colors.primary }} />,
       title: "Results Consultation",
       description: "Review your results with your physician and create a personalized treatment plan.",
       duration: "30-45 minutes",
@@ -37,7 +39,7 @@ export default function HowItWorksPage() {
     },
     {
       number: "05",
-      icon: <Calendar className="w-8 h-8 text-yellow-400" />,
+      icon: <Calendar className="w-8 h-8 " style={{ color: tenant.colors.primary }} />,
       title: "Treatment Delivery",
       description: "Receive your personalized medications delivered directly to your door with ongoing support.",
       duration: "Ongoing",
@@ -70,10 +72,10 @@ export default function HowItWorksPage() {
                 <div className={`lg:w-1/2 ${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                   <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] transition-all duration-300">
                     <div className="flex items-center mb-6">
-                      <div className="bg-yellow-400 text-black w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl mr-4">
+                      <div className="" style={{ backgroundColor: tenant.colors.primary }} className="text-black w-14 h-14 rounded-xl flex items-center justify-center font-black text-xl mr-4">
                         {step.number}
                       </div>
-                      <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center">
+                      <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-14 h-14 rounded-xl flex items-center justify-center">
                         {step.icon}
                       </div>
                     </div>
@@ -81,7 +83,7 @@ export default function HowItWorksPage() {
                     <h3 className="text-3xl font-bold mb-4">{step.title}</h3>
                     <p className="text-white/60 mb-6 text-lg leading-relaxed">{step.description}</p>
                     
-                    <div className="bg-yellow-400/10 border border-yellow-400/20 rounded-xl p-4 mb-6">
+                    <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] border border-[oklch(90.5%_0.182_98.111)]/20 rounded-xl p-4 mb-6">
                       <div className="flex items-center">
                         <Shield className="w-5 h-5 text-yellow-400 mr-2" />
                         <span className="text-yellow-400 font-semibold">Timeline: {step.duration}</span>
@@ -91,7 +93,7 @@ export default function HowItWorksPage() {
                     <ul className="space-y-3">
                       {step.details.map((detail, idx) => (
                         <li key={idx} className="flex items-center text-white/60">
-                          <div className="w-2 h-2 bg-yellow-400 rounded-full mr-3 flex-shrink-0"></div>
+                          <div className="w-2 h-2 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full mr-3 flex-shrink-0"></div>
                           {detail}
                         </li>
                       ))}
@@ -130,24 +132,24 @@ export default function HowItWorksPage() {
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
-                <Shield className="w-8 h-8 text-yellow-400" />
+              <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <Shield className="w-8 h-8 " style={{ color: tenant.colors.primary }} />
               </div>
               <h3 className="text-xl font-bold mb-4">Licensed Physicians</h3>
               <p className="text-white/60 leading-relaxed">All treatments are overseen by board-certified physicians specializing in hormone optimization.</p>
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
-                <FlaskConical className="w-8 h-8 text-yellow-400" />
+              <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <FlaskConical className="w-8 h-8 " style={{ color: tenant.colors.primary }} />
               </div>
               <h3 className="text-xl font-bold mb-4">Comprehensive Testing</h3>
               <p className="text-white/60 leading-relaxed">Advanced lab panels that go beyond basic testing to optimize your entire hormonal profile.</p>
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 text-center hover:bg-white/[0.07] transition-all duration-300">
-              <div className="bg-yellow-400/10 w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
-                <Calendar className="w-8 h-8 text-yellow-400" />
+              <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-6">
+                <Calendar className="w-8 h-8 " style={{ color: tenant.colors.primary }} />
               </div>
               <h3 className="text-xl font-bold mb-4">Ongoing Support</h3>
               <p className="text-white/60 leading-relaxed">Monthly check-ins, dose adjustments, and 24/7 support to ensure optimal results.</p>
@@ -166,7 +168,7 @@ export default function HowItWorksPage() {
             </p>
             <Link 
               href="/consultation"
-              className="inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-2xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-2xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300 transform hover:scale-105"
             >
               Start Your Assessment
               <ArrowRight className="ml-3 w-5 h-5" />

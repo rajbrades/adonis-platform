@@ -1,5 +1,9 @@
 'use client'
 
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
+
 import Link from 'next/link'
 import { 
   Zap, Dumbbell, Scale, Trophy, Moon, Brain, 
@@ -70,8 +74,8 @@ export default function GoalsPage() {
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full px-4 py-2 mb-6">
-            <Target className="w-4 h-4 text-yellow-400" />
+          <div className="inline-flex items-center gap-2 bg-[oklch(90.5%_0.182_98.111/0.1)] border border-[oklch(90.5%_0.182_98.111)]/30 rounded-full px-4 py-2 mb-6">
+            <Target className="w-4 h-4 " style={{ color: tenant.colors.primary }} />
             <span className="text-sm font-semibold text-yellow-400">Your Optimization Goals</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-black mb-6">
@@ -87,10 +91,10 @@ export default function GoalsPage() {
           {goals.map((goal, index) => (
             <div
               key={index}
-              className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-yellow-400/50 hover:bg-white/[0.07] transition-all duration-300"
+              className="group bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-[oklch(90.5%_0.182_98.111)]/50 hover:bg-white/[0.07] transition-all duration-300"
             >
               {/* Icon - Minimal yellow/white only */}
-              <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-yellow-400/10 group-hover:border-yellow-400/30 transition-all duration-300">
+              <div className="w-14 h-14 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-[oklch(90.5%_0.182_98.111/0.1)] group-hover:border-[oklch(90.5%_0.182_98.111)]/30 transition-all duration-300">
                 <goal.icon className="w-7 h-7 text-white/70 group-hover:text-yellow-400 transition-colors duration-300" />
               </div>
 
@@ -118,7 +122,7 @@ export default function GoalsPage() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-12 text-center">
+        <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-12 text-center">
           <h2 className="text-3xl md:text-4xl font-black mb-4">
             Ready to Start Your <span className="text-yellow-400">Optimization Journey?</span>
           </h2>
@@ -127,7 +131,7 @@ export default function GoalsPage() {
           </p>
           <Link
             href="/consultation/intake"
-            className="inline-flex items-center gap-2 bg-yellow-400 text-black px-8 py-4 rounded-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300 text-lg"
+            className="inline-flex items-center gap-2 " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-8 py-4 rounded-lg font-bold hover:opacity-90 hover:shadow-xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300 text-lg"
           >
             Get Started - Free Assessment
             <ArrowRight className="w-6 h-6" />
@@ -145,7 +149,7 @@ export default function GoalsPage() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
                 1
               </div>
               <h3 className="text-xl font-bold mb-3">Complete Assessment</h3>
@@ -155,7 +159,7 @@ export default function GoalsPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
                 2
               </div>
               <h3 className="text-xl font-bold mb-3">Medical Review</h3>
@@ -165,7 +169,7 @@ export default function GoalsPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-4">
                 3
               </div>
               <h3 className="text-xl font-bold mb-3">Start Optimizing</h3>
@@ -182,7 +186,7 @@ export default function GoalsPage() {
       <div className="border-t border-white/10 mt-20">
         <div className="max-w-7xl mx-auto px-6 py-12 text-center">
           <p className="text-white/50 text-sm">
-            © 2025 Adonis Health. All rights reserved.
+            © 2025 {tenant.name}. All rights reserved.
           </p>
         </div>
       </div>

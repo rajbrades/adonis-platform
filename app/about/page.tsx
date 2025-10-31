@@ -1,5 +1,9 @@
 'use client'
 
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
+
 export const dynamic = 'force-dynamic'
 
 import Link from 'next/link'
@@ -44,7 +48,7 @@ export default function AboutPage() {
       <section className="pt-32 pb-16 px-6">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl md:text-6xl font-black mb-6">
-            About <span className="text-yellow-400">ADONIS</span>
+            About <span style={{ color: tenant.colors.primary }}>{tenant.name}</span>
           </h1>
           <p className="text-xl text-white/60 mb-8 max-w-3xl mx-auto leading-relaxed">
             We're pioneering the future of men's health through precision medicine—using advanced diagnostics, 

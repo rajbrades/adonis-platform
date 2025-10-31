@@ -1,10 +1,12 @@
 'use client'
 
+import { getTenantConfig } from '@/lib/tenant-config'
 import Link from 'next/link'
 import { useState } from 'react'
 import { ChevronDown, Menu, X } from 'lucide-react'
 
 export default function Navigation() {
+  const tenant = getTenantConfig()
   const [isOpen, setIsOpen] = useState(false)
   const [treatmentsOpen, setTreatmentsOpen] = useState(false)
 
@@ -19,11 +21,15 @@ export default function Navigation() {
   ]
 
   return (
-    <header className="bg-black border-b border-yellow-500/20 sticky top-0 z-50">
+    <header className="bg-black border-b border-white/10 sticky top-0 z-50">
       <nav className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex justify-between items-center">
-          <Link href="/" className="text-3xl font-black text-yellow-400">
-            ADONIS
+          <Link 
+            href="/" 
+            className="text-3xl font-black" 
+            style={{ color: tenant.colors.primary }}
+          >
+            {tenant.name}
           </Link>
           
           {/* Desktop Navigation */}
@@ -33,12 +39,12 @@ export default function Navigation() {
                 Treatments
                 <ChevronDown className="w-4 h-4 ml-1" />
               </button>
-              <div className="absolute top-full left-0 mt-2 w-64 bg-black border border-yellow-500/20 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+              <div className="absolute top-full left-0 mt-2 w-64 bg-black border border-white/20 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                 {treatmentSubPages.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="block px-4 py-3 text-white hover:text-yellow-400 hover:bg-yellow-400/10 transition-colors border-b border-yellow-500/10 last:border-b-0"
+                    className="block px-4 py-3 text-white hover:bg-white/10 transition-colors border-b border-white/10 last:border-b-0"
                   >
                     {item.name}
                   </Link>
@@ -64,7 +70,11 @@ export default function Navigation() {
             <Link href="/blog" className="text-white hover:text-yellow-400 transition-colors">
               Blog
             </Link>
-            <Link href="/consultation" className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all">
+            <Link 
+              href="/consultation" 
+              className="text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg hover:opacity-90 transition-all"
+              style={{ backgroundColor: tenant.colors.primary }}
+            >
               Get Started
             </Link>
           </div>
@@ -80,7 +90,7 @@ export default function Navigation() {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden mt-4 pb-4 border-t border-yellow-500/20 pt-4">
+          <div className="lg:hidden mt-4 pb-4 border-t border-white/20 pt-4">
             <div className="space-y-4">
               <div>
                 <button
@@ -124,7 +134,12 @@ export default function Navigation() {
               <Link href="/blog" className="block text-white hover:text-yellow-400 transition-colors" onClick={() => setIsOpen(false)}>
                 Blog
               </Link>
-              <Link href="/consultation" className="block bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg transition-all text-center mt-4" onClick={() => setIsOpen(false)}>
+              <Link 
+                href="/consultation" 
+                className="block text-black px-6 py-2 rounded-lg font-bold hover:shadow-lg hover:opacity-90 transition-all text-center mt-4"
+                style={{ backgroundColor: tenant.colors.primary }}
+                onClick={() => setIsOpen(false)}
+              >
                 Get Started
               </Link>
             </div>

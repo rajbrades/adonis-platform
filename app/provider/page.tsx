@@ -1,5 +1,9 @@
 'use client'
 
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
+
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { UserButton, useUser } from '@clerk/nextjs'
@@ -66,7 +70,7 @@ export default function ProviderDashboard() {
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <Link href="/" className="text-2xl font-black text-yellow-400">
-              ADONIS
+              {tenant.name}
             </Link>
             <div className="text-white/60">Provider Portal</div>
           </div>

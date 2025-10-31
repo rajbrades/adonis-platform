@@ -1,4 +1,5 @@
 'use client'
+import { getTenantConfig } from "@/lib/tenant-config"
 
 import Link from 'next/link'
 import { 
@@ -7,6 +8,7 @@ import {
 } from 'lucide-react'
 
 export default function TestosteroneBoostersPage() {
+  const tenant = getTenantConfig()
   const benefits = [
     'Naturally boost testosterone production',
     'Preserve fertility and sperm production',
@@ -89,8 +91,8 @@ export default function TestosteroneBoostersPage() {
           
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full px-4 py-2 mb-6">
-                <Zap className="w-4 h-4 text-yellow-400" />
+              <div className="inline-flex items-center gap-2 bg-[oklch(90.5%_0.182_98.111/0.1)] border border-[oklch(90.5%_0.182_98.111)]/30 rounded-full px-4 py-2 mb-6">
+                <Zap className="w-4 h-4 " style={{ color: tenant.colors.primary }} />
                 <span className="text-sm font-semibold text-yellow-400">NATURAL OPTIMIZATION</span>
               </div>
               
@@ -106,7 +108,7 @@ export default function TestosteroneBoostersPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link 
                   href="/consultation"
-                  className="inline-flex items-center justify-center bg-yellow-400 text-black px-8 py-4 rounded-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300"
+                  className="inline-flex items-center justify-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-8 py-4 rounded-lg font-bold hover:opacity-90 hover:shadow-xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300"
                 >
                   Start Free Assessment
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -160,7 +162,7 @@ export default function TestosteroneBoostersPage() {
             {benefits.map((benefit, idx) => (
               <div 
                 key={idx}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/[0.07] hover:border-[oklch(90.5%_0.182_98.111)]/30 transition-all duration-300"
               >
                 <CheckCircle className="w-8 h-8 text-yellow-400 mb-4" />
                 <p className="text-white/80 font-medium">{benefit}</p>
@@ -186,13 +188,13 @@ export default function TestosteroneBoostersPage() {
             {treatments.map((treatment, idx) => (
               <div 
                 key={idx}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-[oklch(90.5%_0.182_98.111)]/30 transition-all duration-300"
               >
                 <div className="grid md:grid-cols-3 gap-8">
                   <div className="md:col-span-2">
                     <div className="flex items-start gap-4 mb-6">
-                      <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <treatment.icon className="w-7 h-7 text-yellow-400" />
+                      <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <treatment.icon className="w-7 h-7 " style={{ color: tenant.colors.primary }} />
                       </div>
                       <div>
                         <h3 className="text-2xl font-bold mb-2">{treatment.name}</h3>
@@ -203,14 +205,14 @@ export default function TestosteroneBoostersPage() {
                     <div className="grid md:grid-cols-2 gap-4 mb-6">
                       <div className="bg-white/5 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <Pill className="w-5 h-5 text-yellow-400" />
+                          <Pill className="w-5 h-5 " style={{ color: tenant.colors.primary }} />
                           <span className="font-semibold text-sm text-white/80">Dosing Protocol</span>
                         </div>
                         <p className="text-sm text-white/60">{treatment.dosing}</p>
                       </div>
                       <div className="bg-white/5 rounded-xl p-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <Users className="w-5 h-5 text-yellow-400" />
+                          <Users className="w-5 h-5 " style={{ color: tenant.colors.primary }} />
                           <span className="font-semibold text-sm text-white/80">Ideal For</span>
                         </div>
                         <p className="text-sm text-white/60">{treatment.ideal}</p>
@@ -250,8 +252,8 @@ export default function TestosteroneBoostersPage() {
 
           <div className="grid md:grid-cols-2 gap-8">
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
-                <Sparkles className="w-7 h-7 text-yellow-400" />
+              <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                <Sparkles className="w-7 h-7 " style={{ color: tenant.colors.primary }} />
               </div>
               <h3 className="text-2xl font-bold mb-4">Natural Testosterone Boosters</h3>
               <div className="space-y-3 mb-6">
@@ -275,8 +277,8 @@ export default function TestosteroneBoostersPage() {
             </div>
 
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
-                <Zap className="w-7 h-7 text-yellow-400" />
+              <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                <Zap className="w-7 h-7 " style={{ color: tenant.colors.primary }} />
               </div>
               <h3 className="text-2xl font-bold mb-4">Testosterone Replacement (TRT)</h3>
               <div className="space-y-3 mb-6">
@@ -300,7 +302,7 @@ export default function TestosteroneBoostersPage() {
             </div>
           </div>
 
-          <div className="mt-12 bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-8 text-center">
+          <div className="mt-12 bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-8 text-center">
             <Baby className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
             <h3 className="text-2xl font-bold mb-3">Combination Therapy Available</h3>
             <p className="text-white/70 max-w-2xl mx-auto">
@@ -325,7 +327,7 @@ export default function TestosteroneBoostersPage() {
 
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 1
               </div>
               <h3 className="text-xl font-bold mb-3">Free Assessment</h3>
@@ -335,7 +337,7 @@ export default function TestosteroneBoostersPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 2
               </div>
               <h3 className="text-xl font-bold mb-3">Get Lab Work</h3>
@@ -345,7 +347,7 @@ export default function TestosteroneBoostersPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 3
               </div>
               <h3 className="text-xl font-bold mb-3">Physician Consultation</h3>
@@ -355,7 +357,7 @@ export default function TestosteroneBoostersPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 4
               </div>
               <h3 className="text-xl font-bold mb-3">Start Treatment</h3>
@@ -435,7 +437,7 @@ export default function TestosteroneBoostersPage() {
       {/* CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-12 text-center">
+          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-black mb-6">
               Ready to Boost Your Testosterone Naturally?
             </h2>
@@ -445,7 +447,7 @@ export default function TestosteroneBoostersPage() {
             </p>
             <Link 
               href="/consultation"
-              className="inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300 transform hover:scale-105"
             >
               Start Free Assessment
               <ArrowRight className="ml-3 w-5 h-5" />

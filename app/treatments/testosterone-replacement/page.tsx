@@ -1,4 +1,5 @@
 'use client'
+import { getTenantConfig } from "@/lib/tenant-config"
 
 import Link from 'next/link'
 import { 
@@ -7,6 +8,7 @@ import {
 } from 'lucide-react'
 
 export default function TestosteroneReplacementPage() {
+  const tenant = getTenantConfig()
   const benefits = [
     'Increased energy and vitality',
     'Enhanced muscle mass and strength',
@@ -58,8 +60,8 @@ export default function TestosteroneReplacementPage() {
           
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/30 rounded-full px-4 py-2 mb-6">
-                <Zap className="w-4 h-4 text-yellow-400" />
+              <div className="inline-flex items-center gap-2 bg-[oklch(90.5%_0.182_98.111/0.1)] border border-[oklch(90.5%_0.182_98.111)]/30 rounded-full px-4 py-2 mb-6">
+                <Zap className="w-4 h-4 " style={{ color: tenant.colors.primary }} />
                 <span className="text-sm font-semibold text-yellow-400">HORMONE OPTIMIZATION</span>
               </div>
               
@@ -75,7 +77,7 @@ export default function TestosteroneReplacementPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link 
                   href="/consultation"
-                  className="inline-flex items-center justify-center bg-yellow-400 text-black px-8 py-4 rounded-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300"
+                  className="inline-flex items-center justify-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-8 py-4 rounded-lg font-bold hover:opacity-90 hover:shadow-xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300"
                 >
                   Start Free Assessment
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -129,7 +131,7 @@ export default function TestosteroneReplacementPage() {
             {benefits.map((benefit, idx) => (
               <div 
                 key={idx}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-xl p-6 hover:bg-white/[0.07] hover:border-[oklch(90.5%_0.182_98.111)]/30 transition-all duration-300"
               >
                 <CheckCircle className="w-8 h-8 text-yellow-400 mb-4" />
                 <p className="text-white/80 font-medium">{benefit}</p>
@@ -156,10 +158,10 @@ export default function TestosteroneReplacementPage() {
             {protocols.map((protocol, idx) => (
               <div 
                 key={idx}
-                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-yellow-400/30 transition-all duration-300"
+                className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/[0.07] hover:border-[oklch(90.5%_0.182_98.111)]/30 transition-all duration-300"
               >
-                <div className="bg-yellow-400/10 w-14 h-14 rounded-xl flex items-center justify-center mb-6">
-                  <Syringe className="w-7 h-7 text-yellow-400" />
+                <div className="bg-[oklch(90.5%_0.182_98.111/0.1)] w-14 h-14 rounded-xl flex items-center justify-center mb-6">
+                  <Syringe className="w-7 h-7 " style={{ color: tenant.colors.primary }} />
                 </div>
                 
                 <h3 className="text-2xl font-bold mb-4">{protocol.name}</h3>
@@ -167,11 +169,11 @@ export default function TestosteroneReplacementPage() {
                 
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm">
-                    <Clock className="w-5 h-5 text-yellow-400" />
+                    <Clock className="w-5 h-5 " style={{ color: tenant.colors.primary }} />
                     <span className="text-white/60">Half-life: <strong className="text-white">{protocol.halfLife}</strong></span>
                   </div>
                   <div className="flex items-center gap-3 text-sm">
-                    <TrendingUp className="w-5 h-5 text-yellow-400" />
+                    <TrendingUp className="w-5 h-5 " style={{ color: tenant.colors.primary }} />
                     <span className="text-white/60">{protocol.frequency}</span>
                   </div>
                 </div>
@@ -180,7 +182,7 @@ export default function TestosteroneReplacementPage() {
           </div>
 
           {/* Carrier Oils */}
-          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-8 mb-8">
+          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-8 mb-8">
             <div className="flex items-start gap-4 mb-6">
               <Droplet className="w-8 h-8 text-yellow-400 flex-shrink-0" />
               <div>
@@ -225,7 +227,7 @@ export default function TestosteroneReplacementPage() {
 
           <div className="grid md:grid-cols-4 gap-8">
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 1
               </div>
               <h3 className="text-xl font-bold mb-3">Free Assessment</h3>
@@ -235,7 +237,7 @@ export default function TestosteroneReplacementPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 2
               </div>
               <h3 className="text-xl font-bold mb-3">Get Lab Work</h3>
@@ -245,7 +247,7 @@ export default function TestosteroneReplacementPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 3
               </div>
               <h3 className="text-xl font-bold mb-3">Physician Review</h3>
@@ -255,7 +257,7 @@ export default function TestosteroneReplacementPage() {
             </div>
 
             <div className="text-center">
-              <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
+              <div className="w-16 h-16 " style={{ backgroundColor: tenant.colors.primary }} className="rounded-full flex items-center justify-center text-black font-black text-2xl mx-auto mb-6">
                 4
               </div>
               <h3 className="text-xl font-bold mb-3">Start Treatment</h3>
@@ -335,7 +337,7 @@ export default function TestosteroneReplacementPage() {
       {/* CTA Section */}
       <section className="py-24 px-6">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-yellow-400/20 rounded-2xl p-12 text-center">
+          <div className="bg-gradient-to-r from-yellow-400/10 to-yellow-600/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-12 text-center">
             <h2 className="text-4xl font-black mb-6">
               Ready to Optimize Your Testosterone?
             </h2>
@@ -345,7 +347,7 @@ export default function TestosteroneReplacementPage() {
             </p>
             <Link 
               href="/consultation"
-              className="inline-flex items-center bg-yellow-400 text-black px-12 py-4 rounded-lg text-lg font-bold hover:bg-yellow-500 hover:shadow-xl hover:shadow-yellow-500/50 transition-all duration-300 transform hover:scale-105"
+              className="inline-flex items-center " style={{ backgroundColor: tenant.colors.primary }} className="text-black px-12 py-4 rounded-lg text-lg font-bold hover:opacity-90 hover:shadow-xl hover:shadow-[oklch(90.5%_0.182_98.111)]/50 transition-all duration-300 transform hover:scale-105"
             >
               Start Free Assessment
               <ArrowRight className="ml-3 w-5 h-5" />

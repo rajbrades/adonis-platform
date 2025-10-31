@@ -1,5 +1,9 @@
 'use client'
 
+import { getTenantConfig } from '@/lib/tenant-config'
+const tenant = getTenantConfig()
+
+
 export const dynamic = 'force-dynamic'
 
 import { useEffect, useState } from 'react'
@@ -121,7 +125,7 @@ export default function PatientDashboard() {
       <header className="bg-black/40 backdrop-blur-xl border-b border-yellow-500/20 sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            ADONIS
+            {tenant.name}
           </Link>
           <div className="flex items-center gap-6">
             <Link href="/patient/cart" className="relative">
