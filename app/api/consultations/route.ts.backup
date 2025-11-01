@@ -1,25 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-// TEMPORARY MOCK DATA FOR AI TESTING
-const MOCK_PATIENT = {
-  id: 'test-123',
-  name: 'John Executive',
-  age: 42,
-  occupation: 'Tech CEO',
-  submitted: '2 hours ago',
-  priority: 'high',
-  status: 'pending',
-  goals: ['Optimize testosterone', 'Increase energy', 'Improve body composition'],
-  symptoms: ['Low energy', 'Difficulty building muscle', 'Reduced libido', 'Poor sleep quality'],
-  conditions: ['None'],
-  lifestyle: {
-    exercise: '4-5 times per week',
-    sleep: '5-6 hours',
-    stress: 'High'
-  }
-}
-
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -29,24 +10,26 @@ export async function GET() {
 
     if (error) {
       console.error('Supabase error:', error)
+      return NextResponse.json(
+        { error: 'Failed to fetch consultations' },
+        { status: 500 }
+      )
     }
 
     const pending = data?.filter(c => c.status === 'pending') || []
     const reviewed = data?.filter(c => c.status !== 'pending') || []
 
-    // Add mock patient for testing
     return NextResponse.json({
-      pending: [MOCK_PATIENT, ...pending.map(transformConsultation)],
+      pending: pending.map(transformConsultation),
       reviewed: reviewed.map(transformConsultation)
     })
 
   } catch (error) {
     console.error('Fetch error:', error)
-    // Return mock data even if Supabase fails
-    return NextResponse.json({
-      pending: [MOCK_PATIENT],
-      reviewed: []
-    })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 

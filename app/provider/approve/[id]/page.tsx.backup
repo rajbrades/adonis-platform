@@ -7,7 +7,6 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
-import AIAnalysis from './AIAnalysis'
 
 interface LabPanel {
   id: string
@@ -25,7 +24,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
   const [labPanels, setLabPanels] = useState<LabPanel[]>([])
   const [selectedLabs, setSelectedLabs] = useState<string[]>([])
   const [providerNotes, setProviderNotes] = useState('')
-  const [labResults, setLabResults] = useState<any>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -42,21 +40,10 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
         .find((c: any) => c.id === resolvedParams.id)
       setConsultation(foundConsultation)
 
-      // Fetch lab panels
+      // Fetch lab panels from Supabase
       const response = await fetch('/api/lab-panels')
       const panels = await response.json()
-      setLabPanels(Array.isArray(panels) ? panels : [])
-
-      // Try to fetch lab results (may not exist yet)
-      try {
-        const labsRes = await fetch(`/api/patients/${resolvedParams.id}/labs`)
-        if (labsRes.ok) {
-          const labs = await labsRes.json()
-          setLabResults(labs)
-        }
-      } catch {
-        console.log('No lab results found - patient can still use initial assessment')
-      }
+      setLabPanels(panels)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -184,17 +171,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
         </div>
-
-        {/* AI Clinical Analysis */}
-        <AIAnalysis 
-          consultation={consultation}
-          labResults={labResults}
-          onAnalysisComplete={(analysis) => {
-            setProviderNotes(prev => 
-              prev ? `${prev}\n\n## AI Clinical Analysis\n\n${analysis}` : `## AI Clinical Analysis\n\n${analysis}`
-            )
-          }}
-        />
 
         {/* Lab Panels Selection */}
         <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
