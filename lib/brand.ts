@@ -22,6 +22,15 @@ export interface BrandConfig {
     href: string
     icon: string
   }>
+  whyChoose: {
+    sectionTitle: string
+    sectionSubtitle: string
+    items: Array<{
+      title: string
+      description: string
+      icon: string
+    }>
+  }
   whyUs: {
     sectionTitle: string
     items: Array<{
@@ -29,6 +38,20 @@ export interface BrandConfig {
       description: string
       icon: string
     }>
+  }
+  stats: {
+    title: string
+    subtitle: string
+    items: Array<{
+      value: string
+      label: string
+    }>
+  }
+  finalCta: {
+    title: string
+    subtitle: string
+    buttonText: string
+    disclaimer: string
   }
 }
 
@@ -58,17 +81,55 @@ const BRANDS: Record<BrandId, BrandConfig> = {
       },
       {
         title: 'Peptide Therapy',
-        description: 'Advanced peptides for recovery, fat loss, muscle gain, and anti-aging.',
+        description: 'Advanced peptides for recovery, fat loss, muscle growth, and anti-aging.',
         href: '/treatments/peptide-therapy',
         icon: 'TrendingUp'
       },
       {
-        title: 'Wellness Therapy',
-        description: 'NAD+, glutathione, IV therapy, and complete wellness optimization.',
-        href: '/treatments/wellness-therapy',
+        title: 'NAD+ Therapy',
+        description: 'Boost cellular energy, mental clarity, and longevity at the molecular level.',
+        href: '/treatments/nad-therapy',
+        icon: 'Sparkles'
+      },
+      {
+        title: 'Glutathione',
+        description: 'Powerful antioxidant for detoxification, immune support, and cellular health.',
+        href: '/treatments/glutathione',
+        icon: 'Shield'
+      },
+      {
+        title: 'Enclomiphene Citrate',
+        description: 'Natural testosterone optimization while preserving fertility and testicular function.',
+        href: '/treatments/enclomiphene',
         icon: 'Heart'
       }
     ],
+    whyChoose: {
+      sectionTitle: 'Why Choose ADONIS',
+      sectionSubtitle: 'The most advanced human optimization platform designed for high-performers.',
+      items: [
+        {
+          title: 'Licensed Physicians',
+          description: 'AI-supported, physician-led care from board-certified providers.',
+          icon: 'Shield'
+        },
+        {
+          title: 'Premium Quality',
+          description: 'Pharmaceutical-grade medications from US-licensed compounding pharmacies.',
+          icon: 'Award'
+        },
+        {
+          title: 'Fast Results',
+          description: 'Get your assessment reviewed and lab recommendations within 24-48 hours.',
+          icon: 'Clock'
+        },
+        {
+          title: 'Personalized Care',
+          description: 'Custom protocols designed around your goals and biomarkers.',
+          icon: 'Brain'
+        }
+      ]
+    },
     whyUs: {
       sectionTitle: 'Why ADONIS',
       items: [
@@ -88,6 +149,22 @@ const BRANDS: Record<BrandId, BrandConfig> = {
           icon: 'Clock'
         }
       ]
+    },
+    stats: {
+      title: 'Proven Results',
+      subtitle: 'Join thousands who have transformed their health through evidence-based optimization.',
+      items: [
+        { value: '10K+', label: 'PATIENTS OPTIMIZED' },
+        { value: '24-48h', label: 'ASSESSMENT REVIEW TIME' },
+        { value: '98%', label: 'PATIENT SATISFACTION' },
+        { value: '100%', label: 'LICENSED US PHYSICIANS' }
+      ]
+    },
+    finalCta: {
+      title: 'Ready to Optimize Your Life?',
+      subtitle: 'Take the first step toward peak performance, energy, and longevity with a free health assessment.',
+      buttonText: 'Start Free Assessment',
+      disclaimer: 'No credit card required • 100% confidential'
     }
   },
   athena: {
@@ -120,12 +197,50 @@ const BRANDS: Record<BrandId, BrandConfig> = {
         icon: 'Sparkles'
       },
       {
-        title: 'Wellness Therapy',
-        description: 'NAD+, glutathione, IV therapy, and comprehensive wellness optimization.',
-        href: '/treatments/wellness-therapy',
+        title: 'NAD+ Therapy',
+        description: 'Boost cellular energy, mental clarity, and longevity at the molecular level.',
+        href: '/treatments/nad-therapy',
         icon: 'TrendingUp'
+      },
+      {
+        title: 'Glutathione',
+        description: 'Powerful antioxidant for skin radiance, detoxification, and immune support.',
+        href: '/treatments/glutathione',
+        icon: 'Shield'
+      },
+      {
+        title: 'Wellness Therapy',
+        description: 'IV therapy, vitamin optimization, and comprehensive wellness support.',
+        href: '/treatments/wellness-therapy',
+        icon: 'Zap'
       }
     ],
+    whyChoose: {
+      sectionTitle: 'Why Choose ATHENA',
+      sectionSubtitle: 'Specialized women\'s health optimization designed for every stage of life.',
+      items: [
+        {
+          title: 'Women-Specialized Care',
+          description: 'Physicians trained in women\'s hormones, metabolism, and wellness optimization.',
+          icon: 'Heart'
+        },
+        {
+          title: 'Premium Quality',
+          description: 'Pharmaceutical-grade treatments from US-licensed compounding pharmacies.',
+          icon: 'Award'
+        },
+        {
+          title: 'Fast Results',
+          description: 'Get your assessment reviewed and recommendations within 24-48 hours.',
+          icon: 'Clock'
+        },
+        {
+          title: 'Personalized Protocols',
+          description: 'Custom treatment plans tailored to your unique hormonal profile and goals.',
+          icon: 'Brain'
+        }
+      ]
+    },
     whyUs: {
       sectionTitle: 'Why ATHENA',
       items: [
@@ -145,6 +260,22 @@ const BRANDS: Record<BrandId, BrandConfig> = {
           icon: 'Clock'
         }
       ]
+    },
+    stats: {
+      title: 'Proven Results',
+      subtitle: 'Join thousands of women who have transformed their health through personalized care.',
+      items: [
+        { value: '10K+', label: 'WOMEN EMPOWERED' },
+        { value: '24-48h', label: 'ASSESSMENT REVIEW TIME' },
+        { value: '98%', label: 'PATIENT SATISFACTION' },
+        { value: '100%', label: 'LICENSED US PHYSICIANS' }
+      ]
+    },
+    finalCta: {
+      title: 'Ready to Optimize Your Life?',
+      subtitle: 'Take the first step toward balanced hormones, renewed energy, and vibrant health with a free assessment.',
+      buttonText: 'Start Free Assessment',
+      disclaimer: 'No credit card required • 100% confidential'
     }
   }
 }
