@@ -87,12 +87,7 @@ export default function HomePage() {
                   >
                     <Icon className="w-8 h-8" style={{ color: brand.colors.primary }} />
                   </div>
-                  <h3 
-                    className="text-2xl font-bold mb-4 transition-colors text-white"
-                    style={{ ['--hover-color' as any]: brand.colors.primary }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = brand.colors.primary}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'white'}
-                  >
+                  <h3 className="text-2xl font-bold mb-4 text-white group-hover:opacity-80 transition-colors">
                     {service.title}
                   </h3>
                   <p className="text-base leading-relaxed text-gray-400">
