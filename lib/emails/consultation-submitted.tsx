@@ -36,8 +36,8 @@ export const ConsultationSubmittedEmail = ({
                 <table width="100%" cellpadding="0" cellspacing="0" border="0">
                   <tr>
                     <td align="center" style="padding-bottom: 24px;">
-                      <div style="width: 64px; height: 64px; background-color: rgba(34, 197, 94, 0.15); border: 2px solid #22C55E; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 32px; color: #22C55E; line-height: 64px;">✓</span>
+                      <div style="width: 64px; height: 64px; background-color: rgba(34, 197, 94, 0.15); border: 2px solid #22C55E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                        <span style="font-size: 32px; color: #22C55E; line-height: 1;">✓</span>
                       </div>
                     </td>
                   </tr>

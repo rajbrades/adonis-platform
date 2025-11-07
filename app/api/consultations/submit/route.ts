@@ -107,9 +107,9 @@ Questions? Reply to this email or contact us at support@getadonishealth.com
 
       await resend.emails.send({
         from: 'ADONIS Health <noreply@getadonishealth.com>',
-        reply_to: 'support@getadonishealth.com',
+        replyTo: 'support@getadonishealth.com',
         to: data.email,
-        subject: '✓ Your Health Assessment Has Been Received - ADONIS',
+        subject: 'Your ADONIS Health Assessment Has Been Received',
         html: emailHtml,
         text: emailText
       })
