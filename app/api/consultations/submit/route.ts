@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
 import { ConsultationSubmittedEmail } from '@/lib/emails/consultation-submitted'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export async function POST(request: Request) {
   console.log('📨 Consultation submission received')
@@ -66,25 +66,25 @@ export async function POST(request: Request) {
 
     console.log('✅ Consultation saved:', consultation.id)
 
-    // Send confirmation email
-    try {
-      const submittedDate = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
+    // Send confirmation email if Resend is configured
+    if (resend) {
+      try {
+        const submittedDate = new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
 
-      const emailHtml = ConsultationSubmittedEmail({
-        patientName: data.firstName,
-        consultationId: consultation.id,
-        goals: data.optimizationGoals || [],
-        submittedDate
-      })
+        const emailHtml = ConsultationSubmittedEmail({
+          patientName: data.firstName,
+          consultationId: consultation.id,
+          goals: data.optimizationGoals || [],
+          submittedDate
+        })
 
-      // Plain text version
-      const emailText = `
+        const emailText = `
 Hi ${data.firstName},
 
 Thank you for submitting your health optimization consultation with ADONIS.
@@ -103,20 +103,23 @@ Submitted: ${submittedDate}
 Questions? Reply to this email or contact us at support@getadonishealth.com
 
 © 2025 ADONIS Health. All rights reserved.
-      `
+        `
 
-      await resend.emails.send({
-        from: 'ADONIS Health <noreply@getadonishealth.com>',
-        replyTo: 'support@getadonishealth.com',
-        to: data.email,
-        subject: 'Your ADONIS Health Assessment Has Been Received',
-        html: emailHtml,
-        text: emailText
-      })
-      
-      console.log('✅ Confirmation email sent to:', data.email)
-    } catch (emailError) {
-      console.error('⚠️ Email error:', emailError)
+        await resend.emails.send({
+          from: 'ADONIS Health <noreply@getadonishealth.com>',
+          replyTo: 'support@getadonishealth.com',
+          to: data.email,
+          subject: 'Your ADONIS Health Assessment Has Been Received',
+          html: emailHtml,
+          text: emailText
+        })
+        
+        console.log('✅ Confirmation email sent to:', data.email)
+      } catch (emailError) {
+        console.error('⚠️ Email error:', emailError)
+      }
+    } else {
+      console.log('⚠️ Resend not configured, skipping email')
     }
 
     return NextResponse.json({ 
