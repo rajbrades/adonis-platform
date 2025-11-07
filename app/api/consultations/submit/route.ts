@@ -28,7 +28,6 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
 
-    // Insert consultation into database
     const { data: consultation, error } = await supabase
       .from('consultations')
       .insert([
@@ -67,7 +66,7 @@ export async function POST(request: Request) {
 
     console.log('✅ Consultation saved:', consultation.id)
 
-    // Send confirmation email to patient
+    // Send confirmation email
     try {
       const emailHtml = ConsultationSubmittedEmail({
         patientName: data.firstName,
@@ -83,16 +82,15 @@ export async function POST(request: Request) {
       })
 
       await resend.emails.send({
-        from: 'ADONIS Health <onboarding@resend.dev>',
+        from: 'ADONIS Health <noreply@getadonishealth.com>',
         to: data.email,
         subject: '✓ Your Health Assessment Has Been Received',
         html: emailHtml
       })
       
-      console.log('✅ Confirmation email sent to patient')
+      console.log('✅ Confirmation email sent to:', data.email)
     } catch (emailError) {
       console.error('⚠️ Email error:', emailError)
-      // Don't fail the request if email fails
     }
 
     return NextResponse.json({ 
