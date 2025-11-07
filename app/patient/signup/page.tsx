@@ -9,7 +9,6 @@ import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus } from 'lucide
 export default function PatientSignupPage() {
   const brand = getBrand()
   const router = useRouter()
-  const brand = getBrand()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState({

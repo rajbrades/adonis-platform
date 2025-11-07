@@ -46,7 +46,6 @@ const blogPosts: Record<string, any> = {
 export default function BlogArticlePage() {
   const brand = getBrand()
   const params = useParams()
-  const brand = getBrand()
   const slug = params.slug as string
   const post = blogPosts[slug]
 
