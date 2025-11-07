@@ -1,12 +1,7 @@
-import { getBrand } from "@/lib/brand"
 'use client'
 
+import { getBrand } from "@/lib/brand"
 export const dynamic = 'force-dynamic'
-
-
-
-
-
 
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
@@ -19,47 +14,43 @@ export default function DebugPDFPage() {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string>('')
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      setError(null)
-      setResult(null)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0])
+      setError('')
     }
   }
 
-  const handleDebug = async () => {
-    if (!file) return
+  const handleUpload = async () => {
+    if (!file) {
+      setError('Please select a file')
+      return
+    }
+
     setUploading(true)
-    setError(null)
+    setError('')
+    setResult(null)
 
     try {
       const formData = new FormData()
       formData.append('file', file)
 
-      console.log('Uploading file:', file.name, file.size)
-
-      const response = await fetch('/api/admin/debug-pdf', {
+      const response = await fetch('/api/parse-pdf', {
         method: 'POST',
-        body: formData
+        body: formData,
       })
 
-      console.log('Response status:', response.status)
-
       const data = await response.json()
-      
-      console.log('Response data:', data)
 
-      if (data.success) {
-        setResult(data)
-      } else {
-        setError(data.error || 'Unknown error')
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to parse PDF')
       }
-    } catch (error) {
-      console.error('Fetch error:', error)
-      setError(error instanceof Error ? error.message : 'Failed to process PDF')
+
+      setResult(data)
+    } catch (err: any) {
+      setError(err.message || 'An error occurred')
     } finally {
       setUploading(false)
     }
@@ -67,88 +58,62 @@ export default function DebugPDFPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <header className="bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/admin" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">
-            ADONIS ADMIN
-          </Link>
-          <div className="text-sm text-white/60">{user?.firstName}</div>
-        </nav>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-6 py-8">
-        <Link href="/admin" className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group">
-          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Admin
+      <div className="max-w-4xl mx-auto px-6 py-16">
+        <Link 
+          href="/dashboard"
+          className="inline-flex items-center gap-2 text-white/60 hover:text-white mb-8 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Dashboard
         </Link>
 
-        <h1 className="text-4xl font-black mb-8">Debug PDF Parser</h1>
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8">
+          <h1 className="text-3xl font-bold mb-2">PDF Debug Tool</h1>
+          <p className="text-white/60 mb-8">Upload a Quest Diagnostics PDF to test parsing</p>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-8">
-          <p className="text-white/60 mb-4">
-            Upload your Quest/Labcorp PDF to see the extracted text
-          </p>
-          
-          <div className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center mb-4">
-            <input
-              type="file"
-              accept=".pdf"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="pdf-upload"
-            />
-            <label htmlFor="pdf-upload" className="cursor-pointer">
-              <Upload className="w-12 h-12 text-white/40 mb-4 mx-auto" />
-              <div className="text-lg font-semibold mb-2">
-                {file ? file.name : 'Click to upload PDF'}
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Select PDF File</label>
+              <div className="flex gap-4">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileChange}
+                  className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white"
+                />
+                <button
+                  onClick={handleUpload}
+                  disabled={!file || uploading}
+                  className="px-6 py-3 rounded-lg font-semibold text-black transition-all disabled:opacity-50"
+                  style={{ backgroundColor: brand.colors.primary }}
+                >
+                  {uploading ? 'Parsing...' : 'Upload & Parse'}
+                </button>
               </div>
-              {file && (
-                <div className="text-sm text-white/40">
-                  {(file.size / 1024).toFixed(1)} KB
+            </div>
+
+            {error && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+                <p className="text-red-400">{error}</p>
+              </div>
+            )}
+
+            {result && (
+              <div className="space-y-4">
+                <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                  <p className="text-green-400 font-semibold">✓ PDF parsed successfully!</p>
                 </div>
-              )}
-            </label>
+
+                <div className="bg-white/5 border border-white/10 rounded-lg p-6">
+                  <h3 className="text-xl font-bold mb-4">Parsed Results</h3>
+                  <pre className="text-sm text-white/80 overflow-auto max-h-96">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
           </div>
-
-          {file && (
-            <button
-              onClick={handleDebug}
-              disabled={uploading}
-              className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-black py-3 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
-            >
-              {uploading ? 'Extracting...' : 'Extract Text'}
-            </button>
-          )}
-
-          {error && (
-            <div className="mt-4 bg-red-500/20 border border-red-500/40 rounded-xl p-4 text-red-400">
-              <strong>Error:</strong> {error}
-            </div>
-          )}
         </div>
-
-        {result && (
-          <div className="mt-6 bg-white/5 border border-white/10 rounded-2xl p-8">
-            <h2 className="text-2xl font-bold mb-4">Extracted Text</h2>
-            <div className="mb-4 text-sm text-white/60">
-              Total length: {result.textLength} characters
-            </div>
-            <div className="mb-4">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(result.text)
-                  alert('Copied to clipboard!')
-                }}
-                className="bg-yellow-400 text-black px-4 py-2 rounded-lg font-semibold hover:bg-yellow-500 transition"
-              >
-                Copy All Text
-              </button>
-            </div>
-            <pre className="bg-black/40 p-4 rounded-lg text-xs overflow-auto max-h-96 whitespace-pre-wrap font-mono">
-              {result.text}
-            </pre>
-          </div>
-        )}
       </div>
     </div>
   )
