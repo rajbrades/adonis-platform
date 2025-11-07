@@ -1,25 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-// TEMPORARY MOCK DATA FOR AI TESTING
-const MOCK_PATIENT = {
-  id: 'test-123',
-  name: 'John Executive',
-  age: 42,
-  occupation: 'Tech CEO',
-  submitted: '2 hours ago',
-  priority: 'high',
-  status: 'pending',
-  goals: ['Optimize testosterone', 'Increase energy', 'Improve body composition'],
-  symptoms: ['Low energy', 'Difficulty building muscle', 'Reduced libido', 'Poor sleep quality'],
-  conditions: ['None'],
-  lifestyle: {
-    exercise: '4-5 times per week',
-    sleep: '5-6 hours',
-    stress: 'High'
-  }
-}
-
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -29,22 +10,24 @@ export async function GET() {
 
     if (error) {
       console.error('Supabase error:', error)
+      return NextResponse.json({
+        pending: [],
+        reviewed: []
+      })
     }
 
     const pending = data?.filter(c => c.status === 'pending') || []
     const reviewed = data?.filter(c => c.status !== 'pending') || []
 
-    // Add mock patient for testing
     return NextResponse.json({
-      pending: [MOCK_PATIENT, ...pending.map(transformConsultation)],
+      pending: pending.map(transformConsultation),
       reviewed: reviewed.map(transformConsultation)
     })
 
   } catch (error) {
     console.error('Fetch error:', error)
-    // Return mock data even if Supabase fails
     return NextResponse.json({
-      pending: [MOCK_PATIENT],
+      pending: [],
       reviewed: []
     })
   }
@@ -52,11 +35,12 @@ export async function GET() {
 
 function transformConsultation(consultation: any) {
   const timeSince = getTimeSince(consultation.created_at)
+  const age = calculateAge(consultation.date_of_birth)
   
   return {
     id: consultation.id,
     name: `${consultation.first_name} ${consultation.last_name}`,
-    age: consultation.age,
+    age: age,
     occupation: consultation.occupation || 'Not specified',
     submitted: consultation.status === 'pending' ? timeSince : undefined,
     reviewed: consultation.status !== 'pending' ? timeSince : undefined,
@@ -67,11 +51,23 @@ function transformConsultation(consultation: any) {
     symptoms: consultation.symptoms || [],
     conditions: consultation.medical_conditions || [],
     lifestyle: {
-      exercise: consultation.exercise_frequency || 'Not specified',
-      sleep: consultation.sleep_hours || 'Not specified',
-      stress: consultation.stress_level || 'Not specified'
+      exercise: consultation.lifestyle?.exerciseFrequency || 'Not specified',
+      sleep: consultation.lifestyle?.sleepHours ? `${consultation.lifestyle.sleepHours} hours` : 'Not specified',
+      stress: consultation.lifestyle?.stressLevel || 'Not specified'
     }
   }
+}
+
+function calculateAge(dateOfBirth: string): number {
+  if (!dateOfBirth) return 0
+  const today = new Date()
+  const birthDate = new Date(dateOfBirth)
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  return age
 }
 
 function getTimeSince(dateString: string): string {
