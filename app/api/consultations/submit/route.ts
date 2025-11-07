@@ -68,24 +68,50 @@ export async function POST(request: Request) {
 
     // Send confirmation email
     try {
+      const submittedDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+
       const emailHtml = ConsultationSubmittedEmail({
         patientName: data.firstName,
         consultationId: consultation.id,
         goals: data.optimizationGoals || [],
-        submittedDate: new Date().toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })
+        submittedDate
       })
+
+      // Plain text version
+      const emailText = `
+Hi ${data.firstName},
+
+Thank you for submitting your health optimization consultation with ADONIS.
+
+Your Optimization Goals:
+${(data.optimizationGoals || []).map((g: string) => `• ${g}`).join('\n')}
+
+What happens next?
+1. A licensed provider will review your consultation within 24-48 hours
+2. You'll receive an email with their recommendations and lab test suggestions
+3. You can then order any recommended labs directly from that email
+
+Consultation ID: ${consultation.id}
+Submitted: ${submittedDate}
+
+Questions? Reply to this email or contact us at support@getadonishealth.com
+
+© 2025 ADONIS Health. All rights reserved.
+      `
 
       await resend.emails.send({
         from: 'ADONIS Health <noreply@getadonishealth.com>',
+        reply_to: 'support@getadonishealth.com',
         to: data.email,
-        subject: '✓ Your Health Assessment Has Been Received',
-        html: emailHtml
+        subject: '✓ Your Health Assessment Has Been Received - ADONIS',
+        html: emailHtml,
+        text: emailText
       })
       
       console.log('✅ Confirmation email sent to:', data.email)
