@@ -1,17 +1,38 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
-import { Users, FileText, Calendar, Activity, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { Users, FileText, Calendar, TrendingUp, Clock } from 'lucide-react'
 
 export default function ProviderPortal() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
   const brand = getBrand()
+  const [consultations, setConsultations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  if (!isLoaded) {
+  useEffect(() => {
+    if (isLoaded && user) {
+      fetchConsultations()
+    }
+  }, [isLoaded, user])
+
+  const fetchConsultations = async () => {
+    try {
+      const response = await fetch('/api/consultations')
+      const data = await response.json()
+      setConsultations(data.pending || [])
+    } catch (error) {
+      console.error('Error fetching consultations:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
         <div className="text-white">Loading...</div>
@@ -26,15 +47,9 @@ export default function ProviderPortal() {
 
   const stats = [
     { icon: Users, label: 'Active Patients', value: '247', change: '+12%' },
-    { icon: FileText, label: 'Pending Reviews', value: '8', change: '' },
+    { icon: FileText, label: 'Pending Reviews', value: String(consultations.length), change: '' },
     { icon: Calendar, label: 'Today\'s Appointments', value: '6', change: '' },
     { icon: TrendingUp, label: 'Patient Satisfaction', value: '98%', change: '+2%' }
-  ]
-
-  const pendingConsultations = [
-    { id: '1', name: 'John Smith', submitted: '2 hours ago', status: 'pending' },
-    { id: '2', name: 'Sarah Johnson', submitted: '5 hours ago', status: 'pending' },
-    { id: '3', name: 'Michael Brown', submitted: '1 day ago', status: 'pending' }
   ]
 
   return (
@@ -93,38 +108,46 @@ export default function ProviderPortal() {
             </Link>
           </div>
 
-          <div className="space-y-4">
-            {pendingConsultations.map((consultation) => (
-              <div 
-                key={consultation.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div 
-                    className="w-12 h-12 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: `${brand.colors.primary}20` }}
-                  >
-                    <Users className="w-6 h-6" style={{ color: brand.colors.primary }} />
-                  </div>
-                  <div>
-                    <div className="font-semibold">{consultation.name}</div>
-                    <div className="text-sm text-white/60">Submitted {consultation.submitted}</div>
-                  </div>
-                </div>
-                
-                <Link
-                  href={`/provider/approve/${consultation.id}`}
-                  className="px-6 py-2 rounded-lg font-semibold transition-all"
-                  style={{
-                    background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
-                    color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
-                  }}
+          {consultations.length === 0 ? (
+            <div className="text-center py-8 text-white/60">
+              No pending consultations
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {consultations.slice(0, 5).map((consultation) => (
+                <div 
+                  key={consultation.id}
+                  className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
                 >
-                  Review
-                </Link>
-              </div>
-            ))}
-          </div>
+                  <div className="flex items-center gap-4">
+                    <div 
+                      className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: `${brand.colors.primary}20` }}
+                    >
+                      <Users className="w-6 h-6" style={{ color: brand.colors.primary }} />
+                    </div>
+                    <div>
+                      <div className="font-semibold">{consultation.name}</div>
+                      <div className="text-sm text-white/60">
+                        Submitted {consultation.submitted || 'recently'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <Link
+                    href={`/provider/approve/${consultation.id}`}
+                    className="px-6 py-2 rounded-lg font-semibold transition-all"
+                    style={{
+                      background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
+                      color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
+                    }}
+                  >
+                    Review
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Quick Actions */}
