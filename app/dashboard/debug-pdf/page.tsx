@@ -1,3 +1,4 @@
+import { getBrand } from "@/lib/brand"
 'use client'
 
 export const dynamic = 'force-dynamic'
