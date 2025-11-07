@@ -1,4 +1,5 @@
 'use client'
+import { getBrand } from "@/lib/brand"
 
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'

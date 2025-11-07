@@ -1,4 +1,5 @@
 'use client'
+import { getBrand } from "@/lib/brand"
 
 import { useCart } from '@/app/contexts/CartContext'
 import Link from 'next/link'

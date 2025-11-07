@@ -1,3 +1,4 @@
+import { getBrand } from "@/lib/brand"
 import { SignUp } from '@clerk/nextjs'
 
 export default function SignUpPage() {

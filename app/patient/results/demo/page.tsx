@@ -1,4 +1,5 @@
 'use client'
+import { getBrand } from "@/lib/brand"
 
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'

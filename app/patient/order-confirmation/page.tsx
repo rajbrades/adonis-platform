@@ -1,4 +1,5 @@
 'use client'
+import { getBrand } from "@/lib/brand"
 
 import { useUser, UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
