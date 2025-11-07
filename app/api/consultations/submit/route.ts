@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'resend'
+import { ConsultationSubmittedEmail } from '@/lib/emails/consultation-submitted'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: Request) {
   console.log('📨 Consultation submission received')
@@ -12,19 +16,9 @@ export async function POST(request: Request) {
       goals: data.optimizationGoals?.length || 0
     })
 
-    // Check if Supabase credentials exist
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      console.error('❌ Missing NEXT_PUBLIC_SUPABASE_URL')
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json(
-        { error: 'Server configuration error: Missing Supabase URL' },
-        { status: 500 }
-      )
-    }
-
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY')
-      return NextResponse.json(
-        { error: 'Server configuration error: Missing service key' },
+        { error: 'Server configuration error' },
         { status: 500 }
       )
     }
@@ -33,8 +27,6 @@ export async function POST(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     )
-
-    console.log('🔌 Supabase client created')
 
     // Insert consultation into database
     const { data: consultation, error } = await supabase
@@ -74,6 +66,34 @@ export async function POST(request: Request) {
     }
 
     console.log('✅ Consultation saved:', consultation.id)
+
+    // Send confirmation email to patient
+    try {
+      const emailHtml = ConsultationSubmittedEmail({
+        patientName: data.firstName,
+        consultationId: consultation.id,
+        goals: data.optimizationGoals || [],
+        submittedDate: new Date().toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })
+      })
+
+      await resend.emails.send({
+        from: 'ADONIS Health <onboarding@resend.dev>',
+        to: data.email,
+        subject: '✓ Your Health Assessment Has Been Received',
+        html: emailHtml
+      })
+      
+      console.log('✅ Confirmation email sent to patient')
+    } catch (emailError) {
+      console.error('⚠️ Email error:', emailError)
+      // Don't fail the request if email fails
+    }
 
     return NextResponse.json({ 
       success: true, 
