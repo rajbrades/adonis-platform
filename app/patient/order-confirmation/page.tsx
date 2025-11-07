@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { CheckCircle, Mail, MapPin, Clock, Phone, FileText, ArrowRight, Sparkles } from 'lucide-react'
 
 export default function OrderConfirmationPage() {
+  const brand = getBrand()
   const { user } = useUser()
 
   return (

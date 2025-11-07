@@ -7,6 +7,7 @@ import { getBrand } from '@/lib/brand'
 import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus } from 'lucide-react'
 
 export default function PatientSignupPage() {
+  const brand = getBrand()
   const router = useRouter()
   const brand = getBrand()
   const [showPassword, setShowPassword] = useState(false)

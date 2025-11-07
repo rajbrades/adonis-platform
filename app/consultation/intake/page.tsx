@@ -7,6 +7,7 @@ import { getBrand } from '@/lib/brand'
 import { ArrowRight, Target, User, Calendar, Ruler, Weight, Briefcase, Phone, Mail } from 'lucide-react'
 
 export default function ConsultationIntakePage() {
+  const brand = getBrand()
   const router = useRouter()
   const brand = getBrand()
   const [formData, setFormData] = useState({

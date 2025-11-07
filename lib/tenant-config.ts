@@ -13,19 +13,19 @@ const tenantConfigs: Record<string, TenantConfig> = {
     name: "ADONIS",
     logo: "/adonis-logo.svg",
     colors: {
-      primary: "#facc15", // Tailwind yellow-400
+      primary: "#FCD34D", // Yellow
       secondary: "#1a1a1a",
     },
     domain: "adonis-project.vercel.app",
   },
-  "10x": {
-    name: "10X HEALTH",
-    logo: "/10x-logo.svg",
+  athena: {
+    name: "ATHENA",
+    logo: "/athena-logo.svg",
     colors: {
-      primary: "#aa0000", // Red #a00
+      primary: "#9333EA", // Purple
       secondary: "#1a1a1a",
     },
-    domain: "10xhealth.vercel.app",
+    domain: "athena-project.vercel.app",
   },
 }
 

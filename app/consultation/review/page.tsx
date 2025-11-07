@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 
 export default function ReviewPage() {
+  const brand = getBrand()
   const router = useRouter()
   const brand = getBrand()
   const [consultationData, setConsultationData] = useState<any>(null)

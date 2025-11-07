@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { ArrowLeft, Star, CheckCircle } from 'lucide-react'
 
 export default function ProductsPage() {
+  const brand = getBrand()
   const products = [
     {
       name: "Testosterone Optimization",

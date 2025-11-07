@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowLeft, ShoppingCart, Trash2 } from 'lucide-react'
 
 export default function PatientCartPage() {
+  const brand = getBrand()
   const { items, removeItem, clearCart, total } = useCart()
 
   return (

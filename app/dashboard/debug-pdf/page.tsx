@@ -13,6 +13,7 @@ import Link from 'next/link'
 import { ArrowLeft, Upload } from 'lucide-react'
 
 export default function DebugPDFPage() {
+  const brand = getBrand()
   const { user } = useUser()
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)

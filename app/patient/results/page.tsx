@@ -35,6 +35,7 @@ interface HistoricalDataPoint {
 }
 
 export default function PatientResultsPage() {
+  const brand = getBrand()
   const router = useRouter()
   const [results, setResults] = useState<LabResult[]>([])
   const [loading, setLoading] = useState(true)

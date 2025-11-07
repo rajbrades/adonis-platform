@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { ArrowLeft, CreditCard, CheckCircle } from 'lucide-react'
 
 export default function CheckoutPage() {
+  const brand = getBrand()
   const { user } = useUser()
   const { items, total, clearCart } = useCart()
   const [isProcessing, setIsProcessing] = useState(false)

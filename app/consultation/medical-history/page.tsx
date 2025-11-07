@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 
 export default function MedicalHistoryPage() {
+  const brand = getBrand()
   const router = useRouter()
   const brand = getBrand()
   const [formData, setFormData] = useState({

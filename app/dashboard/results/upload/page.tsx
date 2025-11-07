@@ -14,6 +14,7 @@ interface ParsedBiomarker {
 }
 
 export default function UploadResultsPage() {
+  const brand = getBrand()
   const { user } = useUser()
   const [step, setStep] = useState<'upload' | 'preview' | 'submitted'>('upload')
   const [uploading, setUploading] = useState(false)

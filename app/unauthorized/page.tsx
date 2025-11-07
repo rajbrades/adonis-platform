@@ -5,6 +5,7 @@ import { useClerk, useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 
 export default function UnauthorizedPage() {
+  const brand = getBrand()
   const { user } = useUser()
   const { signOut } = useClerk()
   const router = useRouter()

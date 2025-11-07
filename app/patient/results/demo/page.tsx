@@ -535,6 +535,7 @@ const mockBiomarkers: BiomarkerData[] = [
 ]
 
 export default function ResultsDemoPage() {
+  const brand = getBrand()
   const [hoveredPoint, setHoveredPoint] = useState<{biomarker: string, index: number} | null>(null)
 
   const getOptimalRange = (biomarkerName: string): string => {

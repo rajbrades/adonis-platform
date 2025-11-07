@@ -1,4 +1,4 @@
-export type BrandId = 'adonis' | 'athena'
+export type BrandId = 'adonis' | '10x' | 'athena'
 
 export interface BrandConfig {
   id: BrandId
@@ -171,6 +171,119 @@ const brands: Record<BrandId, BrandConfig> = {
       mission: 'Empowering men to achieve peak performance through physician-supervised hormone optimization and evidence-based performance medicine.'
     }
   },
+  '10x': {
+    id: '10x',
+    name: '10X HEALTH',
+    colors: {
+      primary: '#FF0000',
+      primaryDark: '#CC0000',
+      accent: '#FF0000'
+    },
+    hero: {
+      badge: 'HUMAN OPTIMIZATION MEDICINE',
+      title: 'Unlock Your',
+      titleHighlight: 'Peak',
+      subtitle: 'Advanced therapies and protocols to optimize your energy, performance, and longevity.',
+      ctaPrimary: 'START YOUR TRANSFORMATION',
+      ctaSecondary: 'SEE HOW IT WORKS'
+    },
+    services: [
+      {
+        icon: 'Zap',
+        title: 'Testosterone Optimization',
+        description: 'Comprehensive TRT protocols designed to restore peak testosterone levels and vitality.',
+        href: '/treatments/testosterone-replacement'
+      },
+      {
+        icon: 'TrendingUp',
+        title: 'Performance Enhancement',
+        description: 'Advanced peptide therapies to maximize athletic performance and recovery.',
+        href: '/treatments/peptide-therapy'
+      },
+      {
+        icon: 'Heart',
+        title: 'Sexual Wellness',
+        description: 'Restore confidence and performance with evidence-based sexual health treatments.',
+        href: '/treatments/sexual-wellness'
+      },
+      {
+        icon: 'Sparkles',
+        title: 'Hair Restoration',
+        description: 'Prevent hair loss and promote regrowth with proven pharmaceutical interventions.',
+        href: '/treatments/hair'
+      },
+      {
+        icon: 'Shield',
+        title: 'Longevity Medicine',
+        description: 'Cutting-edge protocols to optimize healthspan and extend peak performance years.',
+        href: '/treatments/longevity'
+      }
+    ],
+    whyChoose: {
+      sectionTitle: 'Why Choose Optimization',
+      sectionSubtitle: 'Experience the difference that proper hormone balance makes in every aspect of your life.',
+      items: [
+        {
+          icon: 'Zap',
+          title: 'Peak Energy',
+          description: 'Sustained vitality throughout the day'
+        },
+        {
+          icon: 'TrendingUp',
+          title: 'Muscle & Strength',
+          description: 'Enhanced protein synthesis and recovery'
+        },
+        {
+          icon: 'Brain',
+          title: 'Mental Clarity',
+          description: 'Improved focus and cognitive function'
+        },
+        {
+          icon: 'Heart',
+          title: 'Better Performance',
+          description: 'Enhanced sexual health and confidence'
+        }
+      ]
+    },
+    whyUs: {
+      items: [
+        {
+          icon: 'Shield',
+          title: 'Licensed Physicians',
+          description: 'All treatments overseen by board-certified doctors specializing in hormone optimization and performance medicine.'
+        },
+        {
+          icon: 'Award',
+          title: 'Proven Protocols',
+          description: 'Evidence-based treatments combining the latest research with clinical experience for optimal results.'
+        },
+        {
+          icon: 'Clock',
+          title: 'Ongoing Support',
+          description: 'Comprehensive monitoring, regular adjustments, and 24/7 access to our medical team throughout your journey.'
+        }
+      ]
+    },
+    stats: {
+      title: 'Proven Results',
+      subtitle: 'Join thousands who have transformed their health through evidence-based optimization',
+      items: [
+        { value: '10K+', label: 'PATIENTS OPTIMIZED' },
+        { value: '98%', label: 'SATISFACTION RATE' },
+        { value: '24-48h', label: 'ASSESSMENT REVIEW' },
+        { value: '100%', label: 'LICENSED US PHYSICIANS' }
+      ]
+    },
+    finalCta: {
+      title: 'Ready to Optimize Your Life?',
+      subtitle: 'Take the first step toward peak performance, energy, and longevity with a free health assessment.',
+      buttonText: 'Start Free Assessment',
+      disclaimer: 'No credit card required • 100% confidential'
+    },
+    about: {
+      mission: 'Empowering individuals to achieve peak performance through physician-supervised hormone optimization and evidence-based performance medicine.'
+    }
+  },
   athena: {
     id: 'athena',
     name: 'ATHENA',
@@ -287,6 +400,10 @@ const brands: Record<BrandId, BrandConfig> = {
 }
 
 export function getBrand(): BrandConfig {
-  const brandId = (process.env.NEXT_PUBLIC_BRAND || 'adonis') as BrandId
-  return brands[brandId]
+  const tenantId = process.env.NEXT_PUBLIC_TENANT_ID
+  if (tenantId === "athena") {
+    return brands["athena"]
+  }
+  // Default to adonis
+  return brands["adonis"]
 }

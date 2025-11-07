@@ -26,6 +26,7 @@ interface LabResult {
 }
 
 export default function ViewLabResultsPage() {
+  const brand = getBrand()
   const { user } = useUser()
   const [results, setResults] = useState<LabResult[]>([])
   const [filteredResults, setFilteredResults] = useState<LabResult[]>([])
