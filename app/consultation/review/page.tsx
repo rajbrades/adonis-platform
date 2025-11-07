@@ -12,7 +12,6 @@ import {
 export default function ReviewPage() {
   const brand = getBrand()
   const router = useRouter()
-  const brand = getBrand()
   const [consultationData, setConsultationData] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
 

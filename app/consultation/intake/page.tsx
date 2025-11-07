@@ -9,7 +9,6 @@ import { ArrowRight, Target, User, Calendar, Ruler, Weight, Briefcase, Phone, Ma
 export default function ConsultationIntakePage() {
   const brand = getBrand()
   const router = useRouter()
-  const brand = getBrand()
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
