@@ -7,6 +7,7 @@ export interface BrandConfig {
     primary: string
     primaryDark: string
     accent: string
+    primaryText: string  // Text color to use on primary background
   }
   hero: {
     badge: string
@@ -64,7 +65,8 @@ const brands: Record<BrandId, BrandConfig> = {
     colors: {
       primary: '#FCD34D',
       primaryDark: '#F59E0B',
-      accent: '#FFD700'
+      accent: '#FFD700',
+      primaryText: '#000000'  // Black text on yellow background
     },
     hero: {
       badge: 'PREMIUM MEN\'S HEALTH',
@@ -177,7 +179,8 @@ const brands: Record<BrandId, BrandConfig> = {
     colors: {
       primary: '#FF0000',
       primaryDark: '#CC0000',
-      accent: '#FF0000'
+      accent: '#FF0000',
+      primaryText: '#FFFFFF'  // White text on red background
     },
     hero: {
       badge: 'HUMAN OPTIMIZATION MEDICINE',
@@ -290,7 +293,8 @@ const brands: Record<BrandId, BrandConfig> = {
     colors: {
       primary: '#9333EA',
       primaryDark: '#7E22CE',
-      accent: '#A855F7'
+      accent: '#A855F7',
+      primaryText: '#FFFFFF'  // White text on purple background
     },
     hero: {
       badge: 'PREMIUM WOMEN\'S HEALTH',

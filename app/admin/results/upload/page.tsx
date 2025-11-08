@@ -2,8 +2,10 @@
 
 import { useState } from 'react'
 import { Upload, AlertCircle, CheckCircle, Loader } from 'lucide-react'
+import { getBrand } from '@/lib/brand'
 
 export default function UploadLabResults() {
+  const brand = getBrand()
   const [file, setFile] = useState<File | null>(null)
   const [parsing, setParsing] = useState(false)
   const [parsedData, setParsedData] = useState<any>(null)
@@ -75,17 +77,28 @@ export default function UploadLabResults() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-2">
-          Upload <span className="text-yellow-400">Lab Results</span>
+          Upload <span style={{ color: brand.colors.primary }}>Lab Results</span>
         </h1>
         <p className="text-white/60 mb-8">Upload Quest Diagnostics PDF for automatic parsing</p>
 
         {/* Upload Section */}
         <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 mb-6">
           <label className="block mb-4">
-            <div className="flex items-center justify-center w-full h-64 border-2 border-dashed border-white/20 rounded-lg hover:border-yellow-400/50 transition-colors cursor-pointer">
+            <div 
+              className="flex items-center justify-center w-full h-64 border-2 border-dashed rounded-lg transition-colors cursor-pointer"
+              style={{ 
+                borderColor: file ? brand.colors.primary : 'rgba(255, 255, 255, 0.2)',
+              }}
+              onMouseEnter={(e) => {
+                if (!file) e.currentTarget.style.borderColor = `${brand.colors.primary}80`
+              }}
+              onMouseLeave={(e) => {
+                if (!file) e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)'
+              }}
+            >
               {file ? (
                 <div className="text-center">
-                  <CheckCircle className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+                  <CheckCircle className="w-16 h-16 mx-auto mb-4" style={{ color: brand.colors.primary }} />
                   <p className="text-lg font-semibold">{file.name}</p>
                   <p className="text-white/60 text-sm mt-2">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
@@ -111,7 +124,11 @@ export default function UploadLabResults() {
             <button
               onClick={handleParsePDF}
               disabled={parsing}
-              className="w-full bg-yellow-400 text-black font-bold py-4 rounded-lg hover:bg-yellow-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full font-bold py-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ 
+                backgroundColor: brand.colors.primary,
+                color: brand.colors.primaryText || '#000000'
+              }}
             >
               {parsing ? (
                 <span className="flex items-center justify-center">
@@ -170,7 +187,11 @@ export default function UploadLabResults() {
 
             <button
               onClick={handleSubmit}
-              className="w-full bg-yellow-400 text-black font-bold py-4 rounded-lg hover:bg-yellow-500 transition-colors"
+              className="w-full font-bold py-4 rounded-lg transition-colors"
+              style={{ 
+                backgroundColor: brand.colors.primary,
+                color: brand.colors.primaryText || '#000000'
+              }}
             >
               Save to Database
             </button>
