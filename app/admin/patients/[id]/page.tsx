@@ -26,6 +26,18 @@ interface Consultation {
   reviewed_by: string
   provider_notes: string
   recommended_labs: any
+  lab_upload_status: string
+  created_at: string
+}
+
+interface LabResult {
+  id: string
+  patient_id: string
+  patient_name: string
+  patient_dob: string
+  test_date: string
+  lab_name: string
+  biomarkers: any[]
   created_at: string
 }
 
@@ -36,12 +48,14 @@ export default function PatientDetailPage() {
   const patientId = params.id as string
 
   const [patient, setPatient] = useState<Consultation | null>(null)
+  const [labResults, setLabResults] = useState<LabResult[]>([])
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     fetchPatient()
+    fetchLabResults()
   }, [patientId])
 
   const fetchPatient = async () => {
@@ -55,6 +69,17 @@ export default function PatientDetailPage() {
     } catch (error) {
       console.error('Failed to fetch patient:', error)
       setLoading(false)
+    }
+  }
+
+  const fetchLabResults = async () => {
+    try {
+      const res = await fetch('/api/admin/lab-results')
+      const data = await res.json()
+      const patientLabs = data.filter((lab: LabResult) => lab.patient_id === patientId)
+      setLabResults(patientLabs)
+    } catch (error) {
+      console.error('Failed to fetch lab results:', error)
     }
   }
 
@@ -88,7 +113,7 @@ export default function PatientDetailPage() {
 
       if (response.ok) {
         alert('Patient approved! Lab recommendations sent.')
-        router.push('/admin')
+        fetchPatient()
       }
     } catch (error) {
       console.error('Error approving patient:', error)
@@ -118,6 +143,8 @@ export default function PatientDetailPage() {
       </div>
     )
   }
+
+  const needsLabUpload = patient.status === 'approved' && (!patient.lab_upload_status || patient.lab_upload_status === 'pending')
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-20">
@@ -168,6 +195,94 @@ export default function PatientDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Patient Info */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Lab Results Section */}
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold" style={{ color: brand.colors.primary }}>
+                  Lab Results ({labResults.length})
+                </h2>
+                {needsLabUpload && (
+                  <Link
+                    href={`/admin/upload-labs?patientId=${patient.id}`}
+                    className="px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                    style={{
+                      backgroundColor: brand.colors.primary,
+                      color: brand.colors.primaryText
+                    }}
+                  >
+                    Upload Labs
+                  </Link>
+                )}
+              </div>
+
+              {labResults.length === 0 ? (
+                <div className="text-center py-8 text-gray-400">
+                  <div className="text-4xl mb-3">📋</div>
+                  <p className="mb-2">No lab results uploaded yet</p>
+                  {needsLabUpload && (
+                    <p className="text-sm">Patient is approved and awaiting lab upload</p>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {labResults.map((lab) => (
+                    <div key={lab.id} className="bg-black/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold">{lab.lab_name}</h3>
+                          <p className="text-sm text-gray-400">
+                            Test Date: {lab.test_date || 'N/A'} | Uploaded: {new Date(lab.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span 
+                          className="px-3 py-1 rounded-full text-xs font-semibold"
+                          style={{ 
+                            backgroundColor: `${brand.colors.primary}20`,
+                            color: brand.colors.primary 
+                          }}
+                        >
+                          {lab.biomarkers?.length || 0} Biomarkers
+                        </span>
+                      </div>
+                      
+                      {/* Show first few biomarkers */}
+                      {lab.biomarkers && lab.biomarkers.length > 0 && (
+                        <div className="space-y-2 mb-3">
+                          {lab.biomarkers.slice(0, 3).map((biomarker: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between text-sm bg-white/5 p-2 rounded">
+                              <span className="font-medium">{biomarker.biomarker}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-400">{biomarker.value} {biomarker.unit}</span>
+                                <span className={`px-2 py-0.5 rounded text-xs ${
+                                  biomarker.status === 'Normal' ? 'bg-green-500/20 text-green-400' :
+                                  biomarker.status === 'High' || biomarker.status === 'Low' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-gray-500/20 text-gray-400'
+                                }`}>
+                                  {biomarker.status}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          {lab.biomarkers.length > 3 && (
+                            <p className="text-sm text-gray-400 text-center">
+                              + {lab.biomarkers.length - 3} more biomarkers
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      <Link
+                        href={`/admin/results/view/${lab.id}`}
+                        className="block text-center px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-semibold transition-all"
+                      >
+                        View Full Results
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Basic Info */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4" style={{ color: brand.colors.primary }}>
@@ -294,6 +409,15 @@ export default function PatientDetailPage() {
                     <span className="text-white">{new Date(patient.reviewed_at).toLocaleDateString()}</span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Lab Status:</span>
+                  <span className={`font-semibold ${
+                    patient.lab_upload_status === 'uploaded' ? 'text-green-400' :
+                    'text-yellow-400'
+                  }`}>
+                    {patient.lab_upload_status === 'uploaded' ? 'Uploaded' : 'Pending'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -337,9 +461,21 @@ export default function PatientDetailPage() {
             {patient.status === 'approved' && (
               <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
                 <h3 className="font-bold text-green-400 mb-2">✓ Approved</h3>
-                <p className="text-sm text-gray-300">
+                <p className="text-sm text-gray-300 mb-4">
                   Patient has been approved. Lab recommendations sent on {new Date(patient.reviewed_at).toLocaleDateString()}.
                 </p>
+                {needsLabUpload && (
+                  <Link
+                    href={`/admin/upload-labs?patientId=${patient.id}`}
+                    className="block w-full text-center px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                    style={{
+                      backgroundColor: brand.colors.primary,
+                      color: brand.colors.primaryText
+                    }}
+                  >
+                    Upload Lab Results
+                  </Link>
+                )}
               </div>
             )}
           </div>
