@@ -1,8 +1,8 @@
-import pdf from 'pdf-parse'
+import pdfParse from 'pdf-parse-fork'
 
 export async function parseQuestPDF(buffer: Buffer) {
   try {
-    const data = await pdf(buffer)
+    const data = await pdfParse(buffer)
     const text = data.text
 
     // Extract patient info
@@ -26,11 +26,10 @@ export async function parseQuestPDF(buffer: Buffer) {
 }
 
 function extractPatientName(text: string): string {
-  // Try multiple patterns
   const patterns = [
-    /Patient:\s*([A-Z]+,\s*[A-Z]+)/i,
-    /Name:\s*([A-Z]+,\s*[A-Z]+)/i,
-    /([A-Z]+,\s*[A-Z]+)\s+DOB/i
+    /Patient[:\s]+([A-Z][A-Za-z]+,\s*[A-Z][A-Za-z]+)/i,
+    /Name[:\s]+([A-Z][A-Za-z]+,\s*[A-Z][A-Za-z]+)/i,
+    /([A-Z][A-Za-z]+,\s*[A-Z][A-Za-z]+)\s+DOB/i
   ]
 
   for (const pattern of patterns) {
@@ -45,7 +44,7 @@ function extractDOB(text: string): string {
   const patterns = [
     /DOB[:\s]+(\d{2}\/\d{2}\/\d{4})/i,
     /Date of Birth[:\s]+(\d{2}\/\d{2}\/\d{4})/i,
-    /(\d{2}\/\d{2}\/\d{4})\s+Sex/i
+    /(\d{2}\/\d{2}\/\d{4})\s+(?:Sex|Gender)/i
   ]
 
   for (const pattern of patterns) {
@@ -74,19 +73,18 @@ function extractTestDate(text: string): string {
 function extractBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
 
-  // Common biomarker patterns
   const biomarkerList = [
-    { name: 'Testosterone, Total', unit: 'ng/dL', pattern: /Testosterone,?\s*Total[:\s]+(\d+\.?\d*)/i },
-    { name: 'Testosterone, Free', unit: 'pg/mL', pattern: /Testosterone,?\s*Free[:\s]+(\d+\.?\d*)/i },
-    { name: 'Estradiol', unit: 'pg/mL', pattern: /Estradiol[:\s]+(\d+\.?\d*)/i },
-    { name: 'DHEA-S', unit: 'mcg/dL', pattern: /DHEA-?S[:\s]+(\d+\.?\d*)/i },
-    { name: 'PSA, Total', unit: 'ng/mL', pattern: /PSA,?\s*Total[:\s]+(\d+\.?\d*)/i },
-    { name: 'Vitamin D, 25-OH', unit: 'ng/mL', pattern: /Vitamin D.*?25-OH[:\s]+(\d+\.?\d*)/i },
-    { name: 'TSH', unit: 'mIU/L', pattern: /TSH[:\s]+(\d+\.?\d*)/i },
-    { name: 'Free T3', unit: 'pg/mL', pattern: /Free T3[:\s]+(\d+\.?\d*)/i },
-    { name: 'Free T4', unit: 'ng/dL', pattern: /Free T4[:\s]+(\d+\.?\d*)/i },
-    { name: 'Glucose', unit: 'mg/dL', pattern: /Glucose[:\s]+(\d+)/i },
-    { name: 'HbA1c', unit: '%', pattern: /HbA1c[:\s]+(\d+\.?\d*)/i },
+    { name: 'Testosterone, Total', unit: 'ng/dL', pattern: /Testosterone[,\s]*Total[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Testosterone, Free', unit: 'pg/mL', pattern: /(?:Testosterone[,\s]*Free|Free\s+Testosterone)[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Estradiol', unit: 'pg/mL', pattern: /Estradiol[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'DHEA-S', unit: 'mcg/dL', pattern: /DHEA-?S[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'PSA, Total', unit: 'ng/mL', pattern: /PSA[,\s]*Total[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Vitamin D, 25-OH', unit: 'ng/mL', pattern: /Vitamin D[^0-9]*(\d+(?:\.\d+)?)/i },
+    { name: 'TSH', unit: 'mIU/L', pattern: /\bTSH\b[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Free T3', unit: 'pg/mL', pattern: /Free T3[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Free T4', unit: 'ng/dL', pattern: /Free T4[:\s]+(\d+(?:\.\d+)?)/i },
+    { name: 'Glucose', unit: 'mg/dL', pattern: /\bGlucose\b[:\s]+(\d+)/i },
+    { name: 'HbA1c', unit: '%', pattern: /HbA1c[:\s]+(\d+(?:\.\d+)?)/i },
   ]
 
   for (const biomarker of biomarkerList) {
