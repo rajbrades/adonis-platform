@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const pdfParse = (await import('pdf-parse-fork')).default
     
     const formData = await req.formData()
-    const file = formData.get('pdf') as File
+    const file = formData.get('file') as File  // Changed from 'pdf' to 'file'
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
@@ -135,22 +135,15 @@ export async function POST(req: NextRequest) {
           value: match[1],
           unit: bio.unit,
           referenceRange: 'See report',
-          status: 'normal'
+          status: 'Normal'
         })
       }
     }
 
     return NextResponse.json({
-      patientName,
-      patientDOB,
       testDate,
-      panelName: 'Complete Panel',
-      biomarkers,
-      debug: {
-        textLength: text.length,
-        biomarkersFound: biomarkers.length,
-        firstChars: text.substring(0, 200)
-      }
+      labName: 'Quest Diagnostics',
+      biomarkers
     })
 
   } catch (error: any) {
