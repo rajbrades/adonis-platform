@@ -93,10 +93,10 @@ function PatientsContent() {
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold mb-2" style={{ color: brand.colors.primary }}>
+              <h1 className="text-2xl font-bold mb-1" style={{ color: brand.colors.primary }}>
                 Patient Database
               </h1>
-              <p className="text-gray-400">Search and manage all patients</p>
+              <p className="text-sm text-gray-300">Search and manage all patients</p>
             </div>
             <Link 
               href="/admin"
