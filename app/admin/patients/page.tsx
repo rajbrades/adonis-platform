@@ -89,6 +89,20 @@ function PatientsContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      {/* Breadcrumbs */}
+      <div className="border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-8 py-3">
+          <div className="flex items-center gap-2 text-sm">
+            <Link href="/admin" className="text-gray-400 hover:text-white transition-colors">
+              Admin
+            </Link>
+            <span className="text-gray-600">/</span>
+            <span className="text-white font-medium">Patients</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Header */}
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
