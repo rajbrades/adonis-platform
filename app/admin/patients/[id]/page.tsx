@@ -306,7 +306,6 @@ export default function PatientDetailPage() {
                 placeholder="Add notes about this patient..."
                 rows={6}
                 className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black resize-none"
-                style={{ focusRingColor: brand.colors.primary }}
               />
             </div>
 
