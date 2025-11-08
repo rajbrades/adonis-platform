@@ -2,87 +2,221 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Upload, Eye, Bug, Users, FileText } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
+
+interface Consultation {
+  id: string
+  first_name: string
+  last_name: string
+  email: string
+  date_of_birth: string
+  status: string
+  recommended_labs: any
+  reviewed_at: string
+  lab_upload_status: string | null
+}
 
 export default function AdminDashboard() {
   const brand = getBrand()
+  const [awaitingLabs, setAwaitingLabs] = useState<Consultation[]>([])
   const [stats, setStats] = useState({
-    totalResults: 0,
     totalPatients: 0,
-    pendingConsultations: 0
+    labsThisMonth: 0,
+    pendingConsultations: 0,
+    activePatients: 0
   })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/admin/lab-results/list')
-      .then(res => res.json())
-      .then(data => {
-        setStats({
-          totalResults: data.results?.length || 0,
-          totalPatients: new Set(data.results?.map((r: any) => r.patient_name)).size || 0,
-          pendingConsultations: 0
-        })
-      })
-      .catch(err => console.error('Error fetching stats:', err))
+    fetchDashboardData()
   }, [])
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-8">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2">
-          Admin <span style={{ color: brand.colors.primary }}>Dashboard</span>
-        </h1>
-        <p className="text-white/60 mb-12">Manage lab results and patient data</p>
+  const fetchDashboardData = async () => {
+    try {
+      // Fetch consultations awaiting lab upload
+      const consultationsRes = await fetch('/api/consultations')
+      const consultations = await consultationsRes.json()
+      
+      // Filter for approved consultations awaiting labs
+      const needingLabs = consultations.filter((c: Consultation) => 
+        c.status === 'approved' && 
+        (!c.lab_upload_status || c.lab_upload_status === 'pending')
+      )
+      
+      setAwaitingLabs(needingLabs)
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-            <FileText className="w-8 h-8 mb-3" style={{ color: brand.colors.primary }} />
-            <div className="text-3xl font-bold mb-1">{stats.totalResults}</div>
-            <div className="text-white/60">Lab Results</div>
+      // Calculate stats
+      setStats({
+        totalPatients: consultations.length,
+        labsThisMonth: 2, // TODO: Calculate from lab_results table
+        pendingConsultations: consultations.filter((c: Consultation) => c.status === 'pending').length,
+        activePatients: consultations.filter((c: Consultation) => c.status === 'approved').length
+      })
+
+      setLoading(false)
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error)
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="text-xl">Loading dashboard...</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      {/* Header */}
+      <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
+        <div className="max-w-7xl mx-auto px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold mb-2" style={{ color: brand.colors.primary }}>
+                Admin Dashboard
+              </h1>
+              <p className="text-gray-400">Manage lab results and patient coordination</p>
+            </div>
+            <Link 
+              href="/"
+              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+            >
+              ← Back to Home
+            </Link>
           </div>
-          
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-            <Users className="w-8 h-8 mb-3" style={{ color: brand.colors.primary }} />
-            <div className="text-3xl font-bold mb-1">{stats.totalPatients}</div>
-            <div className="text-white/60">Patients</div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-8 py-8">
+        {/* Action Required Section */}
+        {awaitingLabs.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></div>
+              <h2 className="text-2xl font-bold">ACTION REQUIRED ({awaitingLabs.length})</h2>
+            </div>
+            
+            <div className="space-y-4">
+              {awaitingLabs.slice(0, 5).map((patient) => (
+                <div 
+                  key={patient.id}
+                  className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6 hover:bg-white/10 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-semibold">
+                          {patient.first_name} {patient.last_name}
+                        </h3>
+                        <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">
+                          Labs Pending Upload
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
+                        <div>
+                          <span className="text-gray-500">Approved:</span>{' '}
+                          {new Date(patient.reviewed_at).toLocaleDateString()}
+                        </div>
+                        <div>
+                          <span className="text-gray-500">DOB:</span>{' '}
+                          {new Date(patient.date_of_birth).toLocaleDateString()}
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-gray-500">Recommended Panel:</span>{' '}
+                          {patient.recommended_labs?.panel_name || 'Male Hormone Panel'}
+                        </div>
+                      </div>
+                    </div>
+                    <Link
+                      href={`/admin/upload-labs?patientId=${patient.id}`}
+                      className="px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:opacity-90"
+                      style={{ 
+                        backgroundColor: brand.colors.primary,
+                        color: brand.colors.primaryText 
+                      }}
+                    >
+                      Upload Labs →
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {awaitingLabs.length > 5 && (
+              <Link
+                href="/admin/patients?filter=awaiting_labs"
+                className="mt-4 inline-block text-sm hover:underline"
+                style={{ color: brand.colors.primary }}
+              >
+                View all {awaitingLabs.length} patients awaiting labs →
+              </Link>
+            )}
           </div>
-          
-          <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-            <FileText className="w-8 h-8 mb-3" style={{ color: brand.colors.primary }} />
-            <div className="text-3xl font-bold mb-1">{stats.pendingConsultations}</div>
-            <div className="text-white/60">Pending Consultations</div>
+        )}
+
+        {/* Quick Stats */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">Quick Stats</h2>
+          <div className="grid grid-cols-4 gap-6">
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">{stats.activePatients}</div>
+              <div className="text-gray-400 text-sm">Active Patients</div>
+            </div>
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">{stats.labsThisMonth}</div>
+              <div className="text-gray-400 text-sm">Labs This Month</div>
+            </div>
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">{stats.pendingConsultations}</div>
+              <div className="text-gray-400 text-sm">Pending Reviews</div>
+            </div>
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <div className="text-3xl font-bold mb-2">{stats.totalPatients}</div>
+              <div className="text-gray-400 text-sm">Total Patients</div>
+            </div>
           </div>
         </div>
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link 
-            href="/admin/results/upload"
-            className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all group"
-          >
-            <Upload className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2">Upload Lab Results</h3>
-            <p className="text-white/60">Upload and parse Quest Diagnostics PDFs</p>
-          </Link>
+        {/* Quick Actions */}
+        <div>
+          <h2 className="text-2xl font-bold mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-3 gap-6">
+            <Link
+              href="/admin/patients"
+              className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all duration-300 group"
+            >
+              <div className="text-4xl mb-4" style={{ color: brand.colors.primary }}>👥</div>
+              <h3 className="text-xl font-semibold mb-2 group-hover:translate-x-1 transition-transform">
+                View All Patients
+              </h3>
+              <p className="text-gray-400 text-sm">Browse and search patient database</p>
+            </Link>
 
-          <Link 
-            href="/admin/results/view"
-            className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all group"
-          >
-            <Eye className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2">View All Results</h3>
-            <p className="text-white/60">Browse and search all lab results</p>
-          </Link>
+            <Link
+              href="/admin/upload-labs"
+              className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all duration-300 group"
+            >
+              <div className="text-4xl mb-4" style={{ color: brand.colors.primary }}>📤</div>
+              <h3 className="text-xl font-semibold mb-2 group-hover:translate-x-1 transition-transform">
+                Upload Lab Results
+              </h3>
+              <p className="text-gray-400 text-sm">Upload and parse Quest Diagnostics PDFs</p>
+            </Link>
 
-          <Link 
-            href="/admin/debug-pdf"
-            className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all group"
-          >
-            <Bug className="w-12 h-12 mb-4 group-hover:scale-110 transition-transform" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2">Debug PDF</h3>
-            <p className="text-white/60">Test PDF parsing and troubleshoot issues</p>
-          </Link>
+            <Link
+              href="/admin/results/view"
+              className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 hover:bg-white/10 transition-all duration-300 group"
+            >
+              <div className="text-4xl mb-4" style={{ color: brand.colors.primary }}>👁️</div>
+              <h3 className="text-xl font-semibold mb-2 group-hover:translate-x-1 transition-transform">
+                View All Results
+              </h3>
+              <p className="text-gray-400 text-sm">Browse all uploaded lab results</p>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
