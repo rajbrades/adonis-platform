@@ -9,20 +9,22 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { patientName, patientDOB, testDate, panelName, biomarkers } = body
+    const { patient_id, patient_name, patient_dob, test_date, lab_name, biomarkers } = body
 
-    // Generate user_id from name + DOB
-    const userId = `${patientName.toLowerCase().replace(/\s+/g, '_')}_${patientDOB.replace(/\//g, '')}`
+    // Validate required fields
+    if (!patient_id || !patient_name || !patient_dob) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
 
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
-        user_id: userId,
-        patient_name: patientName,
-        patient_dob: patientDOB,
-        test_date: testDate,
-        panel_name: panelName || 'Complete Panel',
-        biomarkers: biomarkers
+        patient_id: patient_id,
+        patient_name: patient_name,
+        patient_dob: patient_dob,
+        test_date: test_date || new Date().toISOString().split('T')[0],
+        lab_name: lab_name || 'Quest Diagnostics',
+        biomarkers: biomarkers || []
       })
       .select()
       .single()
@@ -35,6 +37,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, id: data.id })
   } catch (error: any) {
     console.error('Error saving lab results:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { data, error } = await supabase
+      .from('lab_results')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return NextResponse.json(data || [])
+  } catch (error: any) {
+    console.error('Error fetching lab results:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
