@@ -54,7 +54,6 @@ function UploadLabsContent() {
     try {
       const res = await fetch('/api/consultations')
       const data = await res.json()
-      // Filter for approved patients awaiting labs
       const awaitingLabs = data.filter((p: Patient) => 
         p.status === 'approved' && 
         (!p.lab_upload_status || p.lab_upload_status === 'pending')
@@ -104,7 +103,6 @@ function UploadLabsContent() {
     setParsing(true)
 
     try {
-      // Parse the PDF
       const formData = new FormData()
       formData.append('file', file)
 
@@ -139,7 +137,6 @@ function UploadLabsContent() {
     setUploading(true)
 
     try {
-      // Save lab results to database
       const response = await fetch('/api/admin/lab-results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,7 +158,6 @@ function UploadLabsContent() {
         return
       }
 
-      // Update consultation lab_upload_status
       await fetch('/api/consultations', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -190,7 +186,6 @@ function UploadLabsContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      {/* Header */}
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
@@ -216,7 +211,6 @@ function UploadLabsContent() {
       </div>
 
       <div className="max-w-4xl mx-auto px-8 py-8">
-        {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-sm ${step === 'select' ? 'font-semibold' : 'text-gray-500'}`} style={step === 'select' ? { color: brand.colors.primary } : {}}>Select</span>
@@ -235,7 +229,6 @@ function UploadLabsContent() {
           </div>
         </div>
 
-        {/* Step 1: Select Patient */}
         {step === 'select' && (
           <div>
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6 mb-6">
@@ -248,7 +241,6 @@ function UploadLabsContent() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black"
-                style={{ focusRingColor: brand.colors.primary }}
               />
               <p className="mt-2 text-sm text-gray-400">
                 Showing patients approved for lab work ({filteredPatients.length} patients)
@@ -310,7 +302,6 @@ function UploadLabsContent() {
           </div>
         )}
 
-        {/* Step 2: Confirm Patient */}
         {step === 'confirm' && selectedPatient && (
           <div>
             <div className="bg-white/5 backdrop-blur-lg border border-yellow-500/50 rounded-xl p-8 mb-6">
@@ -369,7 +360,6 @@ function UploadLabsContent() {
                     value={last4SSN}
                     onChange={(e) => setLast4SSN(e.target.value.replace(/\D/g, ''))}
                     className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black"
-                    style={{ focusRingColor: brand.colors.primary }}
                   />
                 </div>
 
@@ -415,7 +405,6 @@ function UploadLabsContent() {
           </div>
         )}
 
-        {/* Step 3: Upload PDF */}
         {step === 'upload' && selectedPatient && (
           <div>
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 mb-6">
@@ -468,7 +457,6 @@ function UploadLabsContent() {
           </div>
         )}
 
-        {/* Step 4: Review & Submit */}
         {step === 'review' && selectedPatient && parsedData && (
           <div>
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-8 mb-6">
