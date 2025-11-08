@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
-import { useUser } from '@clerk/nextjs'
+import { useUser, SignOutButton } from '@clerk/nextjs'
 
 interface Consultation {
   id: string
@@ -80,8 +80,16 @@ export default function AdminDashboard() {
             </div>
             <div className="flex items-center gap-4">
               {user && (
-                <div className="text-sm text-gray-400">
-                  Logged in as: <span className="text-white font-semibold">{user.firstName || user.emailAddresses[0].emailAddress}</span>
+                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 rounded-lg border border-white/10">
+                  <div className="text-sm">
+                    <div className="text-gray-400">Logged in as:</div>
+                    <div className="font-semibold">{user.firstName || user.emailAddresses[0].emailAddress}</div>
+                  </div>
+                  <SignOutButton>
+                    <button className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-semibold transition-all">
+                      Logout
+                    </button>
+                  </SignOutButton>
                 </div>
               )}
               <Link 
