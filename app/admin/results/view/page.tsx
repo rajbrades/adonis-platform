@@ -57,7 +57,7 @@ export default function ViewResultsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
-        <div className="max-w-7xl mx-auto px-8 py-4">
+        <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold mb-1" style={{ color: brand.colors.primary }}>
@@ -75,7 +75,7 @@ export default function ViewResultsPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-4 mb-4">
           <input
             type="text"
