@@ -1,37 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { parseQuestPDF } from '@/lib/parsers/lab-pdf-parser'
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth()
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+    const formData = await req.formData()
+    const file = formData.get('pdf') as File
 
-    const formData = await request.formData()
-    const file = formData.get('file') as File
-    
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    const pdf = require('pdf-parse-fork')
     const buffer = Buffer.from(await file.arrayBuffer())
-    const data = await pdf(buffer)
+    const result = await parseQuestPDF(buffer)
 
-    return NextResponse.json({ 
-      success: true,
-      text: data.text,
-      textLength: data.text.length,
-      preview: data.text.substring(0, 2000)
+    return NextResponse.json({
+      ...result,
+      debug: {
+        fileName: file.name,
+        fileSize: file.size,
+        biomarkerCount: result.biomarkers?.length || 0
+      }
     })
-
-  } catch (error) {
-    console.error('Debug error:', error)
+  } catch (error: any) {
+    console.error('Error in debug:', error)
     return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed'
+      error: error.message,
+      stack: error.stack 
     }, { status: 500 })
   }
 }

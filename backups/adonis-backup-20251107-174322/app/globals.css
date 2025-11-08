@@ -1,8 +1,0 @@
-@import "tailwindcss";
-
-/* Tenant color variables */
-:root {
-  --primary-color: oklch(90.5% 0.182 98.111);
-  --primary-color-10: oklch(90.5% 0.182 98.111 / 0.1);
-  --primary-color-30: oklch(90.5% 0.182 98.111 / 0.3);
-}
