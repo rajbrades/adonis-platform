@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
+import { useUser } from '@clerk/nextjs'
 
 interface Consultation {
   id: string
@@ -18,6 +19,7 @@ interface Consultation {
 
 export default function AdminDashboard() {
   const brand = getBrand()
+  const { user } = useUser()
   const [awaitingLabs, setAwaitingLabs] = useState<Consultation[]>([])
   const [stats, setStats] = useState({
     totalPatients: 0,
@@ -76,17 +78,24 @@ export default function AdminDashboard() {
               </h1>
               <p className="text-sm text-gray-400">Manage lab results and patient coordination</p>
             </div>
-            <Link 
-              href="/"
-              className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-sm"
-            >
-              ← Back to Home
-            </Link>
+            <div className="flex items-center gap-4">
+              {user && (
+                <div className="text-sm text-gray-400">
+                  Logged in as: <span className="text-white font-semibold">{user.firstName || user.emailAddresses[0].emailAddress}</span>
+                </div>
+              )}
+              <Link 
+                href="/"
+                className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-sm"
+              >
+                ← Back to Home
+              </Link>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="max-w-7xl mx-auto px-8 py-8">
         {awaitingLabs.length > 0 && (
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-3">
