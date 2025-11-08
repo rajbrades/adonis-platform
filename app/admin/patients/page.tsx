@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
@@ -19,7 +19,7 @@ interface Consultation {
   created_at: string
 }
 
-export default function PatientsPage() {
+function PatientsContent() {
   const brand = getBrand()
   const searchParams = useSearchParams()
   const filterParam = searchParams.get('filter')
@@ -238,5 +238,17 @@ export default function PatientsPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function PatientsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    }>
+      <PatientsContent />
+    </Suspense>
   )
 }
