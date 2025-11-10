@@ -182,7 +182,7 @@ export default function ProviderPortal() {
               Lab Reviews
             </h2>
             <Link 
-              href="/admin/patients?filter=labs-uploaded"
+              href="/provider/labs"
               className="text-sm font-semibold hover:underline"
               style={{ color: brand.colors.primary }}
             >
@@ -200,7 +200,7 @@ export default function ProviderPortal() {
               {labReviews.slice(0, 5).map((consultation) => (
                 <Link
                   key={consultation.id}
-                  href={`/admin/patients/${consultation.id}`}
+                  href={`/provider/labs/${consultation.id}`}
                   className="block p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-start justify-between">
@@ -276,15 +276,15 @@ export default function ProviderPortal() {
           </Link>
 
           <Link
-            href="/admin/upload-labs"
+            href="/provider/labs"
             className="p-6 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
           >
             <FlaskConical className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
             <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
-              Upload Lab Results
+              Lab Results
             </h3>
             <p className="text-white/60 text-sm">
-              Upload and parse lab PDFs
+              View and review all lab uploads
             </p>
           </Link>
         </div>
