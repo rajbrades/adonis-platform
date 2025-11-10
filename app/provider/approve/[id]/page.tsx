@@ -35,11 +35,16 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
 
   const fetchData = async () => {
     try {
-      // Fetch consultation
-      const consultationRes = await fetch(`/api/consultations`)
+      // Fetch consultation - API returns array directly
+      const consultationRes = await fetch('/api/consultations')
       const consultationData = await consultationRes.json()
-      const foundConsultation = [...consultationData.pending, ...consultationData.reviewed]
-        .find((c: any) => c.id === resolvedParams.id)
+      const foundConsultation = Array.isArray(consultationData) 
+        ? consultationData.find((c: any) => c.id === resolvedParams.id)
+        : null
+      
+      if (!foundConsultation) {
+        console.error('Consultation not found:', resolvedParams.id)
+      }
       setConsultation(foundConsultation)
 
       // Fetch lab panels
@@ -78,40 +83,66 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
       return
     }
 
-    if (!providerNotes.trim()) {
-      alert('Please add provider notes')
-      return
-    }
-
     setIsSubmitting(true)
 
     try {
-      const recommendedLabs = labPanels
-        .filter(lab => selectedLabs.includes(lab.id))
-        .map(lab => ({
-          id: lab.id,
-          name: lab.name,
-          description: lab.description,
-          price: lab.price
-        }))
-
-      const response = await fetch(`/api/consultations/${resolvedParams.id}/approve`, {
-        method: 'POST',
+      const selectedPanels = labPanels.filter(panel => selectedLabs.includes(panel.id))
+      
+      const response = await fetch('/api/consultations', {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          recommendedLabs,
-          providerNotes,
-          providerName: 'Dr. Smith'
+          id: resolvedParams.id,
+          status: 'approved',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: 'Provider',
+          provider_notes: providerNotes,
+          recommended_labs: {
+            tests: selectedPanels.map(p => p.name),
+            panel_name: selectedPanels.length === 1 ? selectedPanels[0].name : 'Custom Panel'
+          }
         })
       })
 
       if (!response.ok) throw new Error('Failed to approve consultation')
 
-      alert('Consultation approved and patient notified!')
+      // TODO: Send email notification to patient
+      
+      alert('Consultation approved! Patient will receive an email with lab recommendations.')
       router.push('/provider')
     } catch (error) {
-      console.error('Approval error:', error)
-      alert('Failed to approve consultation')
+      console.error('Error approving consultation:', error)
+      alert('Failed to approve consultation. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleReject = async () => {
+    if (!confirm('Are you sure you want to reject this consultation?')) return
+
+    setIsSubmitting(true)
+
+    try {
+      const response = await fetch('/api/consultations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: resolvedParams.id,
+          status: 'rejected',
+          reviewed_at: new Date().toISOString(),
+          reviewed_by: 'Provider',
+          provider_notes: providerNotes
+        })
+      })
+
+      if (!response.ok) throw new Error('Failed to reject consultation')
+
+      alert('Consultation rejected.')
+      router.push('/provider')
+    } catch (error) {
+      console.error('Error rejecting consultation:', error)
+      alert('Failed to reject consultation. Please try again.')
     } finally {
       setIsSubmitting(false)
     }
@@ -119,168 +150,250 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
       </div>
     )
   }
 
   if (!consultation) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <p className="text-white/60">Consultation not found</p>
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white text-xl mb-4">Consultation not found</p>
+          <Link href="/provider" className="text-yellow-500 hover:underline">
+            ← Back to Dashboard
+          </Link>
+        </div>
       </div>
     )
   }
 
-  const totalPrice = labPanels
-    .filter(lab => selectedLabs.includes(lab.id))
-    .reduce((sum, lab) => sum + lab.price, 0)
-
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="bg-black border-b border-yellow-500/20">
-        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/provider" className="text-2xl font-black text-yellow-400">
-            {tenant.name}
-          </Link>
-          <div className="text-white/60">Provider Portal</div>
-        </nav>
-      </header>
-
-      <div className="max-w-5xl mx-auto px-6 py-12">
-        <Link
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-24">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <Link 
           href="/provider"
-          className="inline-flex items-center text-white/70 hover:text-yellow-400 transition-colors mb-8"
+          className="inline-flex items-center text-white/60 hover:text-yellow-500 transition mb-8"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Dashboard
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Approve Consultation</h1>
-          <p className="text-white/60">Review and recommend lab panels for {consultation.name}</p>
+          <h1 className="text-4xl font-black mb-2">
+            <span className="text-yellow-500">Review</span> Consultation
+          </h1>
+          <p className="text-white/60">Patient: {consultation.first_name} {consultation.last_name}</p>
         </div>
 
-        {/* Patient Summary */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4 text-yellow-400">Patient Summary</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-white/60 text-sm mb-1">Name</p>
-              <p className="font-semibold">{consultation.name}</p>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Left Column - Patient Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Basic Info */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+              <h2 className="text-2xl font-bold mb-4">Patient Information</h2>
+              <div className="grid md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-white/60">Name:</span>
+                  <p className="font-semibold">{consultation.first_name} {consultation.last_name}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Email:</span>
+                  <p className="font-semibold">{consultation.email}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Phone:</span>
+                  <p className="font-semibold">{consultation.phone}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Date of Birth:</span>
+                  <p className="font-semibold">{new Date(consultation.date_of_birth).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Height:</span>
+                  <p className="font-semibold">{consultation.height} inches</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Weight:</span>
+                  <p className="font-semibold">{consultation.weight} lbs</p>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-white/60 text-sm mb-1">Age</p>
-              <p className="font-semibold">{consultation.age} years</p>
-            </div>
-            <div>
-              <p className="text-white/60 text-sm mb-1">Occupation</p>
-              <p className="font-semibold">{consultation.occupation}</p>
-            </div>
-            <div>
-              <p className="text-white/60 text-sm mb-1">Primary Goals</p>
-              <p className="font-semibold">{consultation.goals.join(', ')}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* AI Clinical Analysis */}
-        <AIAnalysis 
-          consultation={consultation}
-          labResults={labResults}
-          onAnalysisComplete={(analysis) => {
-            setProviderNotes(prev => 
-              prev ? `${prev}\n\n## AI Clinical Analysis\n\n${analysis}` : `## AI Clinical Analysis\n\n${analysis}`
-            )
-          }}
-        />
-
-        {/* Lab Panels Selection */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4 text-yellow-400">Select Recommended Lab Panels</h2>
-          <div className="space-y-4">
-            {labPanels.map((lab) => (
-              <div
-                key={lab.id}
-                onClick={() => toggleLab(lab.id)}
-                className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                  selectedLabs.includes(lab.id)
-                    ? 'bg-yellow-400/10 border-yellow-400'
-                    : 'bg-white/5 border-white/10 hover:bg-white/10'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-2">
-                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
-                        selectedLabs.includes(lab.id)
-                          ? 'bg-yellow-400 border-yellow-400'
-                          : 'border-white/40'
-                      }`}>
-                        {selectedLabs.includes(lab.id) && (
-                          <CheckCircle className="w-4 h-4 text-black" />
-                        )}
-                      </div>
-                      <h3 className="font-bold text-lg">{lab.name}</h3>
-                    </div>
-                    <p className="text-white/70 text-sm ml-8 mb-2">{lab.description}</p>
-                    <div className="flex items-center ml-8 space-x-4 text-sm text-white/60">
-                      <span>{lab.biomarker_count} biomarkers</span>
-                    </div>
+            {/* Health Goals & Symptoms */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+              <h2 className="text-2xl font-bold mb-4">Health Goals & Symptoms</h2>
+              <div className="space-y-4">
+                <div>
+                  <span className="text-white/60">Optimization Goals:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {consultation.optimization_goals?.map((goal: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm">
+                        {goal}
+                      </span>
+                    ))}
                   </div>
-                  <div className="text-right ml-4">
-                    <p className="text-2xl font-bold text-yellow-400">${lab.price}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Symptoms:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {consultation.symptoms?.map((symptom: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm">
+                        {symptom}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
 
-          {selectedLabs.length > 0 && (
-            <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="font-semibold">Total Investment:</span>
-                <span className="text-2xl font-bold text-yellow-400">${totalPrice}</span>
+            {/* Medical History */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+              <h2 className="text-2xl font-bold mb-4">Medical History</h2>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="text-white/60">Current Medications:</span>
+                  <p className="mt-1">{consultation.current_medications || 'None'}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Allergies:</span>
+                  <p className="mt-1">{consultation.allergies || 'None'}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Medical Conditions:</span>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {consultation.medical_conditions?.map((condition: string, idx: number) => (
+                      <span key={idx} className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm">
+                        {condition}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <span className="text-white/60">Previous Surgeries:</span>
+                  <p className="mt-1">{consultation.surgeries || 'None'}</p>
+                </div>
+                <div>
+                  <span className="text-white/60">Family History:</span>
+                  <p className="mt-1">{consultation.family_history || 'None'}</p>
+                </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Provider Notes */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
-          <h2 className="text-xl font-bold mb-4 text-yellow-400">Provider Notes</h2>
-          <textarea
-            value={providerNotes}
-            onChange={(e) => setProviderNotes(e.target.value)}
-            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-32"
-            placeholder="Enter your recommendations and treatment plan for this patient..."
-            required
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex space-x-4">
-          <button
-            onClick={handleApprove}
-            disabled={isSubmitting || selectedLabs.length === 0 || !providerNotes.trim()}
-            className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Approving...
-              </>
-            ) : (
-              'Approve & Send to Patient'
+            {/* Lifestyle */}
+            {consultation.lifestyle && (
+              <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
+                <h2 className="text-2xl font-bold mb-4">Lifestyle</h2>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-white/60">Exercise:</span>
+                    <p className="mt-1 capitalize">{consultation.lifestyle.exerciseFrequency}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60">Sleep:</span>
+                    <p className="mt-1">{consultation.lifestyle.sleepHours} hours</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60">Diet:</span>
+                    <p className="mt-1 capitalize">{consultation.lifestyle.diet}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60">Stress Level:</span>
+                    <p className="mt-1 capitalize">{consultation.lifestyle.stressLevel}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60">Alcohol:</span>
+                    <p className="mt-1 capitalize">{consultation.lifestyle.alcohol}</p>
+                  </div>
+                  <div>
+                    <span className="text-white/60">Smoking:</span>
+                    <p className="mt-1 capitalize">{consultation.lifestyle.smoking}</p>
+                  </div>
+                </div>
+              </div>
             )}
-          </button>
-          <Link
-            href="/provider"
-            className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg font-bold hover:bg-white/10 transition-all text-center"
-          >
-            Cancel
-          </Link>
+
+            {/* AI Analysis */}
+            {labResults && (
+              <AIAnalysis 
+                consultation={consultation}
+                labResults={labResults}
+              />
+            )}
+          </div>
+
+          {/* Right Column - Actions */}
+          <div className="space-y-6">
+            {/* Lab Panel Selection */}
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 sticky top-24">
+              <h2 className="text-xl font-bold mb-4">Recommended Lab Panels</h2>
+              
+              <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
+                {labPanels.map((panel) => (
+                  <label
+                    key={panel.id}
+                    className="flex items-start gap-3 p-3 rounded-lg border border-white/10 hover:border-yellow-500/50 cursor-pointer transition-all"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedLabs.includes(panel.id)}
+                      onChange={() => toggleLab(panel.id)}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="font-semibold">{panel.name}</div>
+                      <div className="text-xs text-white/60 mt-1">{panel.description}</div>
+                      <div className="text-xs text-yellow-500 mt-2">
+                        ${panel.price} • {panel.biomarker_count} biomarkers
+                      </div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+
+              {/* Provider Notes */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold mb-2">Provider Notes</label>
+                <textarea
+                  value={providerNotes}
+                  onChange={(e) => setProviderNotes(e.target.value)}
+                  placeholder="Add any notes or recommendations..."
+                  rows={4}
+                  className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-500"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleApprove}
+                  disabled={isSubmitting || selectedLabs.length === 0}
+                  className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-5 h-5" />
+                      Approve & Send Labs
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleReject}
+                  disabled={isSubmitting}
+                  className="w-full px-6 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Reject Consultation
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
