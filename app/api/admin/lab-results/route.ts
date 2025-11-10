@@ -9,18 +9,19 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { patient_id, patient_name, patient_dob, test_date, biomarkers } = body
+    const { patient_name, patient_dob, test_date, biomarkers } = body
+
+    console.log('💾 Saving lab results:', { patient_name, patient_dob, biomarkers_count: biomarkers?.length })
 
     // Validate required fields
-    if (!patient_id || !patient_name || !patient_dob) {
+    if (!patient_name || !patient_dob) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Try inserting without lab_name first
+    // Insert lab results with correct column names
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
-        patient_id: patient_id,
         patient_name: patient_name,
         patient_dob: patient_dob,
         test_date: test_date || new Date().toISOString().split('T')[0],
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('❌ Supabase error:', error)
       return NextResponse.json({ 
         error: error.message,
         hint: error.hint,
@@ -38,9 +39,10 @@ export async function POST(req: NextRequest) {
       }, { status: 500 })
     }
 
+    console.log('✅ Lab results saved successfully:', data.id)
     return NextResponse.json({ success: true, id: data.id })
   } catch (error: any) {
-    console.error('Error saving lab results:', error)
+    console.error('❌ Error saving lab results:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
