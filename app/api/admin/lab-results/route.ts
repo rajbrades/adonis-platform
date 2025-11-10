@@ -9,13 +9,14 @@ const supabase = createClient(
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { patient_id, patient_name, patient_dob, test_date, lab_name, biomarkers } = body
+    const { patient_id, patient_name, patient_dob, test_date, biomarkers } = body
 
     // Validate required fields
     if (!patient_id || !patient_name || !patient_dob) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Try inserting without lab_name first
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
@@ -23,7 +24,6 @@ export async function POST(req: NextRequest) {
         patient_name: patient_name,
         patient_dob: patient_dob,
         test_date: test_date || new Date().toISOString().split('T')[0],
-        lab_name: lab_name || 'Quest Diagnostics',
         biomarkers: biomarkers || []
       })
       .select()
@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       console.error('Supabase error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ 
+        error: error.message,
+        hint: error.hint,
+        details: error.details 
+      }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, id: data.id })
