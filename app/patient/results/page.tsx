@@ -156,7 +156,7 @@ export default function PatientResultsPage() {
 
   if (results.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           <h1 className="text-4xl font-black mb-4">No Results Found</h1>
           <p className="text-white/60 mb-8">
@@ -183,7 +183,7 @@ export default function PatientResultsPage() {
     })))
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
         <div className="max-w-7xl mx-auto px-6 py-8">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
             <ArrowLeft className="w-4 h-4" />
@@ -497,7 +497,7 @@ export default function PatientResultsPage() {
   })))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       <div className="max-w-7xl mx-auto px-6 py-8">
         <Link href="/dashboard" className="inline-flex items-center gap-2 text-white/60 hover:text-white transition mb-6">
           <ArrowLeft className="w-4 h-4" />

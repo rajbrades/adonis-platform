@@ -30,7 +30,7 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
 
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-12">
         <div className="text-center mb-12 pt-20">
           <h1 className="text-5xl font-black mb-6">
             Elite <span className="text-yellow-400">Treatments</span>

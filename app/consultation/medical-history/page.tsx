@@ -101,7 +101,7 @@ export default function MedicalHistoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-4xl mx-auto px-6 py-12">
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-12">
         
         <div className="mb-12">
           <button onClick={handleBack} className="inline-flex items-center gap-2 mb-8 text-white/60 hover:text-white transition">

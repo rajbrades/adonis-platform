@@ -446,7 +446,7 @@ export default function SexualWellnessPage() {
       </section>
 
       {/* Important Note */}
-      <section className="py-16 px-6">
+      <section className="pt-32 pb-16 px-6">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gradient-to-r from-[${brand.colors.primary}]/10 to-[${brand.colors.primaryDark}]/10 backdrop-blur-sm border border-[oklch(90.5%_0.182_98.111)]/20 rounded-2xl p-8">
             <div className="flex items-start gap-4">

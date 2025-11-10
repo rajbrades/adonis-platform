@@ -11,7 +11,7 @@ export default function PatientCartPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-4xl mx-auto px-6 py-16">
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-16">
         <Link href="/dashboard" className="inline-flex items-center text-white/60 hover:text-yellow-400 transition mb-8 group">
           <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
           Back to Dashboard

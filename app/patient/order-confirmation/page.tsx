@@ -11,7 +11,7 @@ export default function OrderConfirmationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-4xl mx-auto px-6 py-16">
+      <div className="max-w-4xl mx-auto px-6 pt-32 pb-16">
         <div className="text-center mb-12">
           <div className="relative inline-block mb-6">
             <div className="absolute inset-0 bg-green-500/20 blur-3xl animate-pulse"></div>

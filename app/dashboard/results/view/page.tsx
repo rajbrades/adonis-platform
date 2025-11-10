@@ -98,7 +98,7 @@ export default function ViewLabResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       <header className="bg-black/40 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <Link href="/admin" className="text-2xl font-black bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">

@@ -62,7 +62,7 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       <div className="max-w-4xl mx-auto px-6 py-12">
         
         <div className="mb-12">

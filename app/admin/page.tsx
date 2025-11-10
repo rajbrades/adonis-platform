@@ -68,7 +68,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       <div className="border-b border-white/10 bg-black/20 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-8 py-4">
           <div className="flex items-center justify-between">

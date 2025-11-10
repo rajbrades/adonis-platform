@@ -738,7 +738,7 @@ export default function ResultsDemoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 pt-32 pb-8">
         <Link 
           href="/patient" 
           className="inline-flex items-center gap-2 text-white/60 hover:text-white transition mb-6"

@@ -63,7 +63,7 @@ export default function BlogArticlePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       
       {/* Back Button */}
       <div className="max-w-4xl mx-auto px-6 pt-32 pb-8">
