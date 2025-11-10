@@ -13,6 +13,7 @@ export default function ProviderPortal() {
   const brand = getBrand()
   const [pendingConsultations, setPendingConsultations] = useState<any[]>([])
   const [labReviews, setLabReviews] = useState<any[]>([])
+  const [activePatients, setActivePatients] = useState(0)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -40,8 +41,17 @@ export default function ProviderPortal() {
           c.lab_upload_status === 'uploaded'
         )
         
+        // Active Patients = activity within last 12 months
+        const now = new Date()
+        const twelveMonthsAgo = new Date(now.setMonth(now.getMonth() - 12))
+        const active = data.filter(c => {
+          const lastActivity = new Date(c.updated_at || c.created_at)
+          return lastActivity >= twelveMonthsAgo && c.status !== 'rejected'
+        })
+        
         setPendingConsultations(pending)
         setLabReviews(labsToReview)
+        setActivePatients(active.length)
       }
     } catch (error) {
       console.error('Error fetching consultations:', error)
@@ -63,10 +73,10 @@ export default function ProviderPortal() {
   }
 
   const stats = [
-    { icon: Users, label: 'Active Patients', value: '247', change: '+12%' },
-    { icon: FileText, label: 'Pending Assessments', value: String(pendingConsultations.length), change: '' },
-    { icon: FlaskConical, label: 'Lab Reviews', value: String(labReviews.length), change: '' },
-    { icon: TrendingUp, label: 'Patient Satisfaction', value: '98%', change: '+2%' }
+    { icon: Users, label: 'Active Patients', value: String(activePatients), change: '', isLive: true },
+    { icon: FileText, label: 'Pending Assessments', value: String(pendingConsultations.length), change: '', isLive: true },
+    { icon: FlaskConical, label: 'Lab Reviews', value: String(labReviews.length), change: '', isLive: true },
+    { icon: TrendingUp, label: 'Patient Satisfaction', value: '—', change: '', isLive: false, comingSoon: true }
   ]
 
   return (
@@ -85,22 +95,29 @@ export default function ProviderPortal() {
         <div className="grid md:grid-cols-4 gap-6 mb-12">
           {stats.map((stat, idx) => {
             const Icon = stat.icon
+            const isComingSoon = stat.comingSoon
+            
             return (
               <div 
                 key={idx}
-                className="p-6 rounded-2xl border"
+                className={`p-6 rounded-2xl border relative ${isComingSoon ? 'opacity-50' : ''}`}
                 style={{
                   background: `linear-gradient(to right, ${brand.colors.primary}10, ${brand.colors.primary}05)`,
                   borderColor: `${brand.colors.primary}20`
                 }}
               >
+                {isComingSoon && (
+                  <div className="absolute top-2 right-2 px-2 py-1 bg-white/10 rounded text-xs font-semibold text-white/60">
+                    Coming Soon
+                  </div>
+                )}
                 <div className="flex items-center justify-between mb-4">
-                  <Icon className="w-6 h-6" style={{ color: brand.colors.primary }} />
+                  <Icon className="w-6 h-6" style={{ color: isComingSoon ? '#666' : brand.colors.primary }} />
                   {stat.change && (
                     <span className="text-green-400 text-sm font-semibold">{stat.change}</span>
                   )}
                 </div>
-                <div className="text-3xl font-bold mb-1" style={{ color: brand.colors.primary }}>
+                <div className="text-3xl font-bold mb-1" style={{ color: isComingSoon ? '#666' : brand.colors.primary }}>
                   {stat.value}
                 </div>
                 <div className="text-white/60 text-sm">{stat.label}</div>
