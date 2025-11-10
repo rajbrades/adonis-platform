@@ -186,7 +186,7 @@ export default function ProviderPortal() {
               className="text-sm font-semibold hover:underline"
               style={{ color: brand.colors.primary }}
             >
-              View All →
+              View Completed →
             </Link>
           </div>
 
@@ -200,7 +200,7 @@ export default function ProviderPortal() {
               {labReviews.slice(0, 5).map((consultation) => (
                 <Link
                   key={consultation.id}
-                  href={`/provider/labs/${consultation.id}`}
+                  href={`/admin/patients/${consultation.id}`}
                   className="block p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-start justify-between">
