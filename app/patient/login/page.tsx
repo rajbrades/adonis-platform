@@ -4,22 +4,49 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
-import { Lock, Calendar, User, Eye, EyeOff, ShoppingBag } from 'lucide-react'
+import { Lock, Calendar, User, Eye, EyeOff, ShoppingBag, Loader2 } from 'lucide-react'
 
 export default function PatientLoginPage() {
   const brand = getBrand()
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    fullName: '',
-    dateOfBirth: '',
+    name: '',
+    dob: '',
     password: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual authentication
-    router.push('/patient')
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/patient/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        // Store patient info in sessionStorage
+        sessionStorage.setItem('patient_id', data.patient.id)
+        sessionStorage.setItem('patient_name', data.patient.full_name)
+        sessionStorage.setItem('patient_dob', data.patient.date_of_birth)
+        router.push('/patient')
+      } else {
+        setError(data.error || 'Login failed')
+      }
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -38,6 +65,13 @@ export default function PatientLoginPage() {
           <p className="text-white/60">Sign in to view your lab results</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-6">
           
@@ -49,8 +83,8 @@ export default function PatientLoginPage() {
               <input
                 type="text"
                 required
-                value={formData.fullName}
-                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="LASTNAME, FIRSTNAME"
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
@@ -66,8 +100,8 @@ export default function PatientLoginPage() {
               <input
                 type="text"
                 required
-                value={formData.dateOfBirth}
-                onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                value={formData.dob}
+                onChange={(e) => setFormData({...formData, dob: e.target.value})}
                 placeholder="MM/DD/YYYY"
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
@@ -100,13 +134,21 @@ export default function PatientLoginPage() {
           {/* Sign In Button */}
           <button
             type="submit"
-            className="w-full py-4 rounded-lg font-bold text-lg transition-all"
+            disabled={loading}
+            className="w-full py-4 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
               background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
               color: brand.colors.primaryText
             }}
           >
-            Sign In
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Signing In...
+              </>
+            ) : (
+              'Sign In'
+            )}
           </button>
 
           {/* Sign Up Link */}
