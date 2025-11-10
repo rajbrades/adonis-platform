@@ -23,7 +23,7 @@ export default function PatientLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center px-6 pt-32 pb-12">
       <div className="w-full max-w-md">
         
         {/* Icon */}
@@ -103,7 +103,7 @@ export default function PatientLoginPage() {
             className="w-full py-4 rounded-lg font-bold text-lg transition-all"
             style={{
               background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
-              color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
+              color: brand.colors.primaryText
             }}
           >
             Sign In
