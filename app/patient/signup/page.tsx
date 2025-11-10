@@ -4,26 +4,61 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
-import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus } from 'lucide-react'
+import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react'
 
 export default function PatientSignupPage() {
   const brand = getBrand()
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    fullName: '',
-    dateOfBirth: '',
+    name: '',
+    dob: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: ''
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual registration
-    router.push('/patient')
+    
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/patient/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          dob: formData.dob,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password
+        })
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        router.push('/patient/login?registered=true')
+      } else {
+        setError(data.error || 'Signup failed')
+      }
+    } catch (err) {
+      console.error('Signup error:', err)
+      setError('An error occurred. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -42,6 +77,13 @@ export default function PatientSignupPage() {
           <p className="text-white/60">Sign up to access your lab results</p>
         </div>
 
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg">
+            <p className="text-red-400 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Signup Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           
@@ -53,8 +95,8 @@ export default function PatientSignupPage() {
               <input
                 type="text"
                 required
-                value={formData.fullName}
-                onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="LASTNAME, FIRSTNAME"
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
@@ -70,8 +112,8 @@ export default function PatientSignupPage() {
               <input
                 type="text"
                 required
-                value={formData.dateOfBirth}
-                onChange={(e) => setFormData({...formData, dateOfBirth: e.target.value})}
+                value={formData.dob}
+                onChange={(e) => setFormData({...formData, dob: e.target.value})}
                 placeholder="MM/DD/YYYY"
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
@@ -119,6 +161,8 @@ export default function PatientSignupPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 placeholder="••••••••"
+                autoComplete="new-password"
+                suppressHydrationWarning
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-12 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
               <button
@@ -129,7 +173,6 @@ export default function PatientSignupPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            <p className="text-xs text-white/50 mt-1">At least 8 characters</p>
           </div>
 
           {/* Confirm Password */}
@@ -143,6 +186,8 @@ export default function PatientSignupPage() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                 placeholder="••••••••"
+                autoComplete="new-password"
+                suppressHydrationWarning
                 className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-12 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
               />
               <button
@@ -158,21 +203,36 @@ export default function PatientSignupPage() {
           {/* Create Account Button */}
           <button
             type="submit"
-            className="w-full py-4 rounded-lg font-bold text-lg transition-all"
+            disabled={loading}
+            className="w-full py-4 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             style={{
               background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
-              color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
+              color: brand.colors.primaryText
             }}
           >
-            Create Account
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Creating Account...
+              </>
+            ) : (
+              'Create Account'
+            )}
           </button>
 
           {/* Sign In Link */}
           <div className="text-center">
             <span className="text-white/60">Already have an account? </span>
             <Link href="/patient/login" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: brand.colors.primary }}>
-              Sign In
+              Sign in here
             </Link>
+          </div>
+
+          {/* Security Notice */}
+          <div className="text-center">
+            <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
+              🔒 Your health information is secure and encrypted
+            </p>
           </div>
 
         </form>
