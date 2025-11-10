@@ -5,13 +5,14 @@ import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
-import { Users, FileText, Calendar, TrendingUp, Clock } from 'lucide-react'
+import { Users, FileText, Calendar, TrendingUp, Clock, FlaskConical } from 'lucide-react'
 
 export default function ProviderPortal() {
   const { user, isLoaded } = useUser()
   const router = useRouter()
   const brand = getBrand()
-  const [consultations, setConsultations] = useState<any[]>([])
+  const [pendingConsultations, setPendingConsultations] = useState<any[]>([])
+  const [labReviews, setLabReviews] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -28,9 +29,20 @@ export default function ProviderPortal() {
     try {
       const response = await fetch('/api/consultations')
       const data = await response.json()
-      // API returns array directly, not { pending: [] }
-      const pending = Array.isArray(data) ? data.filter(c => c.status === 'pending') : []
-      setConsultations(pending)
+      
+      if (Array.isArray(data)) {
+        // Pending = new consultations waiting for lab recommendations
+        const pending = data.filter(c => c.status === 'pending')
+        
+        // Lab Reviews = approved patients who uploaded labs
+        const labsToReview = data.filter(c => 
+          c.status === 'approved' && 
+          c.lab_upload_status === 'uploaded'
+        )
+        
+        setPendingConsultations(pending)
+        setLabReviews(labsToReview)
+      }
     } catch (error) {
       console.error('Error fetching consultations:', error)
     } finally {
@@ -52,8 +64,8 @@ export default function ProviderPortal() {
 
   const stats = [
     { icon: Users, label: 'Active Patients', value: '247', change: '+12%' },
-    { icon: FileText, label: 'Pending Reviews', value: String(consultations.length), change: '' },
-    { icon: Calendar, label: 'Today\'s Appointments', value: '6', change: '' },
+    { icon: FileText, label: 'Pending Assessments', value: String(pendingConsultations.length), change: '' },
+    { icon: FlaskConical, label: 'Lab Reviews', value: String(labReviews.length), change: '' },
     { icon: TrendingUp, label: 'Patient Satisfaction', value: '98%', change: '+2%' }
   ]
 
@@ -97,12 +109,12 @@ export default function ProviderPortal() {
           })}
         </div>
 
-        {/* Pending Consultations */}
+        {/* Pending Assessments */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold flex items-center gap-3">
               <Clock className="w-6 h-6" style={{ color: brand.colors.primary }} />
-              Pending Consultations
+              Pending Assessments
             </h2>
             <Link 
               href="/provider/patients"
@@ -113,14 +125,14 @@ export default function ProviderPortal() {
             </Link>
           </div>
 
-          {consultations.length === 0 ? (
+          {pendingConsultations.length === 0 ? (
             <div className="text-center py-12 text-white/40">
               <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>No pending consultations</p>
+              <p>No pending assessments</p>
             </div>
           ) : (
             <div className="space-y-4">
-              {consultations.slice(0, 5).map((consultation) => (
+              {pendingConsultations.slice(0, 5).map((consultation) => (
                 <Link
                   key={consultation.id}
                   href={`/provider/approve/${consultation.id}`}
@@ -153,7 +165,80 @@ export default function ProviderPortal() {
                         color: brand.colors.primary
                       }}
                     >
-                      Review
+                      Review Assessment
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Lab Reviews */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <FlaskConical className="w-6 h-6" style={{ color: brand.colors.primary }} />
+              Lab Reviews
+            </h2>
+            <Link 
+              href="/admin/patients?filter=labs-uploaded"
+              className="text-sm font-semibold hover:underline"
+              style={{ color: brand.colors.primary }}
+            >
+              View All →
+            </Link>
+          </div>
+
+          {labReviews.length === 0 ? (
+            <div className="text-center py-12 text-white/40">
+              <FlaskConical className="w-16 h-16 mx-auto mb-4 opacity-20" />
+              <p>No labs pending review</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {labReviews.slice(0, 5).map((consultation) => (
+                <Link
+                  key={consultation.id}
+                  href={`/admin/patients/${consultation.id}`}
+                  className="block p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-lg mb-2">
+                        {consultation.first_name} {consultation.last_name}
+                      </h3>
+                      <div className="grid grid-cols-2 gap-4 text-sm text-white/60">
+                        <div>
+                          <span className="font-semibold">Email:</span> {consultation.email}
+                        </div>
+                        <div>
+                          <span className="font-semibold">Approved:</span> {new Date(consultation.reviewed_at).toLocaleDateString()}
+                        </div>
+                        <div>
+                          <span className="font-semibold">Recommended:</span> {consultation.recommended_labs?.panel_name || 'Custom Panel'}
+                        </div>
+                        <div>
+                          <span 
+                            className="px-2 py-1 rounded-full text-xs inline-block"
+                            style={{
+                              backgroundColor: `${brand.colors.primary}20`,
+                              color: brand.colors.primary
+                            }}
+                          >
+                            Labs Uploaded
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div 
+                      className="px-4 py-2 rounded-lg text-sm font-semibold"
+                      style={{ 
+                        backgroundColor: `${brand.colors.primary}20`,
+                        color: brand.colors.primary
+                      }}
+                    >
+                      Review Labs
                     </div>
                   </div>
                 </Link>
@@ -191,15 +276,15 @@ export default function ProviderPortal() {
           </Link>
 
           <Link
-            href="/provider/labs"
+            href="/admin/upload-labs"
             className="p-6 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
           >
-            <FileText className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
+            <FlaskConical className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
             <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
-              Lab Results
+              Upload Lab Results
             </h3>
             <p className="text-white/60 text-sm">
-              Upload and review patient lab work
+              Upload and parse lab PDFs
             </p>
           </Link>
         </div>
