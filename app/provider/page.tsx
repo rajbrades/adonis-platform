@@ -1,30 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { getBrand } from '@/lib/brand'
-import { Users, FileText, Calendar, TrendingUp, Clock, FlaskConical } from 'lucide-react'
+import { FileText, Clock, CheckCircle, AlertCircle, Calendar, Users, Activity } from 'lucide-react'
 
-export default function ProviderPortal() {
-  const { user, isLoaded } = useUser()
-  const router = useRouter()
-  const brand = getBrand()
+export default function ProviderDashboard() {
+  const [loading, setLoading] = useState(true)
   const [pendingConsultations, setPendingConsultations] = useState<any[]>([])
   const [labReviews, setLabReviews] = useState<any[]>([])
-  const [activePatients, setActivePatients] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    pending: 0,
+    approved: 0,
+    labsToReview: 0,
+    thisWeek: 0
+  })
 
   useEffect(() => {
-    if (isLoaded) {
-      if (!user) {
-        router.push('/sign-in')
-      } else {
-        fetchConsultations()
-      }
-    }
-  }, [isLoaded, user])
+    fetchConsultations()
+  }, [])
 
   const fetchConsultations = async () => {
     try {
@@ -38,20 +31,22 @@ export default function ProviderPortal() {
         // Lab Reviews = approved patients who uploaded labs
         const labsToReview = data.filter(c => 
           c.status === 'approved' && 
-          c.lab_upload_status === 'uploaded'
+          c.labs_uploaded === true
         )
         
-        // Active Patients = activity within last 12 months
-        const now = new Date()
-        const twelveMonthsAgo = new Date(now.setMonth(now.getMonth() - 12))
-        const active = data.filter(c => {
-          const lastActivity = new Date(c.updated_at || c.created_at)
-          return lastActivity >= twelveMonthsAgo && c.status !== 'rejected'
-        })
+        // This week's consultations
+        const oneWeekAgo = new Date()
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+        const thisWeek = data.filter(c => new Date(c.created_at) > oneWeekAgo)
         
         setPendingConsultations(pending)
         setLabReviews(labsToReview)
-        setActivePatients(active.length)
+        setStats({
+          pending: pending.length,
+          approved: data.filter(c => c.status === 'approved').length,
+          labsToReview: labsToReview.length,
+          thisWeek: thisWeek.length
+        })
       }
     } catch (error) {
       console.error('Error fetching consultations:', error)
@@ -60,92 +55,75 @@ export default function ProviderPortal() {
     }
   }
 
-  if (!isLoaded || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
+        <div className="text-yellow-400">Loading...</div>
       </div>
     )
   }
 
-  if (!user) {
-    return null
-  }
-
-  const stats = [
-    { icon: Users, label: 'Active Patients', value: String(activePatients), change: '', isLive: true },
-    { icon: FileText, label: 'Pending Assessments', value: String(pendingConsultations.length), change: '', isLive: true },
-    { icon: FlaskConical, label: 'Lab Reviews', value: String(labReviews.length), change: '', isLive: true },
-    { icon: TrendingUp, label: 'Patient Satisfaction', value: '—', change: '', isLive: false, comingSoon: true }
-  ]
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-24">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32 pb-12">
+      <div className="max-w-7xl mx-auto px-6">
         
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-4xl font-black mb-2">
-            <span style={{ color: brand.colors.primary }}>Provider</span> Dashboard
-          </h1>
-          <p className="text-white/60 text-lg">Welcome back, Dr. {user.firstName || 'Provider'}</p>
+          <h1 className="text-4xl font-black mb-2">Provider Dashboard</h1>
+          <p className="text-white/60 text-lg">Review consultations and manage patient care</p>
         </div>
 
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6 mb-12">
-          {stats.map((stat, idx) => {
-            const Icon = stat.icon
-            const isComingSoon = stat.comingSoon
-            
-            return (
-              <div 
-                key={idx}
-                className={`p-6 rounded-2xl border relative ${isComingSoon ? 'opacity-50' : ''}`}
-                style={{
-                  background: `linear-gradient(to right, ${brand.colors.primary}10, ${brand.colors.primary}05)`,
-                  borderColor: `${brand.colors.primary}20`
-                }}
-              >
-                {isComingSoon && (
-                  <div className="absolute top-2 right-2 px-2 py-1 bg-white/10 rounded text-xs font-semibold text-white/60">
-                    Coming Soon
-                  </div>
-                )}
-                <div className="flex items-center justify-between mb-4">
-                  <Icon className="w-6 h-6" style={{ color: isComingSoon ? '#666' : brand.colors.primary }} />
-                  {stat.change && (
-                    <span className="text-green-400 text-sm font-semibold">{stat.change}</span>
-                  )}
-                </div>
-                <div className="text-3xl font-bold mb-1" style={{ color: isComingSoon ? '#666' : brand.colors.primary }}>
-                  {stat.value}
-                </div>
-                <div className="text-white/60 text-sm">{stat.label}</div>
-              </div>
-            )
-          })}
+          <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5">
+            <div className="flex items-center justify-between mb-4">
+              <Clock className="w-8 h-8 text-yellow-400" />
+              <span className="text-3xl font-bold text-yellow-400">{stats.pending}</span>
+            </div>
+            <div className="text-white/80 font-semibold">Pending Review</div>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-green-500/10 to-green-600/5">
+            <div className="flex items-center justify-between mb-4">
+              <CheckCircle className="w-8 h-8 text-green-400" />
+              <span className="text-3xl font-bold text-green-400">{stats.approved}</span>
+            </div>
+            <div className="text-white/80 font-semibold">Approved</div>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 to-blue-600/5">
+            <div className="flex items-center justify-between mb-4">
+              <FileText className="w-8 h-8 text-blue-400" />
+              <span className="text-3xl font-bold text-blue-400">{stats.labsToReview}</span>
+            </div>
+            <div className="text-white/80 font-semibold">Labs to Review</div>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-white/10 bg-gradient-to-br from-purple-500/10 to-purple-600/5">
+            <div className="flex items-center justify-between mb-4">
+              <Activity className="w-8 h-8 text-purple-400" />
+              <span className="text-3xl font-bold text-purple-400">{stats.thisWeek}</span>
+            </div>
+            <div className="text-white/80 font-semibold">This Week</div>
+          </div>
         </div>
 
-        {/* Pending Assessments */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
+        {/* Pending Consultations */}
+        <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <Clock className="w-6 h-6" style={{ color: brand.colors.primary }} />
-              Pending Assessments
-            </h2>
+            <h2 className="text-2xl font-bold">Pending Consultations</h2>
             <Link 
               href="/provider/patients"
-              className="text-sm font-semibold hover:underline"
-              style={{ color: brand.colors.primary }}
+              className="text-yellow-400 hover:text-yellow-300 text-sm font-semibold"
             >
               View All →
             </Link>
           </div>
-
+          
           {pendingConsultations.length === 0 ? (
-            <div className="text-center py-12 text-white/40">
-              <FileText className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>No pending assessments</p>
+            <div className="p-12 rounded-2xl border border-white/10 bg-white/5 text-center text-white/60">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No pending consultations</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -178,11 +156,11 @@ export default function ProviderPortal() {
                     <div 
                       className="px-4 py-2 rounded-lg text-sm font-semibold"
                       style={{ 
-                        backgroundColor: `${brand.colors.primary}20`,
-                        color: brand.colors.primary
+                        backgroundColor: 'rgba(234, 179, 8, 0.1)',
+                        color: '#EAB308'
                       }}
                     >
-                      Review Assessment
+                      Review
                     </div>
                   </div>
                 </Link>
@@ -192,32 +170,28 @@ export default function ProviderPortal() {
         </div>
 
         {/* Lab Reviews */}
-        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 mb-8">
+        <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
-              <FlaskConical className="w-6 h-6" style={{ color: brand.colors.primary }} />
-              Lab Reviews
-            </h2>
+            <h2 className="text-2xl font-bold">Lab Results to Review</h2>
             <Link 
               href="/provider/labs"
-              className="text-sm font-semibold hover:underline"
-              style={{ color: brand.colors.primary }}
+              className="text-yellow-400 hover:text-yellow-300 text-sm font-semibold"
             >
-              View Completed →
+              View All →
             </Link>
           </div>
-
+          
           {labReviews.length === 0 ? (
-            <div className="text-center py-12 text-white/40">
-              <FlaskConical className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>No labs pending review</p>
+            <div className="p-12 rounded-2xl border border-white/10 bg-white/5 text-center text-white/60">
+              <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
+              <p>No lab results to review</p>
             </div>
           ) : (
             <div className="space-y-4">
               {labReviews.slice(0, 5).map((consultation) => (
                 <Link
                   key={consultation.id}
-                  href={`/admin/patients/${consultation.id}`}
+                  href={`/provider/patients/${consultation.id}`}
                   className="block p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-start justify-between">
@@ -239,8 +213,8 @@ export default function ProviderPortal() {
                           <span 
                             className="px-2 py-1 rounded-full text-xs inline-block"
                             style={{
-                              backgroundColor: `${brand.colors.primary}20`,
-                              color: brand.colors.primary
+                              backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                              color: '#60A5FA'
                             }}
                           >
                             Labs Uploaded
@@ -251,8 +225,8 @@ export default function ProviderPortal() {
                     <div 
                       className="px-4 py-2 rounded-lg text-sm font-semibold"
                       style={{ 
-                        backgroundColor: `${brand.colors.primary}20`,
-                        color: brand.colors.primary
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        color: '#60A5FA'
                       }}
                     >
                       Review Labs
@@ -264,47 +238,42 @@ export default function ProviderPortal() {
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Quick Links */}
         <div className="grid md:grid-cols-3 gap-6">
           <Link
             href="/provider/patients"
-            className="p-6 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
+            className="p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
           >
-            <Users className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
-              View All Patients
+            <Users className="w-8 h-8 text-yellow-400 mb-4" />
+            <h3 className="font-bold text-lg mb-2 group-hover:translate-x-1 transition-transform">
+              All Patients
             </h3>
-            <p className="text-white/60 text-sm">
-              Browse patient database and history
-            </p>
+            <p className="text-white/60 text-sm">View and manage all patients</p>
           </Link>
 
           <Link
             href="/provider/schedule"
-            className="p-6 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
+            className="p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
           >
-            <Calendar className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
+            <Calendar className="w-8 h-8 text-yellow-400 mb-4" />
+            <h3 className="font-bold text-lg mb-2 group-hover:translate-x-1 transition-transform">
               Schedule
             </h3>
-            <p className="text-white/60 text-sm">
-              Manage appointments and availability
-            </p>
+            <p className="text-white/60 text-sm">Manage appointments</p>
           </Link>
 
           <Link
             href="/provider/labs"
-            className="p-6 rounded-2xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
+            className="p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all group"
           >
-            <FlaskConical className="w-8 h-8 mb-4" style={{ color: brand.colors.primary }} />
-            <h3 className="text-xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
+            <FileText className="w-8 h-8 text-yellow-400 mb-4" />
+            <h3 className="font-bold text-lg mb-2 group-hover:translate-x-1 transition-transform">
               Lab Results
             </h3>
-            <p className="text-white/60 text-sm">
-              View and review all lab uploads
-            </p>
+            <p className="text-white/60 text-sm">Review patient lab results</p>
           </Link>
         </div>
+
       </div>
     </div>
   )
