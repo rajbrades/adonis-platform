@@ -6,6 +6,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
 import { FileText, Calendar, ShoppingCart, Pill, User, LogOut, Loader2 } from 'lucide-react'
 
+// Force this route to be dynamic (not pre-rendered)
+export const dynamic = 'force-dynamic'
+
 function PatientPortalContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -19,14 +22,12 @@ function PatientPortalContent() {
   }, [consultationLink])
 
   const handleAuth = async () => {
-    // If there's a consultation link, store it and redirect to signup
     if (consultationLink) {
       sessionStorage.setItem('pending_consultation_link', consultationLink)
       router.push(`/patient/signup?consultation=${consultationLink}`)
       return
     }
 
-    // Check if patient is logged in
     const patientId = sessionStorage.getItem('patient_id')
     const patientName = sessionStorage.getItem('patient_name')
     
@@ -35,7 +36,6 @@ function PatientPortalContent() {
       return
     }
 
-    // Check if there's a pending consultation to link
     const pendingLink = sessionStorage.getItem('pending_consultation_link')
     if (pendingLink) {
       await linkConsultation(pendingLink, patientId)
