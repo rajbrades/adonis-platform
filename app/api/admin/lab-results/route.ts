@@ -13,36 +13,31 @@ export async function POST(req: NextRequest) {
 
     console.log('💾 Saving lab results:', { patient_name, patient_dob, biomarkers_count: biomarkers?.length })
 
-    // Validate required fields
     if (!patient_name || !patient_dob) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Insert with ALL the NOT NULL columns we've discovered
-    const insertData = {
-      user_id: 'admin-upload',
-      panel_name: 'Quest Diagnostics - Comprehensive Panel',
-      uploaded_by: 'admin',
-      patient_name: patient_name,
-      patient_dob: patient_dob,
-      test_date: test_date || new Date().toISOString().split('T')[0],
-      biomarkers: biomarkers || []
-    }
-    
+    // Insert with ALL required NOT NULL columns from schema
     const { data, error } = await supabase
       .from('lab_results')
-      .insert(insertData)
+      .insert({
+        user_id: 'admin-upload',
+        patient_name: patient_name,
+        patient_dob: patient_dob,
+        panel_name: 'Quest Diagnostics - Comprehensive Panel',
+        test_date: test_date || new Date().toISOString().split('T')[0],
+        uploaded_by: 'admin',
+        biomarkers: biomarkers || []
+      })
       .select()
       .single()
 
     if (error) {
       console.error('❌ Supabase error:', error)
-      console.error('❌ Attempted to insert:', insertData)
       return NextResponse.json({ 
         error: error.message,
         hint: error.hint,
-        details: error.details,
-        code: error.code
+        details: error.details
       }, { status: 500 })
     }
 
