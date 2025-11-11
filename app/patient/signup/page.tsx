@@ -1,14 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
 import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react'
 
-export default function PatientSignupPage() {
+function SignupForm() {
   const brand = getBrand()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const consultationId = searchParams.get('consultation')
+  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -21,6 +24,13 @@ export default function PatientSignupPage() {
     password: '',
     confirmPassword: ''
   })
+
+  useEffect(() => {
+    // Store consultation ID if present
+    if (consultationId) {
+      sessionStorage.setItem('pending_consultation_link', consultationId)
+    }
+  }, [consultationId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,7 +59,11 @@ export default function PatientSignupPage() {
       const data = await response.json()
 
       if (data.success) {
-        router.push('/patient/login?registered=true')
+        // Redirect to login with consultation param if present
+        const loginUrl = consultationId 
+          ? `/patient/login?registered=true&consultation=${consultationId}`
+          : '/patient/login?registered=true'
+        router.push(loginUrl)
       } else {
         setError(data.error || 'Signup failed')
       }
@@ -74,8 +88,22 @@ export default function PatientSignupPage() {
             <UserPlus className="w-10 h-10" style={{ color: brand.colors.primary }} />
           </div>
           <h1 className="text-3xl font-black mb-2">Create Account</h1>
-          <p className="text-white/60">Sign up to access your lab results</p>
+          <p className="text-white/60">
+            {consultationId 
+              ? 'Create your account to view your personalized health plan'
+              : 'Sign up to access your lab results'
+            }
+          </p>
         </div>
+
+        {/* Consultation Notice */}
+        {consultationId && (
+          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg">
+            <p className="text-yellow-400 text-sm">
+              ✓ Your consultation has been approved! Create an account to view your recommendations.
+            </p>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -98,10 +126,9 @@ export default function PatientSignupPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="LASTNAME, FIRSTNAME"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
-            <p className="text-xs text-white/50 mt-1">Enter your name exactly as it appears on your lab report</p>
           </div>
 
           {/* Date of Birth */}
@@ -110,42 +137,43 @@ export default function PatientSignupPage() {
             <div className="relative">
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type="text"
+                type="date"
                 required
                 value={formData.dob}
                 onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                placeholder="MM/DD/YYYY"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Email (Optional)</label>
+            <label className="block text-sm font-semibold mb-2">Email *</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type="email"
+                required
                 value={formData.email}
                 onChange={(e) => setFormData({...formData, email: e.target.value})}
-                placeholder="your@email.com"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                placeholder="you@example.com"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
           </div>
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Phone (Optional)</label>
+            <label className="block text-sm font-semibold mb-2">Phone *</label>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type="tel"
+                required
                 value={formData.phone}
                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                 placeholder="(555) 123-4567"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
           </div>
@@ -156,19 +184,17 @@ export default function PatientSignupPage() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
                 placeholder="••••••••"
-                autoComplete="new-password"
-                suppressHydrationWarning
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-12 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -181,70 +207,68 @@ export default function PatientSignupPage() {
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
                 placeholder="••••••••"
-                autoComplete="new-password"
-                suppressHydrationWarning
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-12 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          {/* Create Account Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             style={{
-              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
-              color: brand.colors.primaryText
+              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.secondary})`,
+              color: '#000000'
             }}
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Creating Account...
               </>
             ) : (
               'Create Account'
             )}
           </button>
-
-          {/* Sign In Link */}
-          <div className="text-center">
-            <span className="text-white/60">Already have an account? </span>
-            <Link href="/patient/login" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: brand.colors.primary }}>
-              Sign in here
-            </Link>
-          </div>
-
-          {/* Security Notice */}
-          <div className="text-center">
-            <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
-              🔒 Your health information is secure and encrypted
-            </p>
-          </div>
-
         </form>
 
-        {/* Back Link */}
-        <div className="text-center mt-8">
-          <Link href="/" className="text-white/60 hover:text-white text-sm transition-colors">
-            ← Back to Home
+        {/* Login Link */}
+        <p className="text-center text-white/60 text-sm mt-6">
+          Already have an account?{' '}
+          <Link 
+            href={consultationId ? `/patient/login?consultation=${consultationId}` : '/patient/login'}
+            className="font-semibold hover:underline"
+            style={{ color: brand.colors.primary }}
+          >
+            Sign in
           </Link>
-        </div>
-
+        </p>
       </div>
     </div>
+  )
+}
+
+export default function PatientSignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }

@@ -1,14 +1,18 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
 import { Lock, Calendar, User, Eye, EyeOff, ShoppingBag, Loader2 } from 'lucide-react'
 
-export default function PatientLoginPage() {
+function LoginForm() {
   const brand = getBrand()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const consultationId = searchParams.get('consultation')
+  const registered = searchParams.get('registered')
+  
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -17,6 +21,13 @@ export default function PatientLoginPage() {
     dob: '',
     password: ''
   })
+
+  useEffect(() => {
+    // Store consultation ID if present
+    if (consultationId) {
+      sessionStorage.setItem('pending_consultation_link', consultationId)
+    }
+  }, [consultationId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,6 +48,8 @@ export default function PatientLoginPage() {
         sessionStorage.setItem('patient_id', data.patient.id)
         sessionStorage.setItem('patient_name', data.patient.full_name)
         sessionStorage.setItem('patient_dob', data.patient.date_of_birth)
+        
+        // Redirect to patient portal (which will handle consultation linking)
         router.push('/patient')
       } else {
         setError(data.error || 'Login failed')
@@ -61,9 +74,32 @@ export default function PatientLoginPage() {
           >
             <ShoppingBag className="w-10 h-10" style={{ color: brand.colors.primary }} />
           </div>
-          <h1 className="text-3xl font-black mb-2">Welcome Back</h1>
-          <p className="text-white/60">Sign in to view your lab results</p>
+          <h1 className="text-3xl font-black mb-2">Patient Login</h1>
+          <p className="text-white/60">
+            {consultationId 
+              ? 'Sign in to view your personalized health plan'
+              : 'Sign in to access your health dashboard'
+            }
+          </p>
         </div>
+
+        {/* Success Message */}
+        {registered === 'true' && (
+          <div className="mb-6 p-4 bg-green-500/20 border border-green-500/40 rounded-lg">
+            <p className="text-green-400 text-sm">
+              ✓ Account created successfully! Please sign in.
+            </p>
+          </div>
+        )}
+
+        {/* Consultation Notice */}
+        {consultationId && (
+          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg">
+            <p className="text-yellow-400 text-sm">
+              ✓ Your consultation has been approved! Sign in to view your recommendations.
+            </p>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
@@ -73,11 +109,11 @@ export default function PatientLoginPage() {
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-5">
           
           {/* Full Name */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Full Name</label>
+            <label className="block text-sm font-semibold mb-2">Full Name *</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
@@ -86,96 +122,94 @@ export default function PatientLoginPage() {
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="LASTNAME, FIRSTNAME"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
-            <p className="text-xs text-white/50 mt-1">Enter your name exactly as it appears on your lab results</p>
           </div>
 
           {/* Date of Birth */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Date of Birth</label>
+            <label className="block text-sm font-semibold mb-2">Date of Birth *</label>
             <div className="relative">
               <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type="text"
+                type="date"
                 required
                 value={formData.dob}
                 onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                placeholder="MM/DD/YYYY"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-yellow-400/50 transition-all"
               />
             </div>
           </div>
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Password</label>
+            <label className="block text-sm font-semibold mb-2">Password *</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({...formData, password: e.target.value})}
-                placeholder="Enter your password"
-                className="w-full bg-gray-800/50 border border-white/10 rounded-lg pl-12 pr-12 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition"
+                placeholder="••••••••"
+                className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60 transition"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
-          {/* Sign In Button */}
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 rounded-lg font-bold text-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             style={{
-              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
-              color: brand.colors.primaryText
+              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.secondary})`,
+              color: '#000000'
             }}
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Signing In...
               </>
             ) : (
               'Sign In'
             )}
           </button>
-
-          {/* Sign Up Link */}
-          <div className="text-center">
-            <span className="text-white/60">Don&apos;t have an account? </span>
-            <Link href="/patient/signup" className="font-semibold hover:opacity-80 transition-opacity" style={{ color: brand.colors.primary }}>
-              Sign up here
-            </Link>
-          </div>
-
-          {/* Security Notice */}
-          <div className="text-center">
-            <p className="text-xs text-blue-400 flex items-center justify-center gap-2">
-              🔒 Your health information is secure and encrypted
-            </p>
-          </div>
-
         </form>
 
-        {/* Back Link */}
-        <div className="text-center mt-8">
-          <Link href="/" className="text-white/60 hover:text-white text-sm transition-colors">
-            ← Back to Home
+        {/* Signup Link */}
+        <p className="text-center text-white/60 text-sm mt-6">
+          Don't have an account?{' '}
+          <Link 
+            href={consultationId ? `/patient/signup?consultation=${consultationId}` : '/patient/signup'}
+            className="font-semibold hover:underline"
+            style={{ color: brand.colors.primary }}
+          >
+            Sign up
           </Link>
-        </div>
-
+        </p>
       </div>
     </div>
+  )
+}
+
+export default function PatientLoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
