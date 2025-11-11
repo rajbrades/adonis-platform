@@ -18,10 +18,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Insert lab results with correct column names
+    // Insert lab results - use placeholder user_id since we don't have proper user accounts yet
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
+        user_id: 'admin-upload', // Placeholder - will be replaced when we link accounts
         patient_name: patient_name,
         patient_dob: patient_dob,
         test_date: test_date || new Date().toISOString().split('T')[0],
