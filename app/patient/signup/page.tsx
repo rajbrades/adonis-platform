@@ -230,7 +230,7 @@ function SignupForm() {
             disabled={loading}
             className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             style={{
-              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.secondary})`,
+              backgroundColor: brand.colors.primary,
               color: '#000000'
             }}
           >

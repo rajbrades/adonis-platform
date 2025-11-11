@@ -23,7 +23,6 @@ function LoginForm() {
   })
 
   useEffect(() => {
-    // Store consultation ID if present
     if (consultationId) {
       sessionStorage.setItem('pending_consultation_link', consultationId)
     }
@@ -44,12 +43,9 @@ function LoginForm() {
       const data = await response.json()
 
       if (data.success) {
-        // Store patient info in sessionStorage
         sessionStorage.setItem('patient_id', data.patient.id)
         sessionStorage.setItem('patient_name', data.patient.full_name)
         sessionStorage.setItem('patient_dob', data.patient.date_of_birth)
-        
-        // Redirect to patient portal (which will handle consultation linking)
         router.push('/patient')
       } else {
         setError(data.error || 'Login failed')
@@ -66,7 +62,6 @@ function LoginForm() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center px-6 pt-32 pb-12">
       <div className="w-full max-w-md">
         
-        {/* Icon */}
         <div className="text-center mb-8">
           <div 
             className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
@@ -83,35 +78,25 @@ function LoginForm() {
           </p>
         </div>
 
-        {/* Success Message */}
         {registered === 'true' && (
           <div className="mb-6 p-4 bg-green-500/20 border border-green-500/40 rounded-lg">
-            <p className="text-green-400 text-sm">
-              ✓ Account created successfully! Please sign in.
-            </p>
+            <p className="text-green-400 text-sm">✓ Account created successfully! Please sign in.</p>
           </div>
         )}
 
-        {/* Consultation Notice */}
         {consultationId && (
           <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg">
-            <p className="text-yellow-400 text-sm">
-              ✓ Your consultation has been approved! Sign in to view your recommendations.
-            </p>
+            <p className="text-yellow-400 text-sm">✓ Your consultation has been approved! Sign in to view your recommendations.</p>
           </div>
         )}
 
-        {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg">
             <p className="text-red-400 text-sm">{error}</p>
           </div>
         )}
 
-        {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          
-          {/* Full Name */}
           <div>
             <label className="block text-sm font-semibold mb-2">Full Name *</label>
             <div className="relative">
@@ -127,7 +112,6 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Date of Birth */}
           <div>
             <label className="block text-sm font-semibold mb-2">Date of Birth *</label>
             <div className="relative">
@@ -142,7 +126,6 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-semibold mb-2">Password *</label>
             <div className="relative">
@@ -165,13 +148,12 @@ function LoginForm() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
             className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             style={{
-              background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.secondary})`,
+              backgroundColor: brand.colors.primary,
               color: '#000000'
             }}
           >
@@ -186,7 +168,6 @@ function LoginForm() {
           </button>
         </form>
 
-        {/* Signup Link */}
         <p className="text-center text-white/60 text-sm mt-6">
           Don't have an account?{' '}
           <Link 
