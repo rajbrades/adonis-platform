@@ -20,12 +20,11 @@ export async function POST(req: NextRequest) {
 
     const now = new Date().toISOString()
 
-    // Insert lab results with ALL required columns
+    // Insert with only the columns that actually exist
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
         user_id: 'admin-upload',
-        clerk_user_id: null,
         panel_name: 'Quest Diagnostics - Comprehensive Panel',
         patient_name: patient_name,
         patient_dob: patient_dob,
