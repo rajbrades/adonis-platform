@@ -62,24 +62,24 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
     try {
       setSubmitting(true)
 
-      const recommendedPanels = labPanels
+      // Get full panel details for selected panels - match backend format
+      const recommendedLabs = labPanels
         .filter(panel => selectedPanels.includes(panel.id))
         .map(panel => ({
           id: panel.id,
           name: panel.name,
           slug: panel.slug,
+          description: panel.description,
           price: panel.price
         }))
-
-      const totalPrice = recommendedPanels.reduce((sum, panel) => sum + panel.price, 0)
 
       const response = await fetch(`/api/consultations/${resolvedParams.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          provider_notes: providerNotes,
-          recommended_lab_panels: recommendedPanels,
-          total_price: totalPrice
+          recommendedLabs,
+          providerNotes,
+          providerName: 'Dr. Provider' // TODO: Get from auth context
         })
       })
 
@@ -87,7 +87,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
         router.push('/provider')
       } else {
         const error = await response.json()
-        alert(`Error: ${error.error}`)
+        alert(`Error: ${error.error || 'Failed to approve consultation'}`)
       }
     } catch (error) {
       console.error('Error approving consultation:', error)
