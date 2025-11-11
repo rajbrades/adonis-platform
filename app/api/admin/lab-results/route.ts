@@ -18,29 +18,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const now = new Date().toISOString()
+    // Insert with ONLY the columns we're sure about
+    const insertData: any = {
+      patient_name: patient_name,
+      patient_dob: patient_dob,
+      biomarkers: biomarkers || []
+    }
 
-    // Insert with only the columns that actually exist
+    // Add optional fields only if we're sure they exist
+    if (test_date) insertData.test_date = test_date
+    
     const { data, error } = await supabase
       .from('lab_results')
-      .insert({
-        user_id: 'admin-upload',
-        panel_name: 'Quest Diagnostics - Comprehensive Panel',
-        patient_name: patient_name,
-        patient_dob: patient_dob,
-        test_date: test_date || new Date().toISOString().split('T')[0],
-        uploaded_at: now,
-        biomarkers: biomarkers || []
-      })
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
       console.error('❌ Supabase error:', error)
+      console.error('❌ Attempted to insert:', insertData)
       return NextResponse.json({ 
         error: error.message,
         hint: error.hint,
-        details: error.details 
+        details: error.details,
+        code: error.code
       }, { status: 500 })
     }
 
