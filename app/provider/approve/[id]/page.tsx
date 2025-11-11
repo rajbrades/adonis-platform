@@ -1,86 +1,49 @@
 'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react'
-
-interface Consultation {
-  id: string
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  date_of_birth: string
-  age: number
-  height: string
-  weight: string
-  occupation: string
-  optimization_goals: string[]
-  symptoms: string[]
-  medical_conditions: string[]
-  current_medications: string
-  allergies: string
-  surgeries: string
-  family_history: string
-  exercise_frequency: string
-  sleep_hours: string
-  stress_level: string
-  alcohol_consumption: string
-  smoking: string
-  diet: string
-  status: string
-  created_at: string
-}
 
 interface LabPanel {
   id: string
   name: string
+  slug: string
   description: string
   price: number
   biomarker_count: number
-  category: string
-  slug: string
 }
 
-export default function ApproveConsultationPage() {
-  const params = useParams()
+export default function ApprovalPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
   const router = useRouter()
-  const [consultation, setConsultation] = useState<Consultation | null>(null)
+  const [consultation, setConsultation] = useState<any>(null)
   const [labPanels, setLabPanels] = useState<LabPanel[]>([])
   const [selectedLabs, setSelectedLabs] = useState<string[]>([])
   const [providerNotes, setProviderNotes] = useState('')
-  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchConsultation()
-    fetchLabPanels()
-  }, [params.id])
+    fetchData()
+  }, [])
 
-  const fetchConsultation = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch(`/api/consultations/${params.id}`)
-      if (response.ok) {
-        const data = await response.json()
-        setConsultation(data)
-      }
-    } catch (error) {
-      console.error('Error fetching consultation:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      // Fetch consultation
+      const consultationRes = await fetch(`/api/consultations`)
+      const consultationData = await consultationRes.json()
+      const foundConsultation = [...consultationData.pending, ...consultationData.reviewed]
+        .find((c: any) => c.id === resolvedParams.id)
+      setConsultation(foundConsultation)
 
-  const fetchLabPanels = async () => {
-    try {
+      // Fetch lab panels from Supabase
       const response = await fetch('/api/lab-panels')
-      if (response.ok) {
-        const data = await response.json()
-        setLabPanels(data)
-      }
+      const panels = await response.json()
+      setLabPanels(panels)
     } catch (error) {
-      console.error('Error fetching lab panels:', error)
+      console.error('Error fetching data:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -98,229 +61,198 @@ export default function ApproveConsultationPage() {
       return
     }
 
+    if (!providerNotes.trim()) {
+      alert('Please add provider notes')
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const selectedLabDetails = labPanels.filter(lab => selectedLabs.includes(lab.id))
+      const recommendedLabs = labPanels
+        .filter(lab => selectedLabs.includes(lab.id))
+        .map(lab => ({
+          id: lab.id,
+          name: lab.name,
+          description: lab.description,
+          price: lab.price
+        }))
 
-      const response = await fetch(`/api/consultations/${params.id}/approve`, {
+      const response = await fetch(`/api/consultations/${resolvedParams.id}/approve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          status: 'approved',
-          provider_notes: providerNotes,
-          recommended_labs: selectedLabDetails,
-        }),
+          recommendedLabs,
+          providerNotes,
+          providerName: 'Dr. Smith'
+        })
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to approve consultation')
-      }
+      if (!response.ok) throw new Error('Failed to approve consultation')
 
-      alert('✅ Consultation approved and patient notified via email!')
+      alert('Consultation approved and patient notified!')
       router.push('/provider')
-    } catch (error: any) {
+    } catch (error) {
       console.error('Approval error:', error)
-      alert(`Error: ${error.message}`)
+      alert('Failed to approve consultation')
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-400" />
       </div>
     )
   }
 
   if (!consultation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-8">
-        <p>Consultation not found</p>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-white/60">Consultation not found</p>
       </div>
     )
   }
 
-  const totalCost = labPanels
+  const totalPrice = labPanels
     .filter(lab => selectedLabs.includes(lab.id))
     .reduce((sum, lab) => sum + lab.price, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      <div className="max-w-6xl mx-auto px-6 py-8">
+    <div className="min-h-screen bg-black text-white">
+      <header className="bg-black border-b border-yellow-500/20">
+        <nav className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <Link href="/provider" className="text-2xl font-black text-yellow-400">
+            ADONIS
+          </Link>
+          <div className="text-white/60">Provider Portal</div>
+        </nav>
+      </header>
+
+      <div className="max-w-5xl mx-auto px-6 py-12">
         <Link
           href="/provider"
-          className="inline-flex items-center text-white/60 hover:text-yellow-500 transition mb-6"
+          className="inline-flex items-center text-white/70 hover:text-yellow-400 transition-colors mb-8"
         >
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Dashboard
         </Link>
 
         <div className="mb-8">
-          <h1 className="text-4xl font-black mb-2">
-            <span className="text-yellow-500">Review</span> Consultation
-          </h1>
-          <p className="text-white/60">Patient: {consultation.first_name} {consultation.last_name}</p>
+          <h1 className="text-3xl font-bold mb-2">Approve Consultation</h1>
+          <p className="text-white/60">Review and recommend lab panels for {consultation.name}</p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Column - Patient Info */}
-          <div>
-            {/* Patient Information */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-4">Patient Information</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <div className="text-white/60 mb-1">Name:</div>
-                  <div className="font-semibold">{consultation.first_name} {consultation.last_name}</div>
-                </div>
-                <div>
-                  <div className="text-white/60 mb-1">Email:</div>
-                  <div className="font-semibold">{consultation.email}</div>
-                </div>
-                <div>
-                  <div className="text-white/60 mb-1">Phone:</div>
-                  <div className="font-semibold">{consultation.phone}</div>
-                </div>
-                <div>
-                  <div className="text-white/60 mb-1">Date of Birth:</div>
-                  <div className="font-semibold">{consultation.date_of_birth}</div>
-                </div>
-                <div>
-                  <div className="text-white/60 mb-1">Height:</div>
-                  <div className="font-semibold">{consultation.height} inches</div>
-                </div>
-                <div>
-                  <div className="text-white/60 mb-1">Weight:</div>
-                  <div className="font-semibold">{consultation.weight} lbs</div>
-                </div>
-              </div>
+        {/* Patient Summary */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Patient Summary</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-white/60 text-sm mb-1">Name</p>
+              <p className="font-semibold">{consultation.name}</p>
             </div>
-
-            {/* Health Goals & Symptoms */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6">
-              <h2 className="text-2xl font-bold mb-4">Health Goals & Symptoms</h2>
-              
-              <div className="mb-4">
-                <div className="text-sm text-white/60 mb-2">Optimization Goals:</div>
-                <div className="flex flex-wrap gap-2">
-                  {consultation.optimization_goals.map((goal, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-yellow-500/20 text-yellow-500 rounded-full text-sm font-medium"
-                    >
-                      {goal}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-sm text-white/60 mb-2">Symptoms:</div>
-                <div className="flex flex-wrap gap-2">
-                  {consultation.symptoms.map((symptom, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium"
-                    >
-                      {symptom}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <div>
+              <p className="text-white/60 text-sm mb-1">Age</p>
+              <p className="font-semibold">{consultation.age} years</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-sm mb-1">Occupation</p>
+              <p className="font-semibold">{consultation.occupation}</p>
+            </div>
+            <div>
+              <p className="text-white/60 text-sm mb-1">Primary Goals</p>
+              <p className="font-semibold">{consultation.goals.join(', ')}</p>
             </div>
           </div>
+        </div>
 
-          {/* Right Column - Lab Selection & Approval */}
-          <div>
-            {/* Recommended Lab Panels */}
-            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-4">Recommended Lab Panels</h2>
-              
-              {labPanels.length === 0 ? (
-                <p className="text-white/60">Loading lab panels...</p>
-              ) : (
-                <div className="space-y-3 mb-6">
-                  {labPanels.map((panel) => (
-                    <label
-                      key={panel.id}
-                      className="flex items-start gap-3 p-4 rounded-lg border border-white/10 hover:border-yellow-500/50 cursor-pointer transition-all bg-white/5"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={selectedLabs.includes(panel.id)}
-                        onChange={() => toggleLab(panel.id)}
-                        className="mt-1 w-4 h-4 accent-yellow-500"
-                      />
-                      <div className="flex-1">
-                        <div className="font-semibold text-white">{panel.name}</div>
-                        <div className="text-xs text-white/60 mt-1">{panel.description}</div>
-                        <div className="flex items-center gap-3 mt-2">
-                          <span className="text-yellow-500 font-bold">${panel.price}</span>
-                          <span className="text-xs text-white/50">• {panel.biomarker_count} biomarkers</span>
-                        </div>
+        {/* Lab Panels Selection */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Select Recommended Lab Panels</h2>
+          <div className="space-y-4">
+            {labPanels.map((lab) => (
+              <div
+                key={lab.id}
+                onClick={() => toggleLab(lab.id)}
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  selectedLabs.includes(lab.id)
+                    ? 'bg-yellow-400/10 border-yellow-400'
+                    : 'bg-white/5 border-white/10 hover:bg-white/10'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center mb-2">
+                      <div className={`w-5 h-5 rounded border-2 mr-3 flex items-center justify-center ${
+                        selectedLabs.includes(lab.id)
+                          ? 'bg-yellow-400 border-yellow-400'
+                          : 'border-white/40'
+                      }`}>
+                        {selectedLabs.includes(lab.id) && (
+                          <CheckCircle className="w-4 h-4 text-black" />
+                        )}
                       </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              {selectedLabs.length > 0 && (
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white/80">Total Cost:</span>
-                    <span className="text-2xl font-bold text-yellow-500">${totalCost}</span>
+                      <h3 className="font-bold text-lg">{lab.name}</h3>
+                    </div>
+                    <p className="text-white/70 text-sm ml-8 mb-2">{lab.description}</p>
+                    <div className="flex items-center ml-8 space-x-4 text-sm text-white/60">
+                      <span>{lab.biomarker_count} biomarkers</span>
+                    </div>
                   </div>
-                  <div className="text-xs text-white/60 mt-1">
-                    {selectedLabs.length} panel{selectedLabs.length !== 1 ? 's' : ''} selected
+                  <div className="text-right ml-4">
+                    <p className="text-2xl font-bold text-yellow-400">${lab.price}</p>
                   </div>
                 </div>
-              )}
+              </div>
+            ))}
+          </div>
 
-              {/* Provider Notes */}
-              <div className="mt-6">
-                <label className="block text-sm font-semibold mb-2">Provider Notes</label>
-                <textarea
-                  value={providerNotes}
-                  onChange={(e) => setProviderNotes(e.target.value)}
-                  placeholder="Add any notes or recommendations..."
-                  rows={4}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-yellow-500"
-                />
+          {selectedLabs.length > 0 && (
+            <div className="mt-6 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Total Investment:</span>
+                <span className="text-2xl font-bold text-yellow-400">${totalPrice}</span>
               </div>
             </div>
+          )}
+        </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={handleApprove}
-                disabled={isSubmitting || selectedLabs.length === 0}
-                className="w-full px-6 py-4 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Approving...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="w-5 h-5" />
-                    Approve & Send Labs
-                  </>
-                )}
-              </button>
+        {/* Provider Notes */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4 text-yellow-400">Provider Notes</h2>
+          <textarea
+            value={providerNotes}
+            onChange={(e) => setProviderNotes(e.target.value)}
+            className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/50 focus:border-yellow-400 focus:outline-none h-32"
+            placeholder="Enter your recommendations and treatment plan for this patient..."
+            required
+          />
+        </div>
 
-              <button
-                onClick={() => router.push('/provider')}
-                className="w-full px-6 py-4 bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold rounded-lg transition-all border border-red-500/30"
-              >
-                Reject Consultation
-              </button>
-            </div>
-          </div>
+        {/* Actions */}
+        <div className="flex space-x-4">
+          <button
+            onClick={handleApprove}
+            disabled={isSubmitting || selectedLabs.length === 0 || !providerNotes.trim()}
+            className="flex-1 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-4 rounded-lg font-bold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Approving...
+              </>
+            ) : (
+              'Approve & Send to Patient'
+            )}
+          </button>
+          <Link
+            href="/provider"
+            className="px-8 py-4 bg-white/5 border border-white/10 rounded-lg font-bold hover:bg-white/10 transition-all text-center"
+          >
+            Cancel
+          </Link>
         </div>
       </div>
     </div>
