@@ -1,19 +1,14 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
 import { Lock, Calendar, User, Mail, Phone, Eye, EyeOff, UserPlus, Loader2 } from 'lucide-react'
 
-function SignupForm() {
+export default function PatientSignupPage() {
   const brand = getBrand()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const consultationId = searchParams.get('consultation')
-  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -26,12 +21,6 @@ function SignupForm() {
     password: '',
     confirmPassword: ''
   })
-
-  useEffect(() => {
-    if (consultationId) {
-      sessionStorage.setItem('pending_consultation_link', consultationId)
-    }
-  }, [consultationId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,10 +49,7 @@ function SignupForm() {
       const data = await response.json()
 
       if (data.success) {
-        const loginUrl = consultationId 
-          ? `/patient/login?registered=true&consultation=${consultationId}`
-          : '/patient/login?registered=true'
-        router.push(loginUrl)
+        router.push('/patient/login?registered=true')
       } else {
         setError(data.error || 'Signup failed')
       }
@@ -87,21 +73,8 @@ function SignupForm() {
             <UserPlus className="w-10 h-10" style={{ color: brand.colors.primary }} />
           </div>
           <h1 className="text-3xl font-black mb-2">Create Account</h1>
-          <p className="text-white/60">
-            {consultationId 
-              ? 'Create your account to view your personalized health plan'
-              : 'Sign up to access your lab results'
-            }
-          </p>
+          <p className="text-white/60">Sign up to access your health dashboard</p>
         </div>
-
-        {consultationId && (
-          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg">
-            <p className="text-yellow-400 text-sm">
-              ✓ Your consultation has been approved! Create an account to view your recommendations.
-            </p>
-          </div>
-        )}
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg">
@@ -110,6 +83,7 @@ function SignupForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          
           <div>
             <label className="block text-sm font-semibold mb-2">Full Name *</label>
             <div className="relative">
@@ -236,7 +210,7 @@ function SignupForm() {
         <p className="text-center text-white/60 text-sm mt-6">
           Already have an account?{' '}
           <Link 
-            href={consultationId ? `/patient/login?consultation=${consultationId}` : '/patient/login'}
+            href="/patient/login"
             className="font-semibold hover:underline"
             style={{ color: brand.colors.primary }}
           >
@@ -245,17 +219,5 @@ function SignupForm() {
         </p>
       </div>
     </div>
-  )
-}
-
-export default function PatientSignupPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
-      </div>
-    }>
-      <SignupForm />
-    </Suspense>
   )
 }
