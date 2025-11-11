@@ -1,18 +1,31 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
 import { FileText, Calendar, ShoppingCart, Pill, User, LogOut, Loader2 } from 'lucide-react'
 
-export default function PatientPortal() {
+function PatientPortalContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const brand = getBrand()
   const [patientData, setPatientData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const consultationLink = searchParams.get('link')
 
   useEffect(() => {
+    handleAuth()
+  }, [consultationLink])
+
+  const handleAuth = async () => {
+    // If there's a consultation link, store it and redirect to signup
+    if (consultationLink) {
+      sessionStorage.setItem('pending_consultation_link', consultationLink)
+      router.push(`/patient/signup?consultation=${consultationLink}`)
+      return
+    }
+
     // Check if patient is logged in
     const patientId = sessionStorage.getItem('patient_id')
     const patientName = sessionStorage.getItem('patient_name')
@@ -22,13 +35,31 @@ export default function PatientPortal() {
       return
     }
 
-    // For now, set basic patient info from session
+    // Check if there's a pending consultation to link
+    const pendingLink = sessionStorage.getItem('pending_consultation_link')
+    if (pendingLink) {
+      await linkConsultation(pendingLink, patientId)
+      sessionStorage.removeItem('pending_consultation_link')
+    }
+
     setPatientData({
       id: patientId,
       name: patientName
     })
     setLoading(false)
-  }, [router])
+  }
+
+  const linkConsultation = async (consultationId: string, patientId: string) => {
+    try {
+      await fetch('/api/patient/link-consultation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ consultationId, patientId })
+      })
+    } catch (error) {
+      console.error('Error linking consultation:', error)
+    }
+  }
 
   const handleLogout = () => {
     sessionStorage.clear()
@@ -83,7 +114,6 @@ export default function PatientPortal() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32 pb-12">
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Header */}
         <div className="flex items-center justify-between mb-12">
           <div>
             <h1 className="text-4xl font-black mb-2">
@@ -100,7 +130,6 @@ export default function PatientPortal() {
           </button>
         </div>
 
-        {/* Quick Stats - Coming Soon */}
         <div className="grid md:grid-cols-3 gap-6 mb-12">
           <div 
             className="p-6 rounded-2xl border relative opacity-50"
@@ -145,7 +174,6 @@ export default function PatientPortal() {
           </div>
         </div>
 
-        {/* Menu Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {menuItems.map((item, idx) => {
             const Icon = item.icon
@@ -190,7 +218,6 @@ export default function PatientPortal() {
           })}
         </div>
 
-        {/* Recent Activity - Coming Soon */}
         <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 relative opacity-50">
           <div className="absolute top-4 right-4 px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-white/60">
             Coming Soon
@@ -204,5 +231,17 @@ export default function PatientPortal() {
 
       </div>
     </div>
+  )
+}
+
+export default function PatientPortal() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      </div>
+    }>
+      <PatientPortalContent />
+    </Suspense>
   )
 }
