@@ -150,28 +150,40 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               <div className="space-y-3">
                 <div>
                   <label className="text-sm text-gray-400">Name</label>
-                  <p className="text-lg">{consultation.patient_name}</p>
+                  <p className="text-lg">{consultation.first_name} {consultation.last_name}</p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-400">Date of Birth</label>
-                  <p className="text-lg">{consultation.patient_dob}</p>
+                  <p className="text-lg">{consultation.date_of_birth}</p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-400">Email</label>
-                  <p className="text-lg">{consultation.patient_email}</p>
+                  <p className="text-lg">{consultation.email}</p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-400">Phone</label>
-                  <p className="text-lg">{consultation.patient_phone}</p>
+                  <p className="text-lg">{consultation.phone || 'Not provided'}</p>
                 </div>
+                {consultation.height && consultation.weight && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-400">Height</label>
+                      <p className="text-lg">{consultation.height}"</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-400">Weight</label>
+                      <p className="text-lg">{consultation.weight} lbs</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Health Goals */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-              <h2 className="text-2xl font-bold mb-4 text-yellow-400">Health Goals</h2>
+              <h2 className="text-2xl font-bold mb-4 text-yellow-400">Optimization Goals</h2>
               <div className="space-y-4">
-                {consultation.health_goals?.map((goal: string, index: number) => (
+                {consultation.optimization_goals?.map((goal: string, index: number) => (
                   <div key={index} className="flex items-start">
                     <CheckCircle className="w-5 h-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
                     <span>{goal}</span>
@@ -180,17 +192,32 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             </div>
 
+            {/* Symptoms */}
+            {consultation.symptoms && consultation.symptoms.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+                <h2 className="text-2xl font-bold mb-4 text-yellow-400">Current Symptoms</h2>
+                <div className="space-y-4">
+                  {consultation.symptoms.map((symptom: string, index: number) => (
+                    <div key={index} className="flex items-start">
+                      <CheckCircle className="w-5 h-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
+                      <span>{symptom}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Medical History */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-2xl font-bold mb-4 text-yellow-400">Medical History</h2>
               <div className="space-y-3">
                 <div>
-                  <label className="text-sm text-gray-400">Current Medications</label>
-                  <p>{consultation.current_medications || 'None reported'}</p>
+                  <label className="text-sm text-gray-400">Medical Conditions</label>
+                  <p>{consultation.medical_conditions?.join(', ') || 'None reported'}</p>
                 </div>
                 <div>
-                  <label className="text-sm text-gray-400">Medical Conditions</label>
-                  <p>{consultation.medical_conditions || 'None reported'}</p>
+                  <label className="text-sm text-gray-400">Current Medications</label>
+                  <p>{consultation.current_medications || 'None reported'}</p>
                 </div>
                 <div>
                   <label className="text-sm text-gray-400">Allergies</label>
