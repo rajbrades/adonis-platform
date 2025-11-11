@@ -18,15 +18,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Insert with ONLY the columns we're sure about
-    const insertData: any = {
+    // Insert with ALL the NOT NULL columns we've discovered
+    const insertData = {
+      user_id: 'admin-upload',
+      panel_name: 'Quest Diagnostics - Comprehensive Panel',
+      uploaded_by: 'admin',
       patient_name: patient_name,
       patient_dob: patient_dob,
+      test_date: test_date || new Date().toISOString().split('T')[0],
       biomarkers: biomarkers || []
     }
-
-    // Add optional fields only if we're sure they exist
-    if (test_date) insertData.test_date = test_date
     
     const { data, error } = await supabase
       .from('lab_results')
