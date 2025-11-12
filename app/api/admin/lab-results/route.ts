@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
         patient_dob: body.patient_dob,
         test_date: body.test_date,
         panel_name: body.lab_name || 'Quest Diagnostics',
+        pdf_url: body.pdf_url || null,
         uploaded_by: 'admin',
         biomarkers: body.biomarkers,
         uploaded_at: new Date().toISOString(),
