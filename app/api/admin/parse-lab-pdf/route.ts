@@ -11,25 +11,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    
-    console.log('📄 PDF File size:', buffer.length, 'bytes')
-    
+    const buffer = Buffer.from(await file.arrayBuffer())
     const data = await pdfParse(buffer)
     const text = data.text
 
-    console.log('📄 PDF Text Length:', text.length)
-    console.log('📄 First 1000 chars:', text.substring(0, 1000))
-
-    if (text.length < 100) {
-      return NextResponse.json({
-        testDate: new Date().toISOString().split('T')[0],
-        labName: 'Quest Diagnostics',
-        biomarkers: [],
-        error: 'PDF text extraction failed - file may be image-based or encrypted'
-      })
-    }
+    console.log('📄 PDF parsed, extracting data...')
 
     // Extract test date
     let testDate = new Date().toISOString().split('T')[0]
@@ -37,36 +23,46 @@ export async function POST(req: NextRequest) {
     if (dateMatch) {
       const [month, day, year] = dateMatch[1].split('/')
       testDate = `${year}-${month}-${day}`
-      console.log('✅ Test date:', testDate)
     }
 
-    // Extract all biomarkers from the PDF
+    // Extract biomarkers from Quest table format
     const biomarkers: any[] = []
     const lines = text.split('\n')
+
+    // Quest format: TEST_NAME VALUE REFERENCE_RANGE UNIT
+    // Example: "TESTOSTERONE, TOTAL 740 250-1100 ng/dL"
+    // Example: "TRIGLYCERIDES 198 H <150 mg/dL"
     
-    // Quest format pattern: "BIOMARKER_NAME    VALUE    STATUS    RANGE"
-    for (const line of lines) {
-      // Skip empty lines and headers
-      if (!line.trim() || line.includes('Test Name') || line.includes('Patient Information')) continue
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
       
-      // Match patterns like: "TESTOSTERONE, TOTAL    612    250-827 ng/dL"
-      const match = line.match(/^([A-Z][A-Z\s,\(\)\/\-]+?)\s+(\d+\.?\d*)\s*(H|L)?\s*([\d\.\-<>]+.*?)$/i)
+      // Skip empty lines and headers
+      if (!line || line.includes('Test Name') || line.includes('Reference Range')) continue
+      
+      // Pattern 1: Name Value Status? Range Unit
+      // TRIGLYCERIDES 198 H <150 mg/dL
+      const pattern1 = /^([A-Z][A-Z\s,\-()]+?)\s+(\d+\.?\d*)\s*(H|L)?\s+([\d<>=\.\-\s]+)\s+([a-zA-Z\/µ%]+)$/
+      
+      // Pattern 2: Name Value Range Unit  
+      // TESTOSTERONE, TOTAL 740 250-1100 ng/dL
+      const pattern2 = /^([A-Z][A-Z\s,\-()]+?)\s+(\d+\.?\d*)\s+([\d<>=\.\-\s]+)\s+([a-zA-Z\/µ%]+)$/
+      
+      // Pattern 3: Multi-line format (name on one line, value on next)
+      const namePattern = /^[A-Z][A-Z\s,\-()]+$/
+      
+      let match = line.match(pattern1) || line.match(pattern2)
       
       if (match) {
-        const name = match[1].trim()
-        const value = match[2]
-        const flag = match[3] || ''
-        const range = match[4]
-        
-        console.log(`✅ Found: ${name} = ${value}`)
-        
-        biomarkers.push({
-          biomarker: name,
-          value: value,
-          unit: extractUnit(range),
-          referenceRange: range,
-          status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
-        })
+        const hasStatus = match.length === 6
+        const biomarker = {
+          biomarker: match[1].trim(),
+          value: match[2],
+          unit: hasStatus ? match[5] : match[4],
+          referenceRange: hasStatus ? match[4] : match[3],
+          status: hasStatus && (match[3] === 'H' || match[3] === 'L') ? (match[3] === 'H' ? 'high' : 'low') : 'normal'
+        }
+        biomarkers.push(biomarker)
+        console.log('✅ Extracted:', biomarker.biomarker, '=', biomarker.value)
       }
     }
 
@@ -82,14 +78,7 @@ export async function POST(req: NextRequest) {
     console.error('PDF Parse Error:', error)
     return NextResponse.json({ 
       error: `Failed to parse PDF: ${error.message}`,
-      testDate: new Date().toISOString().split('T')[0],
-      labName: 'Quest Diagnostics',
-      biomarkers: []
+      details: error.stack
     }, { status: 500 })
   }
-}
-
-function extractUnit(range: string): string {
-  const unitMatch = range.match(/(mg\/dL|ng\/dL|pg\/mL|mIU\/L|mcg\/dL|mmol\/L|g\/dL|%|U\/L|nmol\/L|fL|pg|Thousand\/uL|Million\/uL|cells\/uL)/)
-  return unitMatch ? unitMatch[1] : ''
 }
