@@ -132,14 +132,14 @@ function UploadLabsContent() {
   }
 
   const handleSubmit = async () => {
-    if (!selectedPatient || !parsedData || !selectedFile) return
+    if (!selectedPatient || !parsedData || !pdfFile) return
 
     setUploading(true)
 
     try {
       // First, upload the PDF to storage
       const uploadFormData = new FormData()
-      uploadFormData.append('pdf', selectedFile)
+      uploadFormData.append('pdf', pdfFile)
       uploadFormData.append('patientId', selectedPatient.id)
 
       const uploadRes = await fetch('/api/admin/upload-pdf', {
