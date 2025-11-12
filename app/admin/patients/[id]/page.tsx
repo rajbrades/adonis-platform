@@ -30,16 +30,15 @@ interface Consultation {
   created_at: string
 }
 
+interface LabResult {
   id: string
   user_id: string
   patient_name: string
   patient_dob: string
   test_date: string
-  panel_name: string
-  uploaded_at: string
+  lab_name: string
   biomarkers: any[]
   created_at: string
-}
 }
 
 export default function PatientDetailPage() {
@@ -230,7 +229,7 @@ export default function PatientDetailPage() {
                     <div key={lab.id} className="bg-black/30 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h3 className="font-semibold">{lab.panel_name}</h3>
+                          <h3 className="font-semibold">{lab.lab_name}</h3>
                           <p className="text-sm text-gray-400">
                             Test Date: {lab.test_date || 'N/A'} | Uploaded: {new Date(lab.created_at).toLocaleDateString()}
                           </p>
