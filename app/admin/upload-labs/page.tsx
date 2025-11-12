@@ -156,8 +156,16 @@ function UploadLabsContent() {
         alert(`Error saving results: ${data.error}`)
         setUploading(false)
         return
-        }),
-      })
+      }
+
+//      await fetch('/api/consultations', {
+ //       method: 'PATCH',
+ //       headers: { 'Content-Type': 'application/json' },
+ //       body: JSON.stringify({
+ //         id: selectedPatient.id,
+ //         lab_upload_status: 'uploaded',
+ //       }),
+ //     })
 
       alert('Lab results uploaded successfully!')
       router.push(`/admin/patients/${selectedPatient.id}`)
