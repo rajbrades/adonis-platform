@@ -6,9 +6,10 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { notes, providerId } = await request.json()
 
     // Update consultation status
@@ -20,7 +21,7 @@ export async function POST(
         provider_id: providerId,
         reviewed_at: new Date().toISOString()
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single()
 
@@ -45,7 +46,7 @@ export async function POST(
             <li>Order your lab panel to get started</li>
           </ol>
           <div style="margin: 30px 0;">
-            <a href="${baseUrl}/patient?link=${params.id}" 
+            <a href="${baseUrl}/patient?link=${id}" 
                style="background: #FBBF24; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
               Access Your Portal
             </a>
