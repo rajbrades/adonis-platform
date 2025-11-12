@@ -95,7 +95,7 @@ export default function PatientDetailPage() {
           id: patient.id,
           status: 'approved',
           reviewed_at: new Date().toISOString(),
-          reviewed_by: 'Admin',
+          reviewed_by: 'Provider',
           provider_notes: notes,
           recommended_labs: {
             panel_name: 'Male Hormone Optimization Panel',
@@ -136,7 +136,7 @@ export default function PatientDetailPage() {
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Patient Not Found</h1>
-          <Link href="/admin/patients" className="text-blue-400 hover:underline">
+          <Link href="/provider/patients" className="text-blue-400 hover:underline">
             ← Back to Patients
           </Link>
         </div>
@@ -153,10 +153,10 @@ export default function PatientDetailPage() {
         <div className="max-w-7xl mx-auto px-8 py-6">
           <div className="flex items-center gap-2 text-sm">
             <Link href="/admin" className="text-gray-400 hover:text-white transition-colors">
-              Admin
+              Provider
             </Link>
             <span className="text-gray-600">/</span>
-            <Link href="/admin/patients" className="text-gray-400 hover:text-white transition-colors">
+            <Link href="/provider/patients" className="text-gray-400 hover:text-white transition-colors">
               Patients
             </Link>
             <span className="text-gray-600">/</span>
@@ -182,7 +182,7 @@ export default function PatientDetailPage() {
               </p>
             </div>
             <Link 
-              href="/admin/patients"
+              href="/provider/patients"
               className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all text-sm"
             >
               ← Back to Patients
