@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Anthropic from '@anthropic-ai/sdk'
 
 export async function POST(req: NextRequest) {
   try {
-    const pdfParse = (await import('pdf-parse-fork')).default
+    console.log('🤖 Using Claude AI to extract biomarkers from PDF...')
     
     const formData = await req.formData()
     const file = formData.get('file') as File
@@ -11,74 +12,81 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer())
-    const data = await pdfParse(buffer)
-    const text = data.text
-
-    console.log('📄 PDF parsed, extracting data...')
-
-    // Extract test date
-    let testDate = new Date().toISOString().split('T')[0]
-    const dateMatch = text.match(/Collected[:\s]+(\d{2}\/\d{2}\/\d{4})/i)
-    if (dateMatch) {
-      const [month, day, year] = dateMatch[1].split('/')
-      testDate = `${year}-${month}-${day}`
-    }
-
-    // Extract biomarkers from Quest table format
-    const biomarkers: any[] = []
-    const lines = text.split('\n')
-
-    // Quest format: TEST_NAME VALUE REFERENCE_RANGE UNIT
-    // Example: "TESTOSTERONE, TOTAL 740 250-1100 ng/dL"
-    // Example: "TRIGLYCERIDES 198 H <150 mg/dL"
+    // Convert PDF to base64
+    const arrayBuffer = await file.arrayBuffer()
+    const base64Data = Buffer.from(arrayBuffer).toString('base64')
     
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
-      // Skip empty lines and headers
-      if (!line || line.includes('Test Name') || line.includes('Reference Range')) continue
-      
-      // Pattern 1: Name Value Status? Range Unit
-      // TRIGLYCERIDES 198 H <150 mg/dL
-      const pattern1 = /^([A-Z][A-Z\s,\-()]+?)\s+(\d+\.?\d*)\s*(H|L)?\s+([\d<>=\.\-\s]+)\s+([a-zA-Z\/µ%]+)$/
-      
-      // Pattern 2: Name Value Range Unit  
-      // TESTOSTERONE, TOTAL 740 250-1100 ng/dL
-      const pattern2 = /^([A-Z][A-Z\s,\-()]+?)\s+(\d+\.?\d*)\s+([\d<>=\.\-\s]+)\s+([a-zA-Z\/µ%]+)$/
-      
-      // Pattern 3: Multi-line format (name on one line, value on next)
-      const namePattern = /^[A-Z][A-Z\s,\-()]+$/
-      
-      let match = line.match(pattern1) || line.match(pattern2)
-      
-      if (match) {
-        const hasStatus = match.length === 6
-        const biomarker = {
-          biomarker: match[1].trim(),
-          value: match[2],
-          unit: hasStatus ? match[5] : match[4],
-          referenceRange: hasStatus ? match[4] : match[3],
-          status: hasStatus && (match[3] === 'H' || match[3] === 'L') ? (match[3] === 'H' ? 'high' : 'low') : 'normal'
-        }
-        biomarkers.push(biomarker)
-        console.log('✅ Extracted:', biomarker.biomarker, '=', biomarker.value)
-      }
-    }
+    console.log('📄 PDF size:', file.size, 'bytes')
 
-    console.log(`📊 Total biomarkers extracted: ${biomarkers.length}`)
+    // Use Claude to extract biomarkers from PDF
+    const anthropic = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    })
+
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{
+        role: 'user',
+        content: [
+          {
+            type: 'document',
+            source: {
+              type: 'base64',
+              media_type: 'application/pdf',
+              data: base64Data,
+            },
+          },
+          {
+            type: 'text',
+            text: `Extract ALL biomarkers from this Quest Diagnostics lab report and return them as a JSON array. For each biomarker include: biomarker name, value, unit, reference range, and status (normal/high/low).
+
+Also extract the collection date in YYYY-MM-DD format.
+
+Return ONLY valid JSON in this format:
+{
+  "testDate": "YYYY-MM-DD",
+  "biomarkers": [
+    {
+      "biomarker": "TESTOSTERONE, TOTAL",
+      "value": "612",
+      "unit": "ng/dL",
+      "referenceRange": "250-827",
+      "status": "normal"
+    }
+  ]
+}`,
+          },
+        ],
+      }],
+    })
+
+    const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
+    console.log('🤖 Claude response:', responseText.substring(0, 500))
+    
+    // Parse JSON from response
+    const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('Could not extract JSON from Claude response')
+    }
+    
+    const result = JSON.parse(jsonMatch[0])
+    
+    console.log(`✅ Extracted ${result.biomarkers.length} biomarkers using AI`)
 
     return NextResponse.json({
-      testDate,
+      testDate: result.testDate,
       labName: 'Quest Diagnostics',
-      biomarkers
+      biomarkers: result.biomarkers
     })
 
   } catch (error: any) {
-    console.error('PDF Parse Error:', error)
+    console.error('❌ Error:', error)
     return NextResponse.json({ 
-      error: `Failed to parse PDF: ${error.message}`,
-      details: error.stack
+      error: error.message,
+      testDate: new Date().toISOString().split('T')[0],
+      labName: 'Quest Diagnostics',
+      biomarkers: []
     }, { status: 500 })
   }
 }
