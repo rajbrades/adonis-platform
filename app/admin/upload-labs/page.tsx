@@ -132,11 +132,30 @@ function UploadLabsContent() {
   }
 
   const handleSubmit = async () => {
-    if (!selectedPatient || !parsedData) return
+    if (!selectedPatient || !parsedData || !selectedFile) return
 
     setUploading(true)
 
     try {
+      // First, upload the PDF to storage
+      const uploadFormData = new FormData()
+      uploadFormData.append('pdf', selectedFile)
+      uploadFormData.append('patientId', selectedPatient.id)
+
+      const uploadRes = await fetch('/api/admin/upload-pdf', {
+        method: 'POST',
+        body: uploadFormData,
+      })
+
+      const uploadData = await uploadRes.json()
+
+      if (uploadData.error) {
+        alert(`Error uploading PDF: ${uploadData.error}`)
+        setUploading(false)
+        return
+      }
+
+      // Then save lab results with PDF URL
       const response = await fetch('/api/admin/lab-results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,6 +165,7 @@ function UploadLabsContent() {
           patient_dob: selectedPatient.date_of_birth,
           test_date: parsedData.testDate,
           lab_name: parsedData.labName,
+          pdf_url: uploadData.pdfUrl,
           biomarkers: parsedData.biomarkers,
         }),
       })
@@ -158,24 +178,14 @@ function UploadLabsContent() {
         return
       }
 
-//      await fetch('/api/consultations', {
- //       method: 'PATCH',
- //       headers: { 'Content-Type': 'application/json' },
- //       body: JSON.stringify({
- //         id: selectedPatient.id,
- //         lab_upload_status: 'uploaded',
- //       }),
- //     })
-
       alert('Lab results uploaded successfully!')
       router.push(`/admin/patients/${selectedPatient.id}`)
     } catch (error) {
-      console.error('Failed to save lab results:', error)
-      alert('Failed to save lab results. Please try again.')
+      console.error('Upload failed:', error)
+      alert('Upload failed. Please try again.')
       setUploading(false)
     }
   }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
