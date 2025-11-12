@@ -29,6 +29,21 @@ export async function POST(req: NextRequest) {
     
     console.log('💾 Saving lab results for:', body.patient_name)
 
+    // Check for existing labs for this patient on this date
+    const { data: existing } = await supabase
+      .from('lab_results')
+      .select('id')
+      .eq('user_id', body.patient_id || 'admin-upload')
+      .eq('test_date', body.test_date)
+      .maybeSingle()
+
+    if (existing) {
+      console.log('⚠️  Lab results already exist for this test date')
+      return NextResponse.json({ 
+        error: 'Lab results already uploaded for this test date. Please delete the existing results first.' 
+      }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
