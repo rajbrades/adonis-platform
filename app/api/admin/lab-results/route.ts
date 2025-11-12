@@ -16,7 +16,6 @@ export async function GET(req: NextRequest) {
     if (error) throw error
 
     console.log('📊 Found lab results:', data?.length || 0)
-
     return NextResponse.json(data || [])
   } catch (error: any) {
     console.error('Error fetching lab results:', error)
@@ -34,7 +33,6 @@ export async function POST(req: NextRequest) {
       .from('lab_results')
       .insert({
         user_id: '00000000-0000-0000-0000-000000000000',
-        clerk_user_id: 'placeholder',
         patient_id: body.patient_id,
         patient_name: body.patient_name,
         patient_dob: body.patient_dob,
@@ -49,10 +47,10 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    console.log('✅ Lab results saved with ID:', data?.id)
+    console.log('✅ Lab results saved successfully!')
     return NextResponse.json(data)
   } catch (error: any) {
-    console.error('Error saving lab results:', error)
+    console.error('❌ Error saving lab results:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
