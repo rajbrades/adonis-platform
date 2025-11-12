@@ -37,6 +37,7 @@ interface LabResult {
   patient_dob: string
   test_date: string
   lab_name: string
+  pdf_url: string | null
   biomarkers: any[]
   created_at: string
 }
@@ -271,12 +272,24 @@ export default function PatientDetailPage() {
                         </div>
                       )}
                       
-                      <Link
-                        href={`/patient/results/view/${lab.id}`}
-                        className="block text-center px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-semibold transition-all"
-                      >
-                        View Full Results
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        {lab.pdf_url && (
+                          <a
+                            href={lab.pdf_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 text-center px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm font-semibold transition-all"
+                          >
+                            📄 Download PDF
+                          </a>
+                        )}
+                        <Link
+                          href={`/patient/results/view/${lab.id}`}
+                          className="flex-1 text-center px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-sm font-semibold transition-all"
+                        >
+                          View Full Results →
+                        </Link>
+                      </div>
                     </div>
                   ))}
                 </div>
