@@ -32,7 +32,7 @@ interface Consultation {
 
 interface LabResult {
   id: string
-  patient_id: string
+  user_id: string
   patient_name: string
   patient_dob: string
   test_date: string
@@ -76,7 +76,7 @@ export default function PatientDetailPage() {
     try {
       const res = await fetch('/api/admin/lab-results')
       const data = await res.json()
-      const patientLabs = data.filter((lab: LabResult) => lab.patient_id === patientId)
+      const patientLabs = data.filter((lab: LabResult) => lab.user_id === patientId)
       setLabResults(patientLabs)
     } catch (error) {
       console.error('Failed to fetch lab results:', error)
