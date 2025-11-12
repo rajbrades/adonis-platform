@@ -27,18 +27,17 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     
-    console.log('💾 Saving lab results for patient:', body.patient_id)
+    console.log('💾 Saving lab results for:', body.patient_name)
 
     const { data, error } = await supabase
       .from('lab_results')
       .insert({
-        user_id: '00000000-0000-0000-0000-000000000000',
-        patient_id: body.patient_id,
+        user_id: body.patient_id || 'admin-upload',
         patient_name: body.patient_name,
         patient_dob: body.patient_dob,
         test_date: body.test_date,
-        lab_name: body.lab_name,
-        panel_name: 'Comprehensive Panel',
+        panel_name: body.lab_name || 'Quest Diagnostics',
+        uploaded_by: 'admin',
         biomarkers: body.biomarkers,
         uploaded_at: new Date().toISOString(),
       })
@@ -47,7 +46,7 @@ export async function POST(req: NextRequest) {
 
     if (error) throw error
 
-    console.log('✅ Lab results saved successfully!')
+    console.log('✅ Lab results saved!')
     return NextResponse.json(data)
   } catch (error: any) {
     console.error('❌ Error saving lab results:', error)
