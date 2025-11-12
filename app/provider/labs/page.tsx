@@ -133,7 +133,7 @@ export default function ProviderLabsPage() {
                   </div>
                   
                   <Link
-                    href={`/admin/patients/${consultation.id}`}
+                    href={`/provider/patients/${consultation.id}`}
                     className="px-6 py-3 rounded-lg font-semibold bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex-shrink-0"
                   >
                     View Details
