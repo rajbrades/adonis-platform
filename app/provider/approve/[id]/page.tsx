@@ -126,7 +126,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
   const totalBiomarkers = selectedPanelsDetails.reduce((sum, panel) => sum + panel.biomarker_count, 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-8">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32 px-8 pb-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
