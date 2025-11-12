@@ -6,49 +6,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-export async function POST(req: NextRequest) {
-  try {
-    const body = await req.json()
-    const { patient_name, patient_dob, test_date, biomarkers } = body
-
-    console.log('💾 Saving lab results:', { patient_name, patient_dob, biomarkers_count: biomarkers?.length })
-
-    if (!patient_name || !patient_dob) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
-
-    // Insert with ALL required NOT NULL columns from schema
-    const { data, error } = await supabase
-      .from('lab_results')
-      .insert({
-        user_id: 'admin-upload',
-        patient_name: patient_name,
-        patient_dob: patient_dob,
-        panel_name: 'Quest Diagnostics - Comprehensive Panel',
-        test_date: test_date || new Date().toISOString().split('T')[0],
-        uploaded_by: 'admin',
-        biomarkers: biomarkers || []
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('❌ Supabase error:', error)
-      return NextResponse.json({ 
-        error: error.message,
-        hint: error.hint,
-        details: error.details
-      }, { status: 500 })
-    }
-
-    console.log('✅ Lab results saved successfully:', data.id)
-    return NextResponse.json({ success: true, id: data.id })
-  } catch (error: any) {
-    console.error('❌ Error saving lab results:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { data, error } = await supabase
@@ -58,9 +15,44 @@ export async function GET(req: NextRequest) {
 
     if (error) throw error
 
+    console.log('📊 Found lab results:', data?.length || 0)
+
     return NextResponse.json(data || [])
   } catch (error: any) {
     console.error('Error fetching lab results:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    
+    console.log('💾 Saving lab results for patient:', body.patient_id)
+
+    const { data, error } = await supabase
+      .from('lab_results')
+      .insert({
+        user_id: '00000000-0000-0000-0000-000000000000',
+        clerk_user_id: 'placeholder',
+        patient_id: body.patient_id,
+        patient_name: body.patient_name,
+        patient_dob: body.patient_dob,
+        test_date: body.test_date,
+        lab_name: body.lab_name,
+        panel_name: 'Comprehensive Panel',
+        biomarkers: body.biomarkers,
+        uploaded_at: new Date().toISOString(),
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    console.log('✅ Lab results saved with ID:', data?.id)
+    return NextResponse.json(data)
+  } catch (error: any) {
+    console.error('Error saving lab results:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

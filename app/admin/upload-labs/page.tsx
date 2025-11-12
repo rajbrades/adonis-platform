@@ -141,7 +141,7 @@ function UploadLabsContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // patient_id removed - not used
+          patient_id: selectedPatient.id,
           patient_name: `${selectedPatient.first_name} ${selectedPatient.last_name}`,
           patient_dob: selectedPatient.date_of_birth,
           test_date: parsedData.testDate,
