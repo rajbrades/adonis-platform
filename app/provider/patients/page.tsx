@@ -187,7 +187,7 @@ export default function ProviderPatientsPage() {
                       </td>
                       <td className="p-4">
                         <Link
-                          href={`/admin/patients/${patient.id}`}
+                          href={`/provider/patients/${patient.id}`}
                           className="px-4 py-2 rounded-lg font-semibold transition-all inline-block"
                           style={{
                             backgroundColor: brand.colors.primary,
