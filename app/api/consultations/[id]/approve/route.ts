@@ -12,7 +12,6 @@ export async function POST(
     const { id } = await params
     const { notes, providerId } = await request.json()
 
-    // Update consultation status
     const { data: consultation, error } = await supabase
       .from('consultations')
       .update({
@@ -27,32 +26,33 @@ export async function POST(
 
     if (error) throw error
 
-    // Send approval email with patient portal link
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://getadonishealth.com'
     
     await resend.emails.send({
       from: 'ADONIS Health <noreply@getadonishealth.com>',
       to: consultation.email,
-      subject: 'Your ADONIS Consultation is Approved',
+      subject: 'Your ADONIS Consultation is Approved - Choose Your Lab Panel',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #FBBF24;">Consultation Approved</h1>
+          <h1 style="color: #FBBF24;">Consultation Approved!</h1>
           <p>Hi ${consultation.first_name},</p>
           <p>Great news! Your consultation has been reviewed and approved by our medical team.</p>
-          <p><strong>Next Steps:</strong></p>
-          <ol>
-            <li>Access your patient portal using the link below</li>
-            <li>Review your personalized treatment plan</li>
-            <li>Order your lab panel to get started</li>
-          </ol>
+          <p><strong>Next Step: Choose Your Lab Panel</strong></p>
+          <p>We've recommended lab panels based on your health goals. Click below to select the panel that's right for you:</p>
           <div style="margin: 30px 0;">
-            <a href="${baseUrl}/patient?link=${id}" 
+            <a href="${baseUrl}/checkout/${id}" 
                style="background: #FBBF24; color: black; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
-              Access Your Portal
+              Choose Your Lab Panel
             </a>
           </div>
+          <p><strong>Our Lab Panels:</strong></p>
+          <ul>
+            <li><strong>Essential Panel ($299)</strong> - Core biomarkers</li>
+            <li><strong>Comprehensive Panel ($499)</strong> - Extended analysis</li>
+            <li><strong>Elite Panel ($799)</strong> - Ultimate optimization</li>
+          </ul>
           <p style="color: #666; font-size: 14px; margin-top: 40px;">
-            If you have any questions, reply to this email or contact us at support@getadonishealth.com
+            Questions? Reply to this email or contact support@getadonishealth.com
           </p>
         </div>
       `
