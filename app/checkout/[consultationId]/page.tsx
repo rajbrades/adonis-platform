@@ -1,13 +1,11 @@
 'use client'
 
 import { use, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { LAB_PANELS } from '@/lib/stripe'
+import { LAB_PANELS } from '@/lib/lab-panels'
 import { Check, Loader2 } from 'lucide-react'
 
 export default function CheckoutPage({ params }: { params: Promise<{ consultationId: string }> }) {
   const { consultationId } = use(params)
-  const router = useRouter()
   const [loading, setLoading] = useState<string | null>(null)
   const [consultation, setConsultation] = useState<any>(null)
 
