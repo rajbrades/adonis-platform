@@ -158,11 +158,13 @@ export default function RecommendationPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
 
-        {/* CTA */}
+        {/* CTA - FIXED: Now wired to checkout */}
         <div className="text-center">
-          <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all mb-4">
-            Order Lab Tests - ${totalPrice}
-          </button>
+          <Link href={`/checkout/${resolvedParams.id}`}>
+            <button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-12 py-4 rounded-lg text-xl font-bold hover:shadow-lg transition-all mb-4">
+              Order Lab Tests - ${totalPrice}
+            </button>
+          </Link>
           <p className="text-white/60 text-sm">
             Questions? Contact our support team
           </p>
