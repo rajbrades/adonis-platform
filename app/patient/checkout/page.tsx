@@ -51,7 +51,7 @@ export default function CheckoutPage() {
             Your order has been placed successfully. You'll receive a confirmation email shortly.
           </p>
           <Link
-            href="/dashboard"
+            href="/patient"
             className="inline-block bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold hover:bg-yellow-500 transition"
           >
             Back to Dashboard
