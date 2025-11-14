@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { CheckCircle, Clock, Shield, Award, FileText, User } from 'lucide-react'
 
-const DEFAULT_FEATURES = {
+const DEFAULT_FEATURES: Record<string, string[]> = {
   'Essential Panel': [
     'Hormone Panel (Testosterone, Estradiol, DHEA)',
     'Thyroid Function (TSH, T3, T4)',
@@ -107,7 +107,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ consultatio
 
   const panel = consultation.recommended_labs[0]
   const providerName = consultation.reviewed_by || 'Your provider'
-  const features = panel.features || DEFAULT_FEATURES[panel.name] || DEFAULT_FEATURES['Comprehensive Panel']
+  const features = panel.features || DEFAULT_FEATURES[panel.name as string] || DEFAULT_FEATURES['Comprehensive Panel']
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
