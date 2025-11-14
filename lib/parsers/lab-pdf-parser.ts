@@ -5,7 +5,7 @@ export async function parseQuestPDF(buffer: Buffer) {
     const data = await pdfParse(buffer)
     const text = data.text
 
-    console.log('📄 Parsing PDF...')
+    console.log('📄 Parsing Quest PDF...')
 
     const patientName = extractPatientName(text)
     const patientDOB = extractDOB(text)
@@ -27,13 +27,18 @@ export async function parseQuestPDF(buffer: Buffer) {
 }
 
 function extractPatientName(text: string): string {
-  const match = text.match(/KAIS,\s*JAMES|([A-Z]+,\s*[A-Z]+)/i)
-  return match ? match[0] : 'Unknown Patient'
+  // Look for patient name in header
+  const match = text.match(/Patient Information[^]*?([A-Z]+,\s*[A-Z]+)/)
+  return match ? match[1].trim() : 'Unknown Patient'
 }
 
 function extractDOB(text: string): string {
   const match = text.match(/DOB:\s*(\d{2}\/\d{2}\/\d{4})/)
-  return match ? match[1] : ''
+  if (match) {
+    const [month, day, year] = match[1].split('/')
+    return `${year}-${month}-${day}`
+  }
+  return ''
 }
 
 function extractTestDate(text: string): string {
@@ -49,35 +54,45 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  // Quest format: "BIOMARKER_NAME    VALUE    FLAG    RANGE    UNIT"
-  // Match lines with biomarker data
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Skip headers and empty lines
-    if (!line || line.includes('Test Name') || line.includes('Patient Information')) continue
+    // Skip empty lines and headers
+    if (!line || line.includes('Test Name') || line.includes('Reference Range')) continue
     
-    // Try to extract biomarker data from the line
-    // Pattern: NAME followed by numbers
-    const biomarkerMatch = line.match(/^([A-Z][A-Z\s,\(\)\/\-]+?)\s+(\d+\.?\d*)\s*(H|L)?\s*([\d\.\-<>]+)/)
+    // Pattern 1: NAME VALUE FLAG RANGE UNIT
+    // Example: "IRON, TOTAL 152 50-180 mcg/dL"
+    const pattern1 = /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*|<\d+)\s*(H|L)?\s*([\d\.\-<>]+(?:\s*-\s*[\d\.]+)?|<\s*\d+|>\s*\d+|> OR = \d+)\s*(.+?)?\s*$/
     
-    if (biomarkerMatch) {
-      const name = biomarkerMatch[1].trim()
-      const value = biomarkerMatch[2]
-      const flag = biomarkerMatch[3] || ''
-      const range = biomarkerMatch[4]
+    const match = line.match(pattern1)
+    
+    if (match) {
+      const name = match[1].trim()
+      const value = match[2].trim()
+      const flag = match[3] || ''
+      let range = match[4] ? match[4].trim() : ''
+      const unit = match[5] ? match[5].trim() : ''
+      
+      // Skip if it looks like a header or label
+      if (name.length < 3 || name.includes('PAGE') || name.includes('CLIENT')) continue
+      
+      // Clean up unit
+      const cleanUnit = unit.replace(/\(calc\)/g, '').trim()
+      
+      // Clean up range
+      range = range.replace('> OR =', '>=').replace('< OR =', '<=')
       
       biomarkers.push({
         biomarker: name,
         value: value,
-        unit: extractUnitFromName(name),
+        unit: cleanUnit || extractUnitFromName(name),
         referenceRange: range,
         status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
       })
     }
   }
   
-  return biomarkers
+  return biomarkers.filter(b => b.biomarker && b.value)
 }
 
 function extractUnitFromName(name: string): string {
@@ -85,6 +100,8 @@ function extractUnitFromName(name: string): string {
     'TESTOSTERONE': 'ng/dL',
     'ESTRADIOL': 'pg/mL',
     'TSH': 'mIU/L',
+    'T4': 'ng/dL',
+    'T3': 'pg/mL',
     'VITAMIN D': 'ng/mL',
     'GLUCOSE': 'mg/dL',
     'CHOLESTEROL': 'mg/dL',
@@ -92,8 +109,15 @@ function extractUnitFromName(name: string): string {
     'HDL': 'mg/dL',
     'LDL': 'mg/dL',
     'HEMOGLOBIN': 'g/dL',
+    'HEMATOCRIT': '%',
     'CREATININE': 'mg/dL',
-    'PSA': 'ng/mL'
+    'PSA': 'ng/mL',
+    'IRON': 'mcg/dL',
+    'FERRITIN': 'ng/mL',
+    'DHEA': 'mcg/dL',
+    'INSULIN': 'uIU/mL',
+    'IGF': 'ng/mL',
+    'CRP': 'mg/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {

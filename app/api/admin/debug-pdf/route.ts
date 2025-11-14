@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { parseQuestPDF } from '@/lib/parsers/lab-pdf-parser'
+import pdfParse from 'pdf-parse-fork'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,18 +11,21 @@ export async function POST(req: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer())
-    const result = await parseQuestPDF(buffer)
+    const data = await pdfParse(buffer)
+    const rawText = data.text
+
+    console.log('📄 First 500 chars:')
+    console.log(rawText.substring(0, 500))
 
     return NextResponse.json({
-      ...result,
-      debug: {
-        fileName: file.name,
-        fileSize: file.size,
-        biomarkerCount: result.biomarkers?.length || 0
-      }
+      fileName: file.name,
+      fileSize: file.size,
+      pageCount: data.numpages,
+      rawText: rawText,
+      preview: rawText.substring(0, 1000)
     })
   } catch (error: any) {
-    console.error('Error in debug:', error)
+    console.error('Error:', error)
     return NextResponse.json({ 
       error: error.message,
       stack: error.stack 
