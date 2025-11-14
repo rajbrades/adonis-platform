@@ -1,108 +1,122 @@
 'use client'
 
-import { use, useEffect, useState } from 'react'
-import { LAB_PANELS } from '@/lib/lab-panels'
-import { Check, Loader2 } from 'lucide-react'
+import { use, useState, useEffect } from 'react'
+import Link from 'next/link'
+import { CheckCircle } from 'lucide-react'
 
 export default function CheckoutPage({ params }: { params: Promise<{ consultationId: string }> }) {
-  const { consultationId } = use(params)
-  const [loading, setLoading] = useState<string | null>(null)
+  const resolvedParams = use(params)
   const [consultation, setConsultation] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/api/consultations/${consultationId}`)
-      .then(res => res.json())
-      .then(data => setConsultation(data))
-  }, [consultationId])
+    fetchConsultation()
+  }, [])
 
-  const handleCheckout = async (panelType: string) => {
-    setLoading(panelType)
-    
+  const fetchConsultation = async () => {
     try {
-      const response = await fetch('/api/stripe/create-checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          consultationId,
-          panelType
-        })
-      })
-
-      const { url } = await response.json()
-      window.location.href = url
+      const res = await fetch(`/api/consultations/${resolvedParams.consultationId}`)
+      const data = await res.json()
+      setConsultation(data)
     } catch (error) {
-      console.error('Checkout error:', error)
-      setLoading(null)
+      console.error('Error:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (!consultation) {
+  const handleSelectPanel = async (panel: any) => {
+    try {
+      const res = await fetch('/api/stripe/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consultationId: resolvedParams.consultationId,
+          panelType: panel.slug,
+          panelName: panel.name,
+          panelPrice: panel.price
+        })
+      })
+
+      const data = await res.json()
+      
+      if (data.url) {
+        window.location.href = data.url
+      }
+    } catch (error) {
+      console.error('Error:', error)
+    }
+  }
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-white/60">Loading...</p>
       </div>
     )
   }
 
+  if (!consultation || !consultation.recommended_labs || consultation.recommended_labs.length === 0) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white/60">No lab panels recommended</p>
+        </div>
+      </div>
+    )
+  }
+
+  const recommendedLabs = consultation.recommended_labs
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white py-32">
-      <div className="max-w-7xl mx-auto px-6">
-        
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-black mb-4">
-            Choose Your Lab Panel
-          </h1>
-          <p className="text-xl text-white/60">
+    <div className="min-h-screen bg-black text-white">
+      <header className="bg-black border-b border-yellow-500/20">
+        <nav className="max-w-7xl mx-auto px-6 py-4">
+          <Link href="/" className="text-3xl font-black text-yellow-400">
+            ADONIS
+          </Link>
+        </nav>
+      </header>
+
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-black mb-4 text-yellow-400">Choose Your Lab Panel</h1>
+          <p className="text-xl text-white/80">
             Hi {consultation.first_name}, select the panel that's right for you
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {Object.entries(LAB_PANELS).map(([key, panel]) => (
-            <div
-              key={key}
-              className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:border-yellow-500/50 transition-all"
-            >
-              <h3 className="text-2xl font-bold mb-2">{panel.name}</h3>
-              <div className="text-4xl font-black text-yellow-500 mb-4">
-                ${(panel.price / 100).toFixed(0)}
-              </div>
-              <p className="text-white/60 mb-6">{panel.description}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          {recommendedLabs.map((panel: any, index: number) => (
+            <div key={index} className="bg-white/5 border border-yellow-500/20 rounded-2xl p-8 hover:bg-white/10 transition-all">
+              <h2 className="text-2xl font-bold mb-4">{panel.name}</h2>
+              <div className="text-4xl font-black text-yellow-400 mb-6">${panel.price}</div>
               
-              <ul className="space-y-3 mb-8">
-                {panel.features.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm">
-                    <Check className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-white/80">{feature}</span>
-                  </li>
+              <p className="text-white/70 mb-6">{panel.description}</p>
+              
+              <div className="space-y-3 mb-8">
+                {panel.features?.map((feature: string, idx: number) => (
+                  <div key={idx} className="flex items-start space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-white/80">{feature}</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
 
               <button
-                onClick={() => handleCheckout(key)}
-                disabled={loading !== null}
-                className="w-full py-4 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                onClick={() => handleSelectPanel(panel)}
+                className="w-full bg-yellow-500 text-black py-3 rounded-lg font-bold hover:bg-yellow-400 transition-colors"
               >
-                {loading === key ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  'Select Panel'
-                )}
+                Select Panel
               </button>
             </div>
           ))}
         </div>
 
-        <div className="text-center mt-16">
-          <p className="text-white/40 text-sm mb-4">Secure payment powered by Stripe</p>
-          <p className="text-white/60 text-sm">
-            All panels include physician review • Results in 3-5 days • Quest Diagnostics certified
-          </p>
+        <div className="text-center text-sm text-white/60">
+          <p className="mb-2">Secure payment powered by Stripe</p>
+          <p>All panels include physician review • Results in 3-5 days • Quest Diagnostics certified</p>
         </div>
-
       </div>
     </div>
   )
