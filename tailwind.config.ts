@@ -12,17 +12,17 @@ const config: Config = {
         background: "var(--background)",
         foreground: "var(--foreground)",
         yellow: {
-          50: '#FEFCE8',
-          100: '#FEF9C3',
-          200: '#FEF08A',
-          300: '#FDE047',
+          50: '#FEF9E7',
+          100: '#FEF5CD',
+          200: '#FDEB9B',
+          300: '#FDE169',
           400: '#FCD34D', // ADONIS brand yellow
-          500: '#FCD34D', // Keep consistent
-          600: '#F59E0B',
-          700: '#D97706',
-          800: '#B45309',
-          900: '#92400E',
-          950: '#78350F',
+          500: '#FCD34D', // ADONIS brand yellow
+          600: '#FCD34D', // ADONIS brand yellow (keep consistent)
+          700: '#D4A72C',
+          800: '#9C7A1F',
+          900: '#6B5415',
+          950: '#3D2F0B',
         }
       },
     },
