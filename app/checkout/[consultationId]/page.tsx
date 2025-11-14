@@ -38,6 +38,14 @@ const DEFAULT_FEATURES: Record<string, string[]> = {
   ]
 }
 
+// Map panel names to slugs for Stripe
+const PANEL_SLUG_MAP: Record<string, string> = {
+  'Essential Panel': 'essential',
+  'Comprehensive Panel': 'comprehensive',
+  'Complete Panel': 'comprehensive', // Maps to comprehensive
+  'Elite Panel': 'elite'
+}
+
 export default function CheckoutPage({ params }: { params: Promise<{ consultationId: string }> }) {
   const resolvedParams = use(params)
   const [consultation, setConsultation] = useState<any>(null)
@@ -64,15 +72,16 @@ export default function CheckoutPage({ params }: { params: Promise<{ consultatio
     setProcessing(true)
     const panel = consultation.recommended_labs[0]
     
+    // Map panel name to slug
+    const panelSlug = PANEL_SLUG_MAP[panel.name] || 'comprehensive'
+    
     try {
       const res = await fetch('/api/stripe/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           consultationId: resolvedParams.consultationId,
-          panelType: panel.slug,
-          panelName: panel.name,
-          panelPrice: panel.price
+          panelType: panelSlug
         })
       })
 
@@ -80,9 +89,14 @@ export default function CheckoutPage({ params }: { params: Promise<{ consultatio
       
       if (data.url) {
         window.location.href = data.url
+      } else {
+        console.error('No checkout URL returned:', data)
+        alert('Error creating checkout session. Please try again.')
+        setProcessing(false)
       }
     } catch (error) {
       console.error('Error:', error)
+      alert('Error processing payment. Please try again.')
       setProcessing(false)
     }
   }
