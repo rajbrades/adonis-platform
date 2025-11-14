@@ -5,4 +5,17 @@
   --primary-color: oklch(90.5% 0.182 98.111);
   --primary-color-10: oklch(90.5% 0.182 98.111 / 0.1);
   --primary-color-30: oklch(90.5% 0.182 98.111 / 0.3);
+  
+  /* ADONIS brand yellow - override Tailwind's yellow */
+  --color-yellow-50: #FEF9E7;
+  --color-yellow-100: #FEF5CD;
+  --color-yellow-200: #FDEB9B;
+  --color-yellow-300: #FDE169;
+  --color-yellow-400: #FCD34D;
+  --color-yellow-500: #FCD34D;
+  --color-yellow-600: #FCD34D;
+  --color-yellow-700: #D4A72C;
+  --color-yellow-800: #9C7A1F;
+  --color-yellow-900: #6B5415;
+  --color-yellow-950: #3D2F0B;
 }
