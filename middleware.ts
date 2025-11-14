@@ -16,6 +16,8 @@ const isPublicRoute = createRouteMatcher([
   '/patient/login',
   '/patient/signup',
   '/patient/results',
+  '/password',
+  '/api/auth/verify-password',
   '/api(.*)'
 ])
 
@@ -24,7 +26,7 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const isPasswordRoute = req.nextUrl.pathname === '/password';
   const isPasswordAPI = req.nextUrl.pathname === '/api/auth/verify-password';
   
-  // Always allow password page and API
+  // Always allow password page and API (handled by isPublicRoute now)
   if (isPasswordRoute || isPasswordAPI) {
     return NextResponse.next();
   }
@@ -53,9 +55,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   if (!isPublicRoute(req)) {
     await auth.protect()
   }
-}, { 
-  // Add this config to make password routes truly public
-  publicRoutes: ['/password', '/api/auth/verify-password']
 })
 
 export const config = {
