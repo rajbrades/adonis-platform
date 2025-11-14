@@ -1,71 +1,57 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import bcrypt from 'bcryptjs'
 
-export async function POST(req: NextRequest) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
-
+export async function POST(request: Request) {
   try {
-    // Create Supabase client inside the handler
-    
-    const body = await req.json()
-    const { name, dob, password } = body
+    const { name, date_of_birth, password } = await request.json()
 
-    if (!name || !dob || !password) {
-      return NextResponse.json({ 
-        error: 'Name, date of birth, and password are required' 
-      }, { status: 400 })
-    }
-
-    // Find patient
     const { data: patient, error } = await supabase
       .from('patients')
       .select('*')
-      .eq('full_name', name)
-      .eq('date_of_birth', dob)
+      .or(`full_name.eq.${name},name.eq.${name}`)
+      .eq('date_of_birth', date_of_birth)
       .single()
 
     if (error || !patient) {
-      return NextResponse.json({ 
-        error: 'Invalid credentials' 
-      }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      )
     }
 
-    // Verify password
     const passwordMatch = await bcrypt.compare(password, patient.password_hash)
 
     if (!passwordMatch) {
-      return NextResponse.json({ 
-        error: 'Invalid credentials' 
-      }, { status: 401 })
+      return NextResponse.json(
+        { error: 'Invalid credentials' },
+        { status: 401 }
+      )
     }
 
-    // Update last login
     await supabase
       .from('patients')
       .update({ last_login: new Date().toISOString() })
       .eq('id', patient.id)
 
-    // Return patient data (without password hash)
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
       patient: {
         id: patient.id,
-        full_name: patient.full_name,
-        date_of_birth: patient.date_of_birth,
+        name: patient.full_name || patient.name,
         email: patient.email
       }
     })
-
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error)
-    return NextResponse.json({ 
-      error: 'Login failed',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 })
+    return NextResponse.json(
+      { error: error.message },
+      { status: 500 }
+    )
   }
 }

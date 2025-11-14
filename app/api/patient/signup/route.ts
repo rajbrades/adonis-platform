@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     const { data: patient, error } = await supabase
       .from('patients')
       .insert({
-        name,
+        full_name: name,
+        name: name,
         date_of_birth,
         email,
         phone,
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
       success: true, 
       patient: {
         id: patient.id,
-        name: patient.name,
+        name: patient.full_name || patient.name,
         email: patient.email
       }
     })
