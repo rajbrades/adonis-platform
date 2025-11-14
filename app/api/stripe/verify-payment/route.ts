@@ -2,35 +2,8 @@ import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { supabase } from '@/lib/supabase'
 import { Resend } from 'resend'
-import { generateRequisitionPDF } from '@/lib/pdf/generate-requisition'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-
-const TEST_FEATURES: Record<string, string[]> = {
-  'Essential Panel': [
-    'Hormone Panel (Testosterone, Estradiol, DHEA)',
-    'Thyroid Function (TSH, T3, T4)',
-    'Metabolic Panel (Glucose, HbA1c, Lipids)',
-    'Vitamin D',
-    'Complete Blood Count'
-  ],
-  'Comprehensive Panel': [
-    'Everything in Essential Panel',
-    'Advanced Hormone Panel',
-    'Liver & Kidney Function',
-    'Inflammation Markers (CRP)',
-    'Vitamins & Minerals',
-    'PSA (Prostate Health)'
-  ],
-  'Elite Panel': [
-    'Everything in Comprehensive Panel',
-    'Advanced Cardiovascular Markers',
-    'Insulin Resistance Testing',
-    'Cortisol & Stress Hormones',
-    'Growth Hormone Markers',
-    'Nutrient Optimization Panel'
-  ]
-}
 
 export async function POST(request: Request) {
   try {
@@ -61,28 +34,8 @@ export async function POST(request: Request) {
 
     if (error) throw error
 
-    // Get panel info
-    const recommendedLab = consultation.recommended_labs?.[0]
-    const panelName = recommendedLab?.name || 'Comprehensive Panel'
-    const tests = recommendedLab?.features || TEST_FEATURES[panelName] || TEST_FEATURES['Comprehensive Panel']
-
-    // Generate PDF (stores in private bucket)
-    const pdfUrl = await generateRequisitionPDF({
-      patientName: consultation.first_name + ' ' + (consultation.last_name || ''),
-      dateOfBirth: consultation.date_of_birth || 'N/A',
-      email: consultation.email,
-      phone: consultation.phone || 'N/A',
-      panelName,
-      orderDate: new Date().toLocaleDateString(),
-      orderId: consultationId.slice(0, 8).toUpperCase(),
-      tests
-    })
-
-    // Update consultation with PDF filename
-    await supabase
-      .from('consultations')
-      .update({ requisition_pdf_url: pdfUrl })
-      .eq('id', consultationId)
+    // TODO: Generate PDF requisition (requires serverless-compatible PDF library)
+    // For now, mark as pending PDF generation
 
     // Send email directing to portal
     await resend.emails.send({
