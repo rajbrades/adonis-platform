@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Menu, X, ChevronDown } from 'lucide-react'
+import { Menu, X, ChevronDown, User } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 
 export default function Navigation() {
@@ -85,6 +85,15 @@ export default function Navigation() {
               Blog
             </Link>
             
+            {/* Patient Login */}
+            <Link 
+              href="/patient/login" 
+              className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
+            >
+              <User className="w-4 h-4" />
+              Patient Login
+            </Link>
+            
             <Link 
               href="/consultation"
               className="px-6 py-3 rounded-lg font-bold transition-all duration-300"
@@ -150,6 +159,16 @@ export default function Navigation() {
             </Link>
             <Link href="/blog" onClick={() => setIsOpen(false)} className="block text-white/80 font-semibold">
               Blog
+            </Link>
+            
+            {/* Patient Login - Mobile */}
+            <Link 
+              href="/patient/login" 
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-2 text-white/80 font-semibold"
+            >
+              <User className="w-4 h-4" />
+              Patient Login
             </Link>
             
             <Link 
