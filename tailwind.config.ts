@@ -16,13 +16,13 @@ const config: Config = {
           100: '#FEF9C3',
           200: '#FEF08A',
           300: '#FDE047',
-          400: '#FACC15', // ADONIS brand yellow
-          500: '#EAB308',
-          600: '#CA8A04',
-          700: '#A16207',
-          800: '#854D0E',
-          900: '#713F12',
-          950: '#422006',
+          400: '#FCD34D', // ADONIS brand yellow
+          500: '#FCD34D', // Keep consistent
+          600: '#F59E0B',
+          700: '#D97706',
+          800: '#B45309',
+          900: '#92400E',
+          950: '#78350F',
         }
       },
     },
