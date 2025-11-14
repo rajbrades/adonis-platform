@@ -40,10 +40,12 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   // Check if user has site access
   const hasAccess = req.cookies.get('site-access')?.value === 'granted';
   
-  // Redirect to password page if no access
+  // Redirect to password page if no access, preserving the original URL
   if (!hasAccess) {
     const url = req.nextUrl.clone();
+    const returnUrl = encodeURIComponent(req.nextUrl.pathname + req.nextUrl.search);
     url.pathname = '/password';
+    url.searchParams.set('returnUrl', returnUrl);
     return NextResponse.redirect(url);
   }
 
