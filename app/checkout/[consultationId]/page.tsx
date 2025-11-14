@@ -4,6 +4,40 @@ import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { CheckCircle, Clock, Shield, Award, FileText, User } from 'lucide-react'
 
+const DEFAULT_FEATURES = {
+  'Essential Panel': [
+    'Hormone Panel (Testosterone, Estradiol, DHEA)',
+    'Thyroid Function (TSH, T3, T4)',
+    'Metabolic Panel (Glucose, HbA1c, Lipids)',
+    'Vitamin D',
+    'Complete Blood Count'
+  ],
+  'Comprehensive Panel': [
+    'Everything in Essential Panel',
+    'Advanced Hormone Panel',
+    'Liver & Kidney Function',
+    'Inflammation Markers (CRP)',
+    'Vitamins & Minerals',
+    'PSA (Prostate Health)'
+  ],
+  'Complete Panel': [
+    'Everything in Comprehensive Panel',
+    'Advanced Cardiovascular Markers',
+    'Insulin Resistance Testing',
+    'Cortisol & Stress Hormones',
+    'Growth Hormone Markers',
+    'Nutrient Optimization Panel'
+  ],
+  'Elite Panel': [
+    'Everything in Complete Panel',
+    'Genetic Methylation Analysis',
+    'Advanced Longevity Biomarkers',
+    'Comprehensive Micronutrient Testing',
+    'Oxidative Stress Markers',
+    'Advanced Endocrine Panel'
+  ]
+}
+
 export default function CheckoutPage({ params }: { params: Promise<{ consultationId: string }> }) {
   const resolvedParams = use(params)
   const [consultation, setConsultation] = useState<any>(null)
@@ -73,6 +107,7 @@ export default function CheckoutPage({ params }: { params: Promise<{ consultatio
 
   const panel = consultation.recommended_labs[0]
   const providerName = consultation.reviewed_by || 'Your provider'
+  const features = panel.features || DEFAULT_FEATURES[panel.name] || DEFAULT_FEATURES['Comprehensive Panel']
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
@@ -132,8 +167,8 @@ export default function CheckoutPage({ params }: { params: Promise<{ consultatio
               {/* What's Included */}
               <div className="border-t border-white/10 pt-6 mb-6">
                 <h3 className="text-xl font-bold mb-4">What's Included in Your Panel:</h3>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {panel.features?.map((feature: string, idx: number) => (
+                <div className="space-y-3">
+                  {features.map((feature: string, idx: number) => (
                     <div key={idx} className="flex items-start space-x-3">
                       <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                       <span className="text-sm text-white/90">{feature}</span>
