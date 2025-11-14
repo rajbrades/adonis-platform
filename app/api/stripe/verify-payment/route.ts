@@ -43,6 +43,10 @@ export async function POST(request: Request) {
     }
 
     const consultationId = session.metadata?.consultationId
+    
+    if (!consultationId) {
+      return NextResponse.json({ error: 'Consultation ID not found' }, { status: 400 })
+    }
 
     const { data: consultation, error } = await supabase
       .from('consultations')
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
     const panelName = recommendedLab?.name || 'Comprehensive Panel'
     const tests = recommendedLab?.features || TEST_FEATURES[panelName] || TEST_FEATURES['Comprehensive Panel']
 
-    // Generate PDF
+    // Generate PDF (stores in private bucket)
     const pdfUrl = await generateRequisitionPDF({
       patientName: consultation.first_name + ' ' + (consultation.last_name || ''),
       dateOfBirth: consultation.date_of_birth || 'N/A',
@@ -74,34 +78,36 @@ export async function POST(request: Request) {
       tests
     })
 
-    // Update consultation with PDF URL
+    // Update consultation with PDF filename
     await supabase
       .from('consultations')
       .update({ requisition_pdf_url: pdfUrl })
       .eq('id', consultationId)
 
-    // Send email with PDF link
+    // Send email directing to portal
     await resend.emails.send({
       from: 'ADONIS Health <noreply@getadonishealth.com>',
       to: consultation.email,
       subject: 'Your Lab Requisition is Ready',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #FCD34D;">Your Lab Requisition</h1>
+          <h1 style="color: #FCD34D;">Your Lab Requisition is Ready!</h1>
           <p>Hi ${consultation.first_name},</p>
-          <p>Thank you for your payment! Your lab requisition has been generated.</p>
+          <p>Thank you for your payment! Your lab requisition has been securely generated and is ready to download.</p>
           
-          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #111;">📄 Download Your Requisition</h3>
-            <a href="${pdfUrl}" 
-               style="display: inline-block; background: #FCD34D; color: #000; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 0;">
-              Download Requisition PDF
+          <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+            <h3 style="margin-top: 0; color: #111;">📄 Access Your Requisition</h3>
+            <p style="color: #666; margin-bottom: 15px;">Log in to your patient portal to download your requisition form</p>
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL}/patient/login" 
+               style="display: inline-block; background: #FCD34D; color: #000; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+              Access Patient Portal
             </a>
           </div>
           
           <p><strong>Next Steps:</strong></p>
-          <ol style="line-height: 1.8;">
-            <li>Download and print your requisition form (link above)</li>
+          <ol style="line-height: 1.8; color: #333;">
+            <li>Log in to your patient portal using the button above</li>
+            <li>Download and print your requisition form</li>
             <li>Visit any Quest Diagnostics location - no appointment needed</li>
             <li>Present your requisition and photo ID</li>
             <li>Results will be ready in 3-5 business days</li>
