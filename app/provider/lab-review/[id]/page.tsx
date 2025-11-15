@@ -3,9 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, User } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
-import AIAnalysis from '../../approve/[id]/AIAnalysis'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
 interface LabResult {
@@ -49,6 +48,7 @@ export default function LabReviewPage() {
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [analyzing, setAnalyzing] = useState(false)
 
   useEffect(() => {
     fetchLabResult()
@@ -105,8 +105,39 @@ export default function LabReviewPage() {
     }
   }
 
-  const handleAnalysisComplete = (analysis: string) => {
-    setNotes(prev => prev ? `${prev}\n\n=== AI ANALYSIS ===\n${analysis}` : `=== AI ANALYSIS ===\n${analysis}`)
+  const handleInterpret = async () => {
+    if (!consultation || !labResult) return
+    
+    setAnalyzing(true)
+    try {
+      const response = await fetch('/api/ai-analysis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          promptId: 'comprehensive',
+          patientData: {
+            name: `${consultation.first_name} ${consultation.last_name}`,
+            age: consultation.age,
+            occupation: consultation.occupation,
+            symptoms: consultation.symptoms || [],
+            goals: consultation.optimization_goals || [],
+            conditions: consultation.medical_conditions || [],
+            lifestyle: consultation.lifestyle || {}
+          },
+          labResults: labResult
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setNotes(prev => prev ? `${prev}\n\n=== AI INTERPRETATION ===\n${data.analysis}` : `=== AI INTERPRETATION ===\n${data.analysis}`)
+      }
+    } catch (error) {
+      console.error('AI analysis error:', error)
+      alert('Failed to generate interpretation')
+    } finally {
+      setAnalyzing(false)
+    }
   }
 
   const parseReferenceRange = (range: string): { min: number, max: number } | null => {
@@ -229,113 +260,71 @@ export default function LabReviewPage() {
 
       <div className="max-w-7xl mx-auto px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Lab Results & AI */}
+          {/* Left Column - Treatment Notes (Main Focus) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* AI Analysis */}
-            <AIAnalysis
-              consultation={{
-                name: `${consultation.first_name} ${consultation.last_name}`,
-                age: consultation.age,
-                occupation: consultation.occupation,
-                symptoms: consultation.symptoms,
-                goals: consultation.optimization_goals,
-                conditions: consultation.medical_conditions,
-                lifestyle: consultation.lifestyle
-              }}
-              labResults={labResult}
-              onAnalysisComplete={handleAnalysisComplete}
-              hideInitialAssessment={true}
-            />
-
-            {/* Biomarkers Grid */}
+            {/* Treatment Recommendations */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-              <h2 className="text-xl font-bold mb-4" style={{ color: brand.colors.primary }}>
-                Biomarkers ({labResult.biomarkers?.length || 0})
-              </h2>
-              
-              {labResult.biomarkers && labResult.biomarkers.length > 0 ? (
-                <div className="space-y-2">
-                  {labResult.biomarkers.map((biomarker: any, i: number) => {
-                    const { status, color } = getBiomarkerStatus(biomarker)
-                    const optimalRange = getOptimalRange(biomarker.biomarker)
-                    
-                    return (
-                      <div key={i} className="flex items-center justify-between p-3 bg-black/30 rounded-lg hover:bg-black/40 transition-all">
-                        <span className="font-medium flex-1">{biomarker.biomarker}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-gray-400 text-sm">{biomarker.value} {biomarker.unit}</span>
-                          <div className="text-right">
-                            <div className="text-xs text-gray-500">Lab: {biomarker.referenceRange}</div>
-                            {optimalRange && (
-                              <div className="text-xs text-gray-400">
-                                Optimal: {optimalRange.optimalMin}-{optimalRange.optimalMax} {optimalRange.unit}
-                              </div>
-                            )}
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold min-w-[100px] text-center ${
-                            color === 'green' ? 'bg-green-500/20 text-green-400' :
-                            color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
-                            color === 'red' ? 'bg-red-500/20 text-red-400' :
-                            'bg-gray-500/20 text-gray-400'
-                          }`}>
-                            {status}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-center py-8">No biomarkers data</p>
-              )}
-            </div>
-
-            {/* Patient Context */}
-            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-              <h2 className="text-xl font-bold mb-4" style={{ color: brand.colors.primary }}>
-                Patient Context
-              </h2>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="text-sm text-gray-400">Age</label>
-                  <div className="text-white">{consultation.age || 'N/A'}</div>
-                </div>
-                <div>
-                  <label className="text-sm text-gray-400">Occupation</label>
-                  <div className="text-white">{consultation.occupation}</div>
-                </div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold" style={{ color: brand.colors.primary }}>
+                  Treatment Recommendations
+                </h2>
+                <button
+                  onClick={handleInterpret}
+                  disabled={analyzing}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
+                  style={{
+                    backgroundColor: analyzing ? 'rgba(234, 179, 8, 0.1)' : brand.colors.primary,
+                    color: analyzing ? '#EAB308' : brand.colors.primaryText,
+                    border: analyzing ? '1px solid rgba(234, 179, 8, 0.3)' : 'none'
+                  }}
+                >
+                  {analyzing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Interpreting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Interpret
+                    </>
+                  )}
+                </button>
               </div>
               
-              <div className="mb-4">
-                <label className="text-sm text-gray-400">Optimization Goals</label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {consultation.optimization_goals?.map((goal, i) => (
-                    <span key={i} className="px-3 py-1 bg-blue-500/10 text-blue-300 rounded-full text-sm">
-                      {goal}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mb-4">
-                <label className="text-sm text-gray-400">Current Symptoms</label>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {consultation.symptoms?.map((symptom, i) => (
-                    <span key={i} className="px-3 py-1 bg-red-500/10 text-red-300 rounded-full text-sm">
-                      {symptom}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm text-gray-400">Medical Conditions</label>
-                <div className="text-white mt-1">{consultation.medical_conditions?.join(', ') || 'None'}</div>
-              </div>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add treatment recommendations based on lab results and patient context..."
+                rows={20}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black resize-none text-sm leading-relaxed"
+              />
+              
+              <button
+                onClick={handleSaveNotes}
+                disabled={submitting}
+                className="w-full mt-4 px-4 py-3 rounded-lg font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{
+                  backgroundColor: brand.colors.primary,
+                  color: brand.colors.primaryText
+                }}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save Recommendations
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Right Column - Treatment Recommendations */}
+          {/* Right Column - Patient Context & Labs */}
           <div className="space-y-6">
             {/* Lab Info Card */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
@@ -360,27 +349,90 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Treatment Recommendations */}
+            {/* Patient Context */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Treatment Recommendations</h2>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Add treatment recommendations based on lab results..."
-                rows={12}
-                className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black resize-none"
-              />
-              <button
-                onClick={handleSaveNotes}
-                disabled={submitting}
-                className="w-full mt-3 px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
-                style={{
-                  backgroundColor: brand.colors.primary,
-                  color: brand.colors.primaryText
-                }}
-              >
-                {submitting ? 'Saving...' : 'Save Recommendations'}
-              </button>
+              <h2 className="text-lg font-bold mb-4">Patient Context</h2>
+              
+              <div className="space-y-4 text-sm">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-gray-400 text-xs">Age</label>
+                    <div className="text-white">{consultation.age || 'N/A'}</div>
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-xs">Occupation</label>
+                    <div className="text-white truncate">{consultation.occupation}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-gray-400 text-xs">Goals</label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {consultation.optimization_goals?.map((goal, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded text-xs">
+                        {goal}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-xs">Symptoms</label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {consultation.symptoms?.map((symptom, i) => (
+                      <span key={i} className="px-2 py-0.5 bg-red-500/10 text-red-300 rounded text-xs">
+                        {symptom}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-gray-400 text-xs">Conditions</label>
+                  <div className="text-white text-xs">{consultation.medical_conditions?.join(', ') || 'None'}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Biomarkers */}
+            <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+              <h2 className="text-lg font-bold mb-4">
+                Biomarkers ({labResult.biomarkers?.length || 0})
+              </h2>
+              
+              {labResult.biomarkers && labResult.biomarkers.length > 0 ? (
+                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                  {labResult.biomarkers.map((biomarker: any, i: number) => {
+                    const { status, color } = getBiomarkerStatus(biomarker)
+                    const optimalRange = getOptimalRange(biomarker.biomarker)
+                    
+                    return (
+                      <div key={i} className="p-2 bg-black/30 rounded-lg text-xs">
+                        <div className="font-medium mb-1">{biomarker.biomarker}</div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400">{biomarker.value} {biomarker.unit}</span>
+                          <span className={`px-2 py-0.5 rounded-full font-semibold ${
+                            color === 'green' ? 'bg-green-500/20 text-green-400' :
+                            color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
+                            color === 'red' ? 'bg-red-500/20 text-red-400' :
+                            'bg-gray-500/20 text-gray-400'
+                          }`}>
+                            {status}
+                          </span>
+                        </div>
+                        <div className="text-gray-500 space-y-0.5">
+                          <div>Lab: {biomarker.referenceRange}</div>
+                          {optimalRange && (
+                            <div>Optimal: {optimalRange.optimalMin}-{optimalRange.optimalMax}</div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-center py-4 text-sm">No biomarkers data</p>
+              )}
             </div>
           </div>
         </div>
