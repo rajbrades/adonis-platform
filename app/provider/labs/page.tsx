@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle, Loader2, Search } from 'lucide-react'
 
 export default function ProviderLabsPage() {
   const brand = getBrand()
-  const [reviewedLabs, setReviewedLabs] = useState<any[]>([])
+  const [labResults, setLabResults] = useState<any[]>([])
   const [filteredLabs, setFilteredLabs] = useState<any[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
@@ -18,29 +18,27 @@ export default function ProviderLabsPage() {
 
   useEffect(() => {
     if (searchTerm) {
-      const filtered = reviewedLabs.filter(c => 
-        `${c.first_name} ${c.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = labResults.filter(lab => 
+        lab.patient_name.toLowerCase().includes(searchTerm.toLowerCase())
       )
       setFilteredLabs(filtered)
     } else {
-      setFilteredLabs(reviewedLabs)
+      setFilteredLabs(labResults)
     }
-  }, [searchTerm, reviewedLabs])
+  }, [searchTerm, labResults])
 
   const fetchLabs = async () => {
     try {
-      const response = await fetch('/api/consultations')
+      const response = await fetch('/api/admin/lab-results')
       const data = await response.json()
       
       if (Array.isArray(data)) {
-        // Show all approved consultations (labs were reviewed/recommended)
-        const reviewed = data
-          .filter(c => c.status === 'approved')
-          .sort((a, b) => new Date(b.reviewed_at).getTime() - new Date(a.reviewed_at).getTime())
-        
-        setReviewedLabs(reviewed)
-        setFilteredLabs(reviewed)
+        // Sort by most recent
+        const sorted = data.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        setLabResults(sorted)
+        setFilteredLabs(sorted)
       }
     } catch (error) {
       console.error('Error fetching labs:', error)
@@ -101,39 +99,28 @@ export default function ProviderLabsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredLabs.map((consultation) => (
-                <div key={consultation.id} className="flex items-center justify-between p-6 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+              {filteredLabs.map((lab) => (
+                <div key={lab.id} className="flex items-center justify-between p-6 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
                   <div className="flex items-center gap-4 flex-1">
                     <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
                       <CheckCircle className="w-6 h-6 text-green-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-lg">
-                        {consultation.first_name} {consultation.last_name}
+                        {lab.patient_name}
                       </div>
-                      <div className="text-sm text-white/60 truncate">
-                        {consultation.email}
+                      <div className="text-sm text-white/60">
+                        {lab.lab_name}
                       </div>
                       <div className="text-sm text-white/40 mt-1">
-                        {consultation.recommended_labs?.panel_name || 'Custom Panel'} • 
-                        Reviewed {new Date(consultation.reviewed_at).toLocaleDateString()}
-                        {consultation.lab_upload_status === 'uploaded' && (
-                          <span 
-                            className="ml-2 px-2 py-0.5 rounded-full text-xs"
-                            style={{
-                              backgroundColor: `${brand.colors.primary}20`,
-                              color: brand.colors.primary
-                            }}
-                          >
-                            Labs Uploaded
-                          </span>
-                        )}
+                        {lab.biomarkers?.length || 0} biomarkers • 
+                        Reviewed {new Date(lab.created_at).toLocaleDateString()}
                       </div>
                     </div>
                   </div>
                   
                   <Link
-                    href={`/provider/patients/${consultation.id}`}
+                    href={`/provider/lab-review/${lab.id}`}
                     className="px-6 py-3 rounded-lg font-semibold bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex-shrink-0"
                   >
                     View Details
