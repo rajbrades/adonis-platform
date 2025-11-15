@@ -206,6 +206,7 @@ export default function LabReviewPage() {
               }}
               labResults={labResult}
               onAnalysisComplete={handleAnalysisComplete}
+              hideInitialAssessment={true}
             />
 
             {/* Biomarkers Grid */}

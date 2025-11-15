@@ -7,6 +7,7 @@ interface AIAnalysisProps {
   consultation: any
   labResults: any | null
   onAnalysisComplete?: (analysis: string) => void
+  hideInitialAssessment?: boolean
 }
 
 const QUICK_PROMPTS = [
@@ -14,23 +15,30 @@ const QUICK_PROMPTS = [
     id: 'initialAssessment', 
     title: 'Initial Assessment', 
     requiresLabs: false,
-    description: 'Analyze symptoms & recommend labs'
+    description: 'Analyze symptoms & recommend labs',
+    showInLabReview: false
   },
   { 
     id: 'comprehensive', 
     title: 'Systems Analysis', 
     requiresLabs: true,
-    description: 'Full physiological review'
+    description: 'Full physiological review',
+    showInLabReview: true
   }
 ]
 
-export default function AIAnalysis({ consultation, labResults, onAnalysisComplete }: AIAnalysisProps) {
+export default function AIAnalysis({ consultation, labResults, onAnalysisComplete, hideInitialAssessment = false }: AIAnalysisProps) {
   const [analysis, setAnalysis] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(null)
   const [error, setError] = useState('')
   
   const hasLabs = !!labResults
+
+  const availablePrompts = QUICK_PROMPTS.filter(prompt => {
+    if (hideInitialAssessment && !prompt.showInLabReview) return false
+    return true
+  })
 
   const runAnalysis = async (promptId: string) => {
     setIsAnalyzing(true)
@@ -90,8 +98,8 @@ export default function AIAnalysis({ consultation, labResults, onAnalysisComplet
       </div>
 
       {/* Quick Analysis Buttons */}
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {QUICK_PROMPTS.map((prompt) => {
+      <div className={`grid ${availablePrompts.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-3 mb-6`}>
+        {availablePrompts.map((prompt) => {
           const isDisabled = prompt.requiresLabs && !hasLabs
           
           return (
@@ -166,7 +174,7 @@ export default function AIAnalysis({ consultation, labResults, onAnalysisComplet
       )}
 
       {/* No Labs Notice */}
-      {!hasLabs && (
+      {!hasLabs && !hideInitialAssessment && (
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 mt-4">
           <div className="flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
