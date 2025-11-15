@@ -44,16 +44,29 @@ export default function PatientResultsPage() {
   const [hoveredPoint, setHoveredPoint] = useState<{biomarker: string, index: number} | null>(null)
 
   useEffect(() => {
-    const name = sessionStorage.getItem('patient_name')
-    const dob = sessionStorage.getItem('patient_dob')
-
-    if (!name || !dob) {
+    const patient = localStorage.getItem('patient')
+    
+    if (!patient) {
       router.push('/patient/login')
       return
     }
 
-    setPatientName(name)
-    fetchResults(name, dob)
+    try {
+      const patientInfo = JSON.parse(patient)
+      const name = patientInfo.name || patientInfo.full_name
+      const dob = patientInfo.date_of_birth
+      
+      if (!name || !dob) {
+        router.push('/patient/login')
+        return
+      }
+
+      setPatientName(name)
+      fetchResults(name, dob)
+    } catch (e) {
+      console.error('Error parsing patient data:', e)
+      router.push('/patient/login')
+    }
   }, [router])
 
   const fetchResults = async (name: string, dob: string) => {

@@ -49,7 +49,7 @@ function SignupForm() {
       const data = await res.json()
 
       if (res.ok) {
-        sessionStorage.setItem('patient', JSON.stringify(data.patient))
+        localStorage.setItem('patient', JSON.stringify(data.patient))
         
         if (consultationId) {
           router.push(`/checkout/${consultationId}`)
