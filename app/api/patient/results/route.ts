@@ -9,29 +9,24 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
-    const { name, dob } = body
+    const { patient_id } = body
 
-    console.log('🔍 Searching for patient with:', { name, dob })
+    console.log('🔍 Fetching lab results for patient_id:', patient_id)
 
-    if (!name || !dob) {
+    if (!patient_id) {
       return NextResponse.json({ 
-        error: 'Name and date of birth are required' 
+        error: 'Patient ID is required' 
       }, { status: 400 })
     }
 
-    // Fetch lab results - use case-insensitive search
+    // Query by patient_id (stored as user_id in lab_results table)
     const { data, error } = await supabase
       .from('lab_results')
       .select('*')
-      .ilike('patient_name', name) // Case-insensitive LIKE
-      .eq('patient_dob', dob)
+      .eq('user_id', patient_id)
       .order('test_date', { ascending: false })
 
-    console.log('📊 Query results:', { 
-      found: data?.length || 0, 
-      error: error?.message,
-      results: data?.map(r => ({ patient_name: r.patient_name, patient_dob: r.patient_dob }))
-    })
+    console.log('📊 Found lab results:', data?.length || 0)
 
     if (error) {
       console.error('Error fetching patient results:', error)

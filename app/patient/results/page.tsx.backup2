@@ -53,28 +53,28 @@ export default function PatientResultsPage() {
 
     try {
       const patientInfo = JSON.parse(patient)
-      const patientId = patientInfo.id
       const name = patientInfo.name || patientInfo.full_name
+      const dob = patientInfo.date_of_birth
       
-      if (!patientId) {
+      if (!name || !dob) {
         router.push('/patient/login')
         return
       }
 
       setPatientName(name)
-      fetchResults(patientId)
+      fetchResults(name, dob)
     } catch (e) {
       console.error('Error parsing patient data:', e)
       router.push('/patient/login')
     }
   }, [router])
 
-  const fetchResults = async (patientId: string) => {
+  const fetchResults = async (name: string, dob: string) => {
     try {
       const response = await fetch('/api/patient/results', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ patient_id: patientId })
+        body: JSON.stringify({ name, dob })
       })
 
       const data = await response.json()

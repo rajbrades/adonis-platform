@@ -27,8 +27,7 @@ export async function parseQuestPDF(buffer: Buffer) {
 }
 
 function extractPatientName(text: string): string {
-  // Look for patient name in header
-  const match = text.match(/Patient Information[^]*?([A-Z]+,\s*[A-Z]+)/)
+  const match = text.match(/Patient Information[^]*?([A-Z]+,\s*[A-Z]+)/i)
   return match ? match[1].trim() : 'Unknown Patient'
 }
 
@@ -57,38 +56,48 @@ function extractAllBiomarkers(text: string): any[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Skip empty lines and headers
-    if (!line || line.includes('Test Name') || line.includes('Reference Range')) continue
+    if (!line || 
+        line.includes('Test Name') || 
+        line.includes('PAGE') ||
+        line.includes('CLIENT SERVICES') ||
+        line.includes('Quest, Quest') ||
+        line.includes('PANEL') ||
+        line.length < 5) continue
     
-    // Pattern 1: NAME VALUE FLAG RANGE UNIT
-    // Example: "IRON, TOTAL 152 50-180 mcg/dL"
-    const pattern1 = /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*|<\d+)\s*(H|L)?\s*([\d\.\-<>]+(?:\s*-\s*[\d\.]+)?|<\s*\d+|>\s*\d+|> OR = \d+)\s*(.+?)?\s*$/
+    const patterns = [
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+    ]
     
-    const match = line.match(pattern1)
+    let matched = false
     
-    if (match) {
-      const name = match[1].trim()
-      const value = match[2].trim()
-      const flag = match[3] || ''
-      let range = match[4] ? match[4].trim() : ''
-      const unit = match[5] ? match[5].trim() : ''
+    for (const pattern of patterns) {
+      const match = line.match(pattern)
       
-      // Skip if it looks like a header or label
-      if (name.length < 3 || name.includes('PAGE') || name.includes('CLIENT')) continue
-      
-      // Clean up unit
-      const cleanUnit = unit.replace(/\(calc\)/g, '').trim()
-      
-      // Clean up range
-      range = range.replace('> OR =', '>=').replace('< OR =', '<=')
-      
-      biomarkers.push({
-        biomarker: name,
-        value: value,
-        unit: cleanUnit || extractUnitFromName(name),
-        referenceRange: range,
-        status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
-      })
+      if (match) {
+        const name = match[1].trim()
+        const value = match[2]
+        const flag = match[3] || ''
+        const range = match[4] || ''
+        const unit = match[5] || ''
+        
+        if (name.length < 3 || 
+            name.includes('Reference') ||
+            name.includes('For ages') ||
+            name.includes('Desirable') ||
+            name.includes('Risk Category')) continue
+        
+        biomarkers.push({
+          biomarker: name.replace(/\s+/g, ' ').trim(),
+          value: value,
+          unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
+          referenceRange: range.replace('> OR =', '>=').replace('< OR =', '<=').trim(),
+          status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
+        })
+        
+        matched = true
+        break
+      }
     }
   }
   
@@ -121,7 +130,7 @@ function extractUnitFromName(name: string): string {
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
-    if (name.includes(key)) return unit
+    if (name.toUpperCase().includes(key)) return unit
   }
   
   return ''

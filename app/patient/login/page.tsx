@@ -1,39 +1,26 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
-import { Lock, Calendar, User, Eye, EyeOff, ShoppingBag, Loader2 } from 'lucide-react'
+import { Calendar, Mail, Lock } from 'lucide-react'
 
-function LoginForm() {
+export default function PatientLoginPage() {
   const brand = getBrand()
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const consultationId = searchParams.get('consultation')
-  const registered = searchParams.get('registered')
-  
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
-    name: '',
+    email: '',
     dob: '',
     password: ''
   })
-
-  useEffect(() => {
-    if (consultationId) {
-      sessionStorage.setItem('pending_consultation_link', consultationId)
-    }
-  }, [consultationId])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
+    setLoading(true)
 
     try {
       const response = await fetch('/api/patient/login', {
@@ -45,9 +32,7 @@ function LoginForm() {
       const data = await response.json()
 
       if (data.success) {
-        // Store patient data in localStorage as JSON
         localStorage.setItem('patient', JSON.stringify(data.patient))
-        // Dispatch custom event to notify Navigation
         window.dispatchEvent(new Event('patientLogin'))
         router.push('/patient')
       } else {
@@ -62,138 +47,103 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center px-6 pt-32 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-md">
         
+        {/* Header */}
         <div className="text-center mb-8">
-          <div 
-            className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-6"
-            style={{ backgroundColor: `${brand.colors.primary}20` }}
-          >
-            <ShoppingBag className="w-10 h-10" style={{ color: brand.colors.primary }} />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center" 
+               style={{ backgroundColor: `${brand.colors.primary}20` }}>
+            <Mail className="w-8 h-8" style={{ color: brand.colors.primary }} />
           </div>
           <h1 className="text-3xl font-black mb-2">Patient Login</h1>
-          <p className="text-white/60">
-            {consultationId 
-              ? 'Sign in to view your personalized health plan'
-              : 'Sign in to access your health dashboard'
-            }
-          </p>
+          <p className="text-white/60">Sign in to access your health dashboard</p>
         </div>
 
-        {registered === 'true' && (
-          <div className="mb-6 p-4 bg-green-500/20 border border-green-500/40 rounded-lg">
-            <p className="text-green-400 text-sm">✓ Account created successfully! Please sign in.</p>
-          </div>
-        )}
-
-        {consultationId && (
-          <div className="mb-6 p-4 bg-yellow-500/20 border border-yellow-500/40 rounded-lg">
-            <p className="text-yellow-400 text-sm">✓ Your consultation has been approved! Sign in to view your recommendations.</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500/40 rounded-lg">
-            <p className="text-red-400 text-sm">{error}</p>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Full Name *</label>
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="LASTNAME, FIRSTNAME"
-                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
-              />
+        {/* Login Form */}
+        <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">Email Address</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500/50 text-white placeholder:text-white/40"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Date of Birth *</label>
-            <div className="relative">
-              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-              <input
-                type="date"
-                required
-                value={formData.dob}
-                onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-yellow-400/50 transition-all"
-              />
+            {/* Date of Birth */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">Date of Birth</label>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                <input
+                  type="date"
+                  value={formData.dob}
+                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500/50 text-white placeholder:text-white/40"
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2">Password *</label>
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
-                placeholder="••••••••"
-                className="w-full pl-12 pr-12 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/50 transition-all"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/60"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-semibold mb-2">Password</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="••••••••"
+                  required
+                  className="w-full pl-12 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500/50 text-white placeholder:text-white/40"
+                />
+              </div>
             </div>
-          </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            style={{
-              backgroundColor: brand.colors.primary,
-              color: '#000000'
-            }}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Signing In...
-              </>
-            ) : (
-              'Sign In'
+            {/* Error Message */}
+            {error && (
+              <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
             )}
-          </button>
-        </form>
 
-        <p className="text-center text-white/60 text-sm mt-6">
-          Don't have an account?{' '}
-          <Link 
-            href={consultationId ? `/patient/signup?consultation=${consultationId}` : '/patient/signup'}
-            className="font-semibold hover:underline"
-            style={{ color: brand.colors.primary }}
-          >
-            Sign up
-          </Link>
-        </p>
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 rounded-lg font-bold transition-all disabled:opacity-50"
+              style={{ 
+                background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
+                color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
+              }}
+            >
+              {loading ? 'Signing in...' : 'Sign In'}
+            </button>
+          </form>
+
+          {/* Sign Up Link */}
+          <div className="mt-6 text-center">
+            <p className="text-white/60 text-sm">
+              Don't have an account?{' '}
+              <Link href="/patient/signup" className="font-semibold hover:underline" style={{ color: brand.colors.primary }}>
+                Sign up
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
-  )
-}
-
-export default function PatientLoginPage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-yellow-500" />
-      </div>
-    }>
-      <LoginForm />
-    </Suspense>
   )
 }

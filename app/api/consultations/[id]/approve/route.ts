@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { Resend } from 'resend'
+import bcrypt from 'bcryptjs'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,6 +20,7 @@ export async function POST(
     
     const { recommendedLabs, providerNotes, providerName } = await request.json()
 
+    // Update consultation
     const { data: consultation, error } = await supabase
       .from('consultations')
       .update({
@@ -33,6 +35,29 @@ export async function POST(
       .single()
 
     if (error) throw error
+
+    // Auto-create patient record with same ID
+    const temporaryPassword = Math.random().toString(36).slice(-8) + 'A1!' // Simple temp password
+    const hashedPassword = await bcrypt.hash(temporaryPassword, 10)
+
+    const { error: patientError } = await supabase
+      .from('patients')
+      .insert({
+        id: consultation.id, // Same ID as consultation!
+        email: consultation.email,
+        full_name: `${consultation.first_name} ${consultation.last_name}`,
+        name: `${consultation.first_name} ${consultation.last_name}`,
+        date_of_birth: consultation.date_of_birth,
+        password_hash: hashedPassword,
+        created_at: new Date().toISOString()
+      })
+
+    // Ignore duplicate key errors (patient already exists)
+    if (patientError && !patientError.message.includes('duplicate')) {
+      console.error('Error creating patient:', patientError)
+    } else {
+      console.log('✅ Patient record created:', consultation.email)
+    }
 
     const totalPrice = recommendedLabs.reduce((sum: any, lab: any) => sum + (lab.price || 0), 0)
 
@@ -69,16 +94,23 @@ export async function POST(
             </div>
           </div>
           
+          <div style="background: #1F2937; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #FBBF24;">
+            <h4 style="margin: 0 0 10px 0; color: #FBBF24;">Your Login Credentials</h4>
+            <p style="margin: 5px 0; color: #E5E7EB;"><strong>Email:</strong> ${consultation.email}</p>
+            <p style="margin: 5px 0; color: #E5E7EB;"><strong>Temporary Password:</strong> <code style="background: #374151; padding: 4px 8px; border-radius: 4px; color: #FBBF24;">${temporaryPassword}</code></p>
+            <p style="margin: 10px 0 0 0; color: #9CA3AF; font-size: 12px;">You can change this password after logging in.</p>
+          </div>
+          
           <div style="margin: 30px 0; text-align: center;">
-            <a href="${process.env.NEXT_PUBLIC_BASE_URL}/patient/signup?consultation=${id}" 
+            <a href="${process.env.NEXT_PUBLIC_BASE_URL}/patient/login" 
                style="background: #FBBF24; color: black; padding: 16px 32px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
-              Create Account & Complete Order
+              Login to Your Portal
             </a>
           </div>
           
           <h3 style="color: #111;">What Happens Next:</h3>
           <ol style="color: #333; line-height: 1.8;">
-            <li><strong>Create Your Account</strong> - Click the button above to register</li>
+            <li><strong>Login to Your Portal</strong> - Use the credentials above</li>
             <li><strong>Complete Payment</strong> - Secure checkout for your lab panel${recommendedLabs.length > 1 ? 's' : ''}</li>
             <li><strong>Receive Lab Requisition</strong> - Get your order form via email</li>
             <li><strong>Visit Quest Diagnostics</strong> - Any location, no appointment needed</li>
