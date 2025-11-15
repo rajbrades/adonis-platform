@@ -36,8 +36,8 @@ export default function ProviderDashboard() {
         // Lab Reviews = patients who have uploaded labs
         const labsToReview = consultations.filter(c => {
           if (c.status !== 'approved') return false
-          // Check if this patient has lab results
-          return labResults.some((lab: any) => lab.patient_id === c.id)
+          // Check if this patient has lab results (using user_id)
+          return labResults.some((lab: any) => lab.user_id === c.id)
         })
         
         // This week's consultations

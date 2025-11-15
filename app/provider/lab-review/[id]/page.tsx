@@ -9,11 +9,11 @@ import AIAnalysis from '../../approve/[id]/AIAnalysis'
 
 interface LabResult {
   id: string
-  patient_id: string
+  user_id: string
   patient_name: string
   patient_dob: string
   test_date: string
-  lab_name: string
+  panel_name: string
   biomarkers: any[]
   provider_notes: string
   created_at: string
@@ -64,10 +64,10 @@ export default function LabReviewPage() {
         setLabResult(foundLab)
         setNotes(foundLab.provider_notes || '')
 
-        // Fetch consultation data using patient_id
+        // Fetch consultation data using user_id
         const consultRes = await fetch('/api/consultations')
         const allConsultations = await consultRes.json()
-        const foundConsult = allConsultations.find((c: Consultation) => c.id === foundLab.patient_id)
+        const foundConsult = allConsultations.find((c: Consultation) => c.id === foundLab.user_id)
         setConsultation(foundConsult)
       }
       
@@ -167,7 +167,7 @@ export default function LabReviewPage() {
               <div className="flex items-center gap-4 text-sm text-gray-400">
                 <span className="flex items-center gap-1">
                   <FileText className="w-4 h-4" />
-                  {labResult.lab_name}
+                  {labResult.panel_name}
                 </span>
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
