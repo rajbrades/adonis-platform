@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, Calendar, FileText, User } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 import AIAnalysis from '../../approve/[id]/AIAnalysis'
+import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
 interface LabResult {
   id: string
@@ -108,12 +109,49 @@ export default function LabReviewPage() {
     setNotes(prev => prev ? `${prev}\n\n=== AI ANALYSIS ===\n${analysis}` : `=== AI ANALYSIS ===\n${analysis}`)
   }
 
+  const parseReferenceRange = (range: string): { min: number, max: number } | null => {
+    if (!range) return null
+    const match = range.match(/([\d.]+)\s*-\s*([\d.]+)/)
+    if (match) {
+      return { min: parseFloat(match[1]), max: parseFloat(match[2]) }
+    }
+    return null
+  }
+
   const getBiomarkerStatus = (biomarker: any) => {
+    const value = parseFloat(biomarker.value)
+    if (isNaN(value)) return { status: 'unknown', color: 'gray' }
+
+    // Get optimal range
+    const optimalRange = getOptimalRange(biomarker.biomarker)
+    const labRange = parseReferenceRange(biomarker.referenceRange)
+
+    if (optimalRange && labRange) {
+      const functionalStatus = calculateFunctionalStatus(
+        value,
+        labRange.min,
+        labRange.max,
+        optimalRange.optimalMin,
+        optimalRange.optimalMax
+      )
+
+      const statusMap = {
+        'optimal': { status: 'Optimal', color: 'green' },
+        'suboptimal-low': { status: 'Suboptimal ↓', color: 'yellow' },
+        'suboptimal-high': { status: 'Suboptimal ↑', color: 'yellow' },
+        'low': { status: 'Low', color: 'red' },
+        'high': { status: 'High', color: 'red' }
+      }
+
+      return statusMap[functionalStatus]
+    }
+
+    // Fallback to original status
     const status = biomarker.status?.toLowerCase() || ''
-    if (status === 'normal' || status === 'in range') return 'normal'
-    if (status === 'high' || status.includes('high')) return 'high'
-    if (status === 'low' || status.includes('low')) return 'low'
-    return 'unknown'
+    if (status === 'normal' || status === 'in range') return { status: 'Normal', color: 'green' }
+    if (status === 'high' || status.includes('high')) return { status: 'High', color: 'red' }
+    if (status === 'low' || status.includes('low')) return { status: 'Low', color: 'red' }
+    return { status: biomarker.status || 'Unknown', color: 'gray' }
   }
 
   if (loading) {
@@ -218,20 +256,29 @@ export default function LabReviewPage() {
               {labResult.biomarkers && labResult.biomarkers.length > 0 ? (
                 <div className="space-y-2">
                   {labResult.biomarkers.map((biomarker: any, i: number) => {
-                    const status = getBiomarkerStatus(biomarker)
+                    const { status, color } = getBiomarkerStatus(biomarker)
+                    const optimalRange = getOptimalRange(biomarker.biomarker)
+                    
                     return (
                       <div key={i} className="flex items-center justify-between p-3 bg-black/30 rounded-lg hover:bg-black/40 transition-all">
-                        <span className="font-medium">{biomarker.biomarker}</span>
+                        <span className="font-medium flex-1">{biomarker.biomarker}</span>
                         <div className="flex items-center gap-3">
-                          <span className="text-gray-400">{biomarker.value} {biomarker.unit}</span>
-                          <span className="text-xs text-gray-500">{biomarker.referenceRange}</span>
-                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            status === 'normal' ? 'bg-green-500/20 text-green-400' :
-                            status === 'high' ? 'bg-red-500/20 text-red-400' :
-                            status === 'low' ? 'bg-yellow-500/20 text-yellow-400' :
+                          <span className="text-gray-400 text-sm">{biomarker.value} {biomarker.unit}</span>
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500">Lab: {biomarker.referenceRange}</div>
+                            {optimalRange && (
+                              <div className="text-xs text-gray-400">
+                                Optimal: {optimalRange.optimalMin}-{optimalRange.optimalMax} {optimalRange.unit}
+                              </div>
+                            )}
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold min-w-[100px] text-center ${
+                            color === 'green' ? 'bg-green-500/20 text-green-400' :
+                            color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' :
+                            color === 'red' ? 'bg-red-500/20 text-red-400' :
                             'bg-gray-500/20 text-gray-400'
                           }`}>
-                            {biomarker.status}
+                            {status}
                           </span>
                         </div>
                       </div>
