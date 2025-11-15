@@ -21,29 +21,35 @@ export default function ProviderDashboard() {
 
   const fetchConsultations = async () => {
     try {
-      const response = await fetch('/api/consultations')
-      const data = await response.json()
+      // Fetch consultations
+      const consultResponse = await fetch('/api/consultations')
+      const consultations = await consultResponse.json()
       
-      if (Array.isArray(data)) {
+      // Fetch lab results
+      const labResponse = await fetch('/api/admin/lab-results')
+      const labResults = await labResponse.json()
+      
+      if (Array.isArray(consultations)) {
         // Pending = new consultations waiting for lab recommendations
-        const pending = data.filter(c => c.status === 'pending')
+        const pending = consultations.filter(c => c.status === 'pending')
         
-        // Lab Reviews = approved patients who uploaded labs
-        const labsToReview = data.filter(c => 
-          c.status === 'approved' && 
-          c.labs_uploaded === true
-        )
+        // Lab Reviews = patients who have uploaded labs
+        const labsToReview = consultations.filter(c => {
+          if (c.status !== 'approved') return false
+          // Check if this patient has lab results
+          return labResults.some((lab: any) => lab.patient_id === c.id)
+        })
         
         // This week's consultations
         const oneWeekAgo = new Date()
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-        const thisWeek = data.filter(c => new Date(c.created_at) > oneWeekAgo)
+        const thisWeek = consultations.filter(c => new Date(c.created_at) > oneWeekAgo)
         
         setPendingConsultations(pending)
         setLabReviews(labsToReview)
         setStats({
           pending: pending.length,
-          approved: data.filter(c => c.status === 'approved').length,
+          approved: consultations.filter(c => c.status === 'approved').length,
           labsToReview: labsToReview.length,
           thisWeek: thisWeek.length
         })
@@ -207,7 +213,7 @@ export default function ProviderDashboard() {
                           <span className="font-semibold">Approved:</span> {new Date(consultation.reviewed_at).toLocaleDateString()}
                         </div>
                         <div>
-                          <span className="font-semibold">Recommended:</span> {consultation.recommended_labs?.panel_name || 'Custom Panel'}
+                          <span className="font-semibold">Panel:</span> {consultation.recommended_labs?.[0]?.name || 'Custom Panel'}
                         </div>
                         <div>
                           <span 
