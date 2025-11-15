@@ -237,7 +237,7 @@ export default function LabReviewPage() {
 
   const categorizedBiomarkers = getBiomarkersByCategory()
   const categories = ['all', ...Object.keys(categorizedBiomarkers).sort()]
-  const bmi = consultation.height && consultation.weight ? calculateBMI(consultation.weight, consultation.height) : null
+  const bmi = consultation.height && consultation.weight ? calculateBMI(parseFloat(consultation.weight), parseFloat(consultation.height)) : null
 
   const displayBiomarkers = activeCategory === 'all' 
     ? labResult.biomarkers 
