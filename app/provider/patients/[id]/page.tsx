@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
+import AIAnalysis from '../../approve/[id]/AIAnalysis'
 
 interface Consultation {
   id: string
@@ -83,7 +84,7 @@ export default function PatientDetailPage() {
     }
   }
 
-  const handleApprove = async () => {
+  const handleSaveNotes = async () => {
     if (!patient) return
     
     setSubmitting(true)
@@ -93,34 +94,24 @@ export default function PatientDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: patient.id,
-          status: 'approved',
-          reviewed_at: new Date().toISOString(),
-          reviewed_by: 'Provider',
-          provider_notes: notes,
-          recommended_labs: {
-            panel_name: 'Male Hormone Optimization Panel',
-            tests: [
-              'Testosterone Total & Free',
-              'Estradiol',
-              'DHEA-S',
-              'Thyroid Panel (TSH, T3, T4)',
-              'Vitamin D',
-              'Complete Metabolic Panel'
-            ]
-          }
+          provider_notes: notes
         })
       })
 
       if (response.ok) {
-        alert('Patient approved! Lab recommendations sent.')
+        alert('Notes saved successfully')
         fetchPatient()
       }
     } catch (error) {
-      console.error('Error approving patient:', error)
-      alert('Failed to approve patient')
+      console.error('Error saving notes:', error)
+      alert('Failed to save notes')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const handleAnalysisComplete = (analysis: string) => {
+    setNotes(prev => prev ? `${prev}\n\n=== AI ANALYSIS ===\n${analysis}` : `=== AI ANALYSIS ===\n${analysis}`)
   }
 
   if (loading) {
@@ -195,6 +186,23 @@ export default function PatientDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Patient Info */}
           <div className="lg:col-span-2 space-y-6">
+            {/* AI Analysis Section - Only show if labs are uploaded */}
+            {labResults.length > 0 && (
+              <AIAnalysis
+                consultation={{
+                  name: `${patient.first_name} ${patient.last_name}`,
+                  age: patient.date_of_birth ? new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear() : null,
+                  occupation: patient.occupation,
+                  symptoms: patient.symptoms,
+                  goals: patient.optimization_goals,
+                  conditions: patient.medical_conditions,
+                  lifestyle: patient.lifestyle
+                }}
+                labResults={labResults[0]}
+                onAnalysisComplete={handleAnalysisComplete}
+              />
+            )}
+
             {/* Lab Results Section */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
@@ -428,41 +436,28 @@ export default function PatientDetailPage() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Add notes about this patient..."
-                rows={6}
+                rows={8}
                 className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black resize-none"
               />
+              <button
+                onClick={handleSaveNotes}
+                disabled={submitting}
+                className="w-full mt-3 px-4 py-2 rounded-lg font-semibold transition-all disabled:opacity-50"
+                style={{
+                  backgroundColor: brand.colors.primary,
+                  color: brand.colors.primaryText
+                }}
+              >
+                {submitting ? 'Saving...' : 'Save Notes'}
+              </button>
             </div>
 
-            {/* Actions */}
-            {patient.status === 'pending' && (
-              <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
-                <h2 className="text-lg font-bold mb-4">Actions</h2>
-                <div className="space-y-3">
-                  <button
-                    onClick={handleApprove}
-                    disabled={submitting}
-                    className="w-full px-4 py-3 rounded-lg font-semibold transition-all disabled:opacity-50"
-                    style={{
-                      backgroundColor: brand.colors.primary,
-                      color: brand.colors.primaryText
-                    }}
-                  >
-                    {submitting ? 'Approving...' : 'Approve & Send Lab Recommendations'}
-                  </button>
-                  <button
-                    className="w-full px-4 py-3 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg font-semibold transition-all"
-                  >
-                    Reject Consultation
-                  </button>
-                </div>
-              </div>
-            )}
-
+            {/* Approved Status */}
             {patient.status === 'approved' && (
               <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-6">
                 <h3 className="font-bold text-green-400 mb-2">✓ Approved</h3>
                 <p className="text-sm text-gray-300 mb-4">
-                  Patient has been approved. Lab recommendations sent on {new Date(patient.reviewed_at).toLocaleDateString()}.
+                  Patient approved on {new Date(patient.reviewed_at).toLocaleDateString()}.
                 </p>
                 {needsLabUpload && (
                   <Link
