@@ -34,11 +34,17 @@ export default function ProviderDashboard() {
         const pending = consultations.filter(c => c.status === 'pending')
         
         // Lab Reviews = patients who have uploaded labs
-        const labsToReview = consultations.filter(c => {
-          if (c.status !== 'approved') return false
-          // Check if this patient has lab results (using user_id)
-          return labResults.some((lab: any) => lab.user_id === c.id)
-        })
+        const labsToReview = consultations
+          .filter(c => {
+            if (c.status !== 'approved') return false
+            // Check if this patient has lab results (using user_id)
+            return labResults.some((lab: any) => lab.user_id === c.id)
+          })
+          .map(c => {
+            // Attach the lab result ID for linking
+            const lab = labResults.find((l: any) => l.user_id === c.id)
+            return { ...c, labResultId: lab?.id }
+          })
         
         // This week's consultations
         const oneWeekAgo = new Date()
@@ -197,7 +203,7 @@ export default function ProviderDashboard() {
               {labReviews.slice(0, 5).map((consultation) => (
                 <Link
                   key={consultation.id}
-                  href={`/provider/patients/${consultation.id}`}
+                  href={`/provider/lab-review/${consultation.labResultId}`}
                   className="block p-6 rounded-xl border border-white/10 hover:border-white/20 bg-white/5 hover:bg-white/10 transition-all"
                 >
                   <div className="flex items-start justify-between">
