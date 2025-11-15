@@ -108,10 +108,10 @@ export default function ProviderDashboard() {
           </div>
         </div>
 
-        {/* Pending Consultations */}
+        {/* Pending Lab Recommendations */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Pending Consultations</h2>
+            <h2 className="text-2xl font-bold">Pending Lab Recommendations</h2>
             <Link 
               href="/provider/patients"
               className="text-yellow-400 hover:text-yellow-300 text-sm font-semibold"
