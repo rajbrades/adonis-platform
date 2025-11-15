@@ -2,7 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Check, Loader2, FileText } from 'lucide-react'
+import { Check, Loader2, FileText, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 
 function PaymentSuccessContent() {
@@ -120,10 +120,17 @@ function PaymentSuccessContent() {
           </div>
         </div>
 
-        <div className="text-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link 
+            href="/patient"
+            className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400 transition-all shadow-lg shadow-yellow-500/20"
+          >
+            Go to My Portal
+            <ArrowRight className="w-5 h-5" />
+          </Link>
           <Link 
             href="/"
-            className="inline-block px-8 py-4 bg-yellow-500 text-black font-bold rounded-lg hover:bg-yellow-400 transition-all"
+            className="inline-flex items-center justify-center px-8 py-4 bg-white/5 border border-white/10 text-white font-bold rounded-lg hover:bg-white/10 transition-all"
           >
             Return to Homepage
           </Link>

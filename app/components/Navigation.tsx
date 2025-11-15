@@ -1,14 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, ChevronDown, User } from 'lucide-react'
+import { Menu, X, ChevronDown, User, LogOut } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [treatmentsOpen, setTreatmentsOpen] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [patientName, setPatientName] = useState('')
   const brand = getBrand()
+
+  useEffect(() => {
+    // Check if patient is logged in
+    const patient = localStorage.getItem('patient')
+    if (patient) {
+      try {
+        const patientData = JSON.parse(patient)
+        setIsLoggedIn(true)
+        setPatientName(patientData.name || patientData.full_name || 'Patient')
+      } catch (e) {
+        setIsLoggedIn(false)
+      }
+    }
+  }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('patient')
+    setIsLoggedIn(false)
+    setPatientName('')
+    window.location.href = '/'
+  }
 
   const treatments = [
     { name: 'Testosterone Replacement Therapy', href: '/treatments/testosterone-replacement' },
@@ -85,14 +108,33 @@ export default function Navigation() {
               Blog
             </Link>
             
-            {/* Patient Login */}
-            <Link 
-              href="/patient/login" 
-              className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
-            >
-              <User className="w-4 h-4" />
-              Patient Login
-            </Link>
+            {/* Patient Auth */}
+            {isLoggedIn ? (
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/patient" 
+                  className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  My Portal
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link 
+                href="/patient/login" 
+                className="flex items-center gap-2 text-white/80 hover:text-white font-semibold transition-colors"
+              >
+                <User className="w-4 h-4" />
+                Patient Login
+              </Link>
+            )}
             
             <Link 
               href="/consultation"
@@ -161,15 +203,35 @@ export default function Navigation() {
               Blog
             </Link>
             
-            {/* Patient Login - Mobile */}
-            <Link 
-              href="/patient/login" 
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-2 text-white/80 font-semibold"
-            >
-              <User className="w-4 h-4" />
-              Patient Login
-            </Link>
+            {/* Patient Auth - Mobile */}
+            {isLoggedIn ? (
+              <>
+                <Link 
+                  href="/patient" 
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-2 text-white/80 font-semibold"
+                >
+                  <User className="w-4 h-4" />
+                  My Portal
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-white/80 font-semibold w-full text-left"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link 
+                href="/patient/login" 
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 text-white/80 font-semibold"
+              >
+                <User className="w-4 h-4" />
+                Patient Login
+              </Link>
+            )}
             
             <Link 
               href="/consultation"
