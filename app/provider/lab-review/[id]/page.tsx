@@ -50,6 +50,7 @@ export default function LabReviewPage() {
   const [submitting, setSubmitting] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string>('all')
+  const [activeSeverity, setActiveSeverity] = useState<number | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['context', 'medications']))
 
   useEffect(() => {
@@ -250,9 +251,15 @@ export default function LabReviewPage() {
     return { category: cat, total: biomarkers.length, abnormal }
   })
 
-  const sortedBiomarkers = activeCategory === 'all' 
-    ? [...labResult.biomarkers].sort((a, b) => getBiomarkerStatus(b).severity - getBiomarkerStatus(a).severity)
-    : [...(categorizedBiomarkers[activeCategory] || [])].sort((a, b) => getBiomarkerStatus(b).severity - getBiomarkerStatus(a).severity)
+  let filteredBiomarkers = activeCategory === 'all' 
+    ? [...labResult.biomarkers]
+    : [...(categorizedBiomarkers[activeCategory] || [])]
+
+  if (activeSeverity !== null) {
+    filteredBiomarkers = filteredBiomarkers.filter(b => getBiomarkerStatus(b).severity === activeSeverity)
+  }
+
+  const sortedBiomarkers = filteredBiomarkers.sort((a, b) => getBiomarkerStatus(b).severity - getBiomarkerStatus(a).severity)
 
   const flaggedBiomarkers = labResult.biomarkers.filter(b => getBiomarkerStatus(b).severity > 0)
 
@@ -317,7 +324,7 @@ export default function LabReviewPage() {
             </div>
           </div>
 
-          {/* Alert Summary */}
+          {/* Alert Summary - Clickable Filters */}
           {flaggedBiomarkers.length > 0 && (
             <div className="border-t border-white/10 py-3 bg-gradient-to-r from-red-500/5 via-yellow-500/5 to-red-500/5">
               <div className="flex items-center justify-between">
@@ -325,23 +332,38 @@ export default function LabReviewPage() {
                   <AlertTriangle className="w-5 h-5 text-yellow-400" />
                   
                   {biomarkerStats.critical > 0 && (
-                    <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveSeverity(activeSeverity === 2 ? null : 2)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                        activeSeverity === 2 ? 'bg-red-500/20 ring-2 ring-red-500' : 'hover:bg-red-500/10'
+                      }`}
+                    >
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
                       <span className="text-sm font-bold text-red-400">{biomarkerStats.critical} Critical</span>
-                    </div>
+                    </button>
                   )}
                   
                   {biomarkerStats.suboptimal > 0 && (
-                    <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setActiveSeverity(activeSeverity === 1 ? null : 1)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                        activeSeverity === 1 ? 'bg-yellow-500/20 ring-2 ring-yellow-500' : 'hover:bg-yellow-500/10'
+                      }`}
+                    >
                       <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
                       <span className="text-sm font-semibold text-yellow-400">{biomarkerStats.suboptimal} Suboptimal</span>
-                    </div>
+                    </button>
                   )}
                   
-                  <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setActiveSeverity(activeSeverity === 0 ? null : 0)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all ${
+                      activeSeverity === 0 ? 'bg-green-500/20 ring-2 ring-green-500' : 'hover:bg-green-500/10'
+                    }`}
+                  >
                     <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     <span className="text-sm text-green-400">{biomarkerStats.optimal} Optimal</span>
-                  </div>
+                  </button>
                 </div>
                 
                 <div className="text-xs text-gray-400">
@@ -355,9 +377,9 @@ export default function LabReviewPage() {
       </div>
 
       {/* Main Content */}
-      <div className="pt-44 pb-12">
+      <div className="pt-56 pb-12">
         <div className="mx-auto px-8" style={{ maxWidth: '1800px' }}>
-          <div className="grid grid-cols-12 gap-6">
+          <div className="grid grid-cols-12 gap-6 items-start">
             {/* Left Sidebar */}
             <div className="col-span-2">
               <div className="space-y-3">
@@ -451,7 +473,7 @@ export default function LabReviewPage() {
             {/* Center - Labs */}
             <div className="col-span-7">
               <div className="bg-white/5 border border-white/10 rounded-lg">
-                <div className="p-4 border-b border-white/10">
+                <div className="p-5 border-b border-white/10">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-bold" style={{ color: brand.colors.primary }}>
                       Laboratory Results
@@ -491,14 +513,14 @@ export default function LabReviewPage() {
                 </div>
 
                 {/* Biomarkers */}
-                <div className="divide-y divide-white/5 max-h-[calc(100vh-400px)] overflow-y-auto">
+                <div className="divide-y divide-white/5 max-h-[calc(100vh-420px)] overflow-y-auto">
                   {sortedBiomarkers.map((biomarker: any, i: number) => {
                     const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
                     const optimalRange = getOptimalRange(biomarker.biomarker)
                     const isCritical = severity === 2
                     
                     return (
-                      <div key={i} className={`p-4 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-4 border-red-500' : ''}`}>
+                      <div key={i} className={`p-5 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-4 border-red-500' : ''}`}>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
@@ -545,7 +567,7 @@ export default function LabReviewPage() {
 
             {/* Right - Treatment Plan */}
             <div className="col-span-3">
-              <div className="bg-white/5 border border-white/10 rounded-lg sticky top-56">
+              <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
                   <h2 className="font-bold flex items-center gap-2">
                     <FileText className="w-4 h-4 text-yellow-400" />
@@ -557,7 +579,7 @@ export default function LabReviewPage() {
                     value={notes} 
                     onChange={(e) => setNotes(e.target.value)} 
                     placeholder="Click 'AI Interpret' for clinical interpretation..." 
-                    rows={28} 
+                    rows={30} 
                     className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed font-mono"
                   />
                 </div>
