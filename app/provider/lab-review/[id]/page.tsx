@@ -470,22 +470,22 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Center - Labs */}
-            <div className="col-span-7">
+            {/* Center - Labs (NARROWER) */}
+            <div className="col-span-6">
               <div className="bg-white/5 border border-white/10 rounded-lg">
-                <div className="p-5 border-b border-white/10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold" style={{ color: brand.colors.primary }}>
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-base font-bold" style={{ color: brand.colors.primary }}>
                       Laboratory Results
                     </h2>
-                    <span className="text-sm text-gray-400">{labResult.panel_name}</span>
+                    <span className="text-xs text-gray-400">{labResult.panel_name}</span>
                   </div>
                   
                   {/* Category Tabs */}
                   <div className="flex gap-2 flex-wrap">
                     <button 
                       onClick={() => setActiveCategory('all')} 
-                      className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                      className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
                         activeCategory === 'all' ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
                       }`}
                     >
@@ -495,7 +495,7 @@ export default function LabReviewPage() {
                       <button 
                         key={category}
                         onClick={() => setActiveCategory(category)} 
-                        className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-2 ${
+                        className={`px-2.5 py-1 rounded text-xs font-medium transition-all flex items-center gap-1.5 ${
                           activeCategory === category ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
                         }`}
                       >
@@ -512,7 +512,7 @@ export default function LabReviewPage() {
                   </div>
                 </div>
 
-                {/* Biomarkers */}
+                {/* Biomarkers - More compact, more spacing */}
                 <div className="divide-y divide-white/5 max-h-[calc(100vh-420px)] overflow-y-auto">
                   {sortedBiomarkers.map((biomarker: any, i: number) => {
                     const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
@@ -520,39 +520,39 @@ export default function LabReviewPage() {
                     const isCritical = severity === 2
                     
                     return (
-                      <div key={i} className={`p-5 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-2 border-red-500/40' : ''}`}>
-                        <div className="flex items-start justify-between mb-3">
+                      <div key={i} className={`p-4 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-2 border-red-500/40' : ''}`}>
+                        <div className="flex items-start justify-between mb-2">
                           <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="font-semibold text-sm text-gray-200">{biomarker.biomarker}</span>
-                              {isCritical && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <span className="font-semibold text-xs text-gray-300">{biomarker.biomarker}</span>
+                              {isCritical && <AlertCircle className="w-3 h-3 text-red-500 animate-pulse" />}
                             </div>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-5xl font-bold leading-none">{biomarker.value}</span>
-                              <span className="text-lg text-gray-400">{biomarker.unit}</span>
+                              <span className="text-3xl font-bold leading-none">{biomarker.value}</span>
+                              <span className="text-sm text-gray-400">{biomarker.unit}</span>
                             </div>
                           </div>
                           
-                          <span className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${
+                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
                             color === 'green' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                             color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                             color === 'red' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
                             'bg-gray-500/20 text-gray-400 border border-gray-500/30'
                           }`}>
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-3 h-3" />
                             {status}
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div className="bg-white/5 rounded-lg p-2.5">
-                            <div className="text-gray-400 mb-1">Lab Reference</div>
-                            <div className="text-white font-medium">{biomarker.referenceRange}</div>
+                        <div className="grid grid-cols-2 gap-2 text-xs mt-3">
+                          <div className="bg-white/5 rounded p-2">
+                            <div className="text-gray-400 mb-0.5 text-[10px]">Lab Reference</div>
+                            <div className="text-white font-medium text-xs">{biomarker.referenceRange}</div>
                           </div>
                           {optimalRange && (
-                            <div className="bg-yellow-500/10 rounded-lg p-2.5 border border-yellow-500/20">
-                              <div className="text-yellow-400 mb-1 font-medium">Optimal Range</div>
-                              <div className="text-yellow-300 font-semibold">
+                            <div className="bg-yellow-500/10 rounded p-2 border border-yellow-500/20">
+                              <div className="text-yellow-400 mb-0.5 text-[10px] font-medium">Optimal Range</div>
+                              <div className="text-yellow-300 font-semibold text-xs">
                                 {optimalRange.optimalMin}-{optimalRange.optimalMax} {optimalRange.unit}
                               </div>
                             </div>
@@ -565,11 +565,11 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Right - Treatment Plan */}
-            <div className="col-span-3">
+            {/* Right - Treatment Plan (WIDER - THE HERO) */}
+            <div className="col-span-4">
               <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
-                  <h2 className="font-bold flex items-center gap-2">
+                  <h2 className="font-bold flex items-center gap-2 text-base">
                     <FileText className="w-4 h-4 text-yellow-400" />
                     Treatment Plan
                   </h2>
@@ -578,9 +578,9 @@ export default function LabReviewPage() {
                   <textarea 
                     value={notes} 
                     onChange={(e) => setNotes(e.target.value)} 
-                    placeholder="Click 'AI Interpret' for clinical interpretation..." 
-                    rows={30} 
-                    className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed font-mono"
+                    placeholder="Click 'AI Interpret' for comprehensive clinical interpretation and treatment recommendations..." 
+                    rows={32} 
+                    className="w-full px-3 py-3 bg-black/40 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed"
                   />
                 </div>
               </div>
