@@ -45,9 +45,10 @@ function LoginForm() {
       const data = await response.json()
 
       if (data.success) {
-        sessionStorage.setItem('patient_id', data.patient.id)
-        sessionStorage.setItem('patient_name', data.patient.full_name)
-        sessionStorage.setItem('patient_dob', data.patient.date_of_birth)
+        // Store patient data in localStorage as JSON
+        localStorage.setItem('patient', JSON.stringify(data.patient))
+        // Dispatch custom event to notify Navigation
+        window.dispatchEvent(new Event('patientLogin'))
         router.push('/patient')
       } else {
         setError(data.error || 'Login failed')

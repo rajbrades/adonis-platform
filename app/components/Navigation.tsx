@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Menu, X, ChevronDown, User, LogOut } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
@@ -10,10 +11,10 @@ export default function Navigation() {
   const [treatmentsOpen, setTreatmentsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [patientName, setPatientName] = useState('')
+  const pathname = usePathname()
   const brand = getBrand()
 
-  useEffect(() => {
-    // Check if patient is logged in
+  const checkAuth = () => {
     const patient = localStorage.getItem('patient')
     if (patient) {
       try {
@@ -23,8 +24,31 @@ export default function Navigation() {
       } catch (e) {
         setIsLoggedIn(false)
       }
+    } else {
+      setIsLoggedIn(false)
+    }
+  }
+
+  useEffect(() => {
+    // Check auth on mount
+    checkAuth()
+    
+    // Check auth on storage change (when login happens in another tab)
+    window.addEventListener('storage', checkAuth)
+    
+    // Custom event for same-tab login
+    window.addEventListener('patientLogin', checkAuth)
+    
+    return () => {
+      window.removeEventListener('storage', checkAuth)
+      window.removeEventListener('patientLogin', checkAuth)
     }
   }, [])
+
+  // Re-check auth when pathname changes
+  useEffect(() => {
+    checkAuth()
+  }, [pathname])
 
   const handleLogout = () => {
     localStorage.removeItem('patient')
