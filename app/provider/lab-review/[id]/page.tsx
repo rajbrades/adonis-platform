@@ -520,7 +520,7 @@ export default function LabReviewPage() {
                     const isCritical = severity === 2
                     
                     return (
-                      <div key={i} className={`p-5 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-4 border-red-500' : ''}`}>
+                      <div key={i} className={`p-5 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-2 border-red-500/40' : ''}`}>
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
