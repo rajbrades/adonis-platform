@@ -94,12 +94,12 @@ export default function LabReviewPage() {
       })
 
       if (response.ok) {
-        alert('Treatment plan saved successfully')
+        alert('Treatment plan saved')
         fetchLabResult()
       }
     } catch (error) {
       console.error('Error saving notes:', error)
-      alert('Failed to save treatment plan')
+      alert('Failed to save')
     } finally {
       setSubmitting(false)
     }
@@ -134,8 +134,8 @@ export default function LabReviewPage() {
         setNotes(data.analysis)
       }
     } catch (error) {
-      console.error('AI analysis error:', error)
-      alert('Failed to generate interpretation')
+      console.error('AI error:', error)
+      alert('Failed to analyze')
     } finally {
       setAnalyzing(false)
     }
@@ -227,9 +227,7 @@ export default function LabReviewPage() {
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Lab Results Not Found</h1>
-          <Link href="/provider/labs" className="text-yellow-400 hover:underline">
-            ← Back to Lab History
-          </Link>
+          <Link href="/provider/labs" className="text-yellow-400 hover:underline">← Back</Link>
         </div>
       </div>
     )
@@ -259,183 +257,310 @@ export default function LabReviewPage() {
   const flaggedBiomarkers = labResult.biomarkers.filter(b => getBiomarkerStatus(b).severity > 0)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
-      <div className="border-b border-white/10 bg-black/40 backdrop-blur-lg fixed top-20 left-0 right-0 z-40">
-        <div className="max-w-[1920px] mx-auto px-6 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <Link href="/provider/labs" className="text-gray-400 hover:text-white text-sm flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Link>
-            <span className="text-xs text-gray-500">Saved: {new Date(labResult.created_at).toLocaleString()}</span>
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold mb-1" style={{ color: brand.colors.primary }}>
-                {consultation.first_name} {consultation.last_name}
-              </h1>
-              <div className="flex items-center gap-4 text-sm text-gray-400">
-                <span>{consultation.age}yo • {consultation.occupation} • BMI: {bmi || 'N/A'}</span>
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {labResult.test_date || 'N/A'}
-                </span>
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+      {/* Fixed Header */}
+      <div className="fixed top-20 left-0 right-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
+        <div className="mx-auto px-8" style={{ maxWidth: '1800px' }}>
+          {/* Top Bar */}
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-6">
+              <Link href="/provider/labs" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-colors">
+                <ArrowLeft className="w-4 h-4" />
+                Back
+              </Link>
+              <div className="h-4 w-px bg-white/20"></div>
+              <div>
+                <h1 className="text-xl font-bold" style={{ color: brand.colors.primary }}>
+                  {consultation.first_name} {consultation.last_name}
+                </h1>
+                <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                  <span>{consultation.age}yo</span>
+                  <span>•</span>
+                  <span>{consultation.occupation}</span>
+                  <span>•</span>
+                  <span>BMI: {bmi || 'N/A'}</span>
+                  <span>•</span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    {labResult.test_date}
+                  </span>
+                </div>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
-              <button onClick={handleInterpret} disabled={analyzing} className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all text-sm" style={{ backgroundColor: analyzing ? 'rgba(234, 179, 8, 0.1)' : brand.colors.primary, color: analyzing ? '#EAB308' : brand.colors.primaryText, border: analyzing ? '1px solid rgba(234, 179, 8, 0.3)' : 'none' }}>
-                {analyzing ? <><Loader2 className="w-4 h-4 animate-spin" />Analyzing...</> : <><Sparkles className="w-4 h-4" />AI Interpret</>}
+              <button 
+                onClick={handleInterpret} 
+                disabled={analyzing} 
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all text-sm disabled:opacity-50"
+                style={{
+                  backgroundColor: analyzing ? 'rgba(234, 179, 8, 0.1)' : brand.colors.primary,
+                  color: analyzing ? '#EAB308' : brand.colors.primaryText,
+                  border: analyzing ? '1px solid rgba(234, 179, 8, 0.3)' : 'none'
+                }}
+              >
+                {analyzing ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />Analyzing</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" />AI Interpret</>
+                )}
               </button>
-              <button onClick={handleSaveNotes} disabled={submitting} className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg font-semibold transition-all text-sm flex items-center gap-2">
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Save
+              
+              <button 
+                onClick={handleSaveNotes} 
+                disabled={submitting} 
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Save
               </button>
             </div>
           </div>
-        </div>
 
-        {flaggedBiomarkers.length > 0 && (
-          <div className="bg-gradient-to-r from-red-500/10 via-yellow-500/10 to-red-500/10 border-t border-white/10">
-            <div className="max-w-[1920px] mx-auto px-6 py-3">
+          {/* Alert Summary */}
+          {flaggedBiomarkers.length > 0 && (
+            <div className="border-t border-white/10 py-3 bg-gradient-to-r from-red-500/5 via-yellow-500/5 to-red-500/5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5">
                   <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                  <div className="flex items-center gap-6 text-sm">
-                    {biomarkerStats.critical > 0 && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                        <span className="text-red-400 font-semibold">{biomarkerStats.critical} Critical</span>
-                      </div>
-                    )}
-                    {biomarkerStats.suboptimal > 0 && (
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                        <span className="text-yellow-400 font-semibold">{biomarkerStats.suboptimal} Suboptimal</span>
-                      </div>
-                    )}
+                  
+                  {biomarkerStats.critical > 0 && (
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-green-400">{biomarkerStats.optimal} Optimal</span>
+                      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-bold text-red-400">{biomarkerStats.critical} Critical</span>
                     </div>
+                  )}
+                  
+                  {biomarkerStats.suboptimal > 0 && (
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <span className="text-sm font-semibold text-yellow-400">{biomarkerStats.suboptimal} Suboptimal</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm text-green-400">{biomarkerStats.optimal} Optimal</span>
                   </div>
                 </div>
+                
                 <div className="text-xs text-gray-400">
-                  Priority: {flaggedBiomarkers.slice(0, 3).map(b => b.biomarker).join(', ')}
-                  {flaggedBiomarkers.length > 3 && ` +${flaggedBiomarkers.length - 3} more`}
+                  <span className="font-medium">Priority:</span> {flaggedBiomarkers.slice(0, 3).map(b => b.biomarker).join(', ')}
+                  {flaggedBiomarkers.length > 3 && <span className="text-yellow-400 ml-1">+{flaggedBiomarkers.length - 3} more</span>}
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div className="max-w-[1920px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-12 gap-6 items-start">
-          <div className="col-span-2">
-            <div className="space-y-4">
-              <div className="bg-white/5 border border-white/10 rounded-lg">
-                <button onClick={() => toggleSection('context')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-yellow-400" />
-                    <h3 className="font-bold text-sm">Context</h3>
-                  </div>
-                  {expandedSections.has('context') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </button>
-                {expandedSections.has('context') && (
-                  <div className="p-3 pt-0 space-y-3 text-xs">
-                    <div>
-                      <div className="text-gray-400 mb-1 font-medium">Conditions</div>
-                      {consultation.medical_conditions && consultation.medical_conditions.length > 0 ? (
-                        <div className="flex flex-wrap gap-1">{consultation.medical_conditions.map((c, i) => <span key={i} className="px-2 py-0.5 bg-red-500/10 text-red-300 rounded text-xs border border-red-500/20">{c}</span>)}</div>
-                      ) : <div className="text-gray-500">None</div>}
+      {/* Main Content */}
+      <div className="pt-44 pb-12">
+        <div className="mx-auto px-8" style={{ maxWidth: '1800px' }}>
+          <div className="grid grid-cols-12 gap-6">
+            {/* Left Sidebar */}
+            <div className="col-span-2">
+              <div className="space-y-3">
+                {/* Context */}
+                <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                  <button onClick={() => toggleSection('context')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-yellow-400" />
+                      <span className="font-bold text-sm">Context</span>
                     </div>
-                    <div><div className="text-gray-400 mb-1 font-medium">Allergies</div><div className="text-white">{consultation.allergies || 'None'}</div></div>
-                    <div><div className="text-gray-400 mb-1 font-medium">Symptoms</div><div className="flex flex-wrap gap-1">{consultation.symptoms?.map((s, i) => <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-300 rounded text-xs">{s}</span>)}</div></div>
-                    <div><div className="text-gray-400 mb-1 font-medium">Goals</div><div className="flex flex-wrap gap-1">{consultation.optimization_goals?.map((g, i) => <span key={i} className="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded text-xs">{g}</span>)}</div></div>
+                    {expandedSections.has('context') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.has('context') && (
+                    <div className="px-3 pb-3 space-y-3 text-xs">
+                      <div>
+                        <div className="text-gray-400 mb-1.5 font-medium">Conditions</div>
+                        {consultation.medical_conditions?.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {consultation.medical_conditions.map((c, i) => (
+                              <span key={i} className="px-2 py-0.5 bg-red-500/10 text-red-300 rounded border border-red-500/20">{c}</span>
+                            ))}
+                          </div>
+                        ) : <div className="text-gray-500">None</div>}
+                      </div>
+                      <div>
+                        <div className="text-gray-400 mb-1.5 font-medium">Symptoms</div>
+                        <div className="flex flex-wrap gap-1">
+                          {consultation.symptoms?.map((s, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-300 rounded">{s}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-gray-400 mb-1.5 font-medium">Goals</div>
+                        <div className="flex flex-wrap gap-1">
+                          {consultation.optimization_goals?.map((g, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-blue-500/10 text-blue-300 rounded">{g}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Medications */}
+                <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                  <button onClick={() => toggleSection('medications')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-4 h-4 text-yellow-400" />
+                      <span className="font-bold text-sm">Medications</span>
+                    </div>
+                    {expandedSections.has('medications') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.has('medications') && (
+                    <div className="px-3 pb-3 text-xs text-white whitespace-pre-wrap">
+                      {consultation.current_medications || 'None'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Lifestyle */}
+                {consultation.lifestyle && (
+                  <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                    <h3 className="font-bold mb-2.5 flex items-center gap-2 text-sm">
+                      <Activity className="w-4 h-4 text-yellow-400" />
+                      Lifestyle
+                    </h3>
+                    <div className="space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Exercise:</span>
+                        <span className="text-white">{consultation.lifestyle.exerciseFrequency || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Sleep:</span>
+                        <span className="text-white">{consultation.lifestyle.sleepHours || 'N/A'} hrs</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Diet:</span>
+                        <span className="text-white">{consultation.lifestyle.diet || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Stress:</span>
+                        <span className="text-white">{consultation.lifestyle.stressLevel || 'N/A'}</span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
+            </div>
+
+            {/* Center - Labs */}
+            <div className="col-span-7">
               <div className="bg-white/5 border border-white/10 rounded-lg">
-                <button onClick={() => toggleSection('medications')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <Pill className="w-4 h-4 text-yellow-400" />
-                    <h3 className="font-bold text-sm">Medications</h3>
+                <div className="p-4 border-b border-white/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-bold" style={{ color: brand.colors.primary }}>
+                      Laboratory Results
+                    </h2>
+                    <span className="text-sm text-gray-400">{labResult.panel_name}</span>
                   </div>
-                  {expandedSections.has('medications') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                </button>
-                {expandedSections.has('medications') && <div className="p-3 pt-0 text-xs"><div className="text-white whitespace-pre-wrap">{consultation.current_medications || 'None'}</div></div>}
-              </div>
-              {consultation.lifestyle && (
-                <div className="bg-white/5 border border-white/10 rounded-lg p-3">
-                  <h3 className="font-bold mb-2 flex items-center gap-2 text-sm"><Activity className="w-4 h-4 text-yellow-400" />Lifestyle</h3>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex justify-between"><span className="text-gray-400">Exercise:</span><span className="text-white">{consultation.lifestyle.exerciseFrequency || 'N/A'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Sleep:</span><span className="text-white">{consultation.lifestyle.sleepHours || 'N/A'} hrs</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Diet:</span><span className="text-white">{consultation.lifestyle.diet || 'N/A'}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-400">Stress:</span><span className="text-white">{consultation.lifestyle.stressLevel || 'N/A'}</span></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="col-span-7">
-            <div className="bg-white/5 border border-white/10 rounded-lg">
-              <div className="p-4 border-b border-white/10">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-bold" style={{ color: brand.colors.primary }}>Laboratory Results</h2>
-                  <span className="text-sm text-gray-400">{labResult.panel_name}</span>
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <button onClick={() => setActiveCategory('all')} className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${activeCategory === 'all' ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>All ({labResult.biomarkers.length})</button>
-                  {categoryStats.map(({ category, total, abnormal }) => (
-                    <button key={category} onClick={() => setActiveCategory(category)} className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-2 ${activeCategory === category ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
-                      {category} ({total}){abnormal > 0 && <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${activeCategory === category ? 'bg-red-500 text-white' : 'bg-red-500/20 text-red-400'}`}>{abnormal}</span>}
+                  
+                  {/* Category Tabs */}
+                  <div className="flex gap-2 flex-wrap">
+                    <button 
+                      onClick={() => setActiveCategory('all')} 
+                      className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${
+                        activeCategory === 'all' ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                      }`}
+                    >
+                      All ({labResult.biomarkers.length})
                     </button>
-                  ))}
+                    {categoryStats.map(({ category, total, abnormal }) => (
+                      <button 
+                        key={category}
+                        onClick={() => setActiveCategory(category)} 
+                        className={`px-3 py-1.5 rounded text-xs font-medium transition-all flex items-center gap-2 ${
+                          activeCategory === category ? 'bg-yellow-400 text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                        }`}
+                      >
+                        {category} ({total})
+                        {abnormal > 0 && (
+                          <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            activeCategory === category ? 'bg-red-600 text-white' : 'bg-red-500/20 text-red-400'
+                          }`}>
+                            {abnormal}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Biomarkers */}
+                <div className="divide-y divide-white/5 max-h-[calc(100vh-400px)] overflow-y-auto">
+                  {sortedBiomarkers.map((biomarker: any, i: number) => {
+                    const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
+                    const optimalRange = getOptimalRange(biomarker.biomarker)
+                    const isCritical = severity === 2
+                    
+                    return (
+                      <div key={i} className={`p-4 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-4 border-red-500' : ''}`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-semibold text-sm text-gray-200">{biomarker.biomarker}</span>
+                              {isCritical && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
+                            </div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-5xl font-bold leading-none">{biomarker.value}</span>
+                              <span className="text-lg text-gray-400">{biomarker.unit}</span>
+                            </div>
+                          </div>
+                          
+                          <span className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${
+                            color === 'green' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                            color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
+                            color === 'red' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
+                            'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                          }`}>
+                            <Icon className="w-4 h-4" />
+                            {status}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div className="bg-white/5 rounded-lg p-2.5">
+                            <div className="text-gray-400 mb-1">Lab Reference</div>
+                            <div className="text-white font-medium">{biomarker.referenceRange}</div>
+                          </div>
+                          {optimalRange && (
+                            <div className="bg-yellow-500/10 rounded-lg p-2.5 border border-yellow-500/20">
+                              <div className="text-yellow-400 mb-1 font-medium">Optimal Range</div>
+                              <div className="text-yellow-300 font-semibold">
+                                {optimalRange.optimalMin}-{optimalRange.optimalMax} {optimalRange.unit}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
-              <div className="divide-y divide-white/5 max-h-[calc(100vh-450px)] overflow-y-auto">
-                {sortedBiomarkers.map((biomarker: any, i: number) => {
-                  const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
-                  const optimalRange = getOptimalRange(biomarker.biomarker)
-                  const isCritical = severity === 2
-                  return (
-                    <div key={i} className={`p-4 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-2 border-red-500' : ''}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="font-semibold text-sm text-gray-300">{biomarker.biomarker}</div>
-                            {isCritical && <AlertCircle className="w-4 h-4 text-red-500 animate-pulse" />}
-                          </div>
-                          <div className="flex items-baseline gap-2">
-                            <div className="text-4xl font-bold">{biomarker.value}</div>
-                            <div className="text-lg text-gray-400">{biomarker.unit}</div>
-                          </div>
-                        </div>
-                        <span className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 ${color === 'green' ? 'bg-green-500/20 text-green-400' : color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400' : color === 'red' ? 'bg-red-500/20 text-red-400' : 'bg-gray-500/20 text-gray-400'}`}>
-                          <Icon className="w-4 h-4" />{status}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs mt-3">
-                        <div className="bg-white/5 rounded p-2"><div className="text-gray-400 mb-1">Lab Reference</div><div className="text-white font-medium">{biomarker.referenceRange}</div></div>
-                        {optimalRange && <div className="bg-yellow-500/10 rounded p-2 border border-yellow-500/20"><div className="text-yellow-400 mb-1">Optimal Range</div><div className="text-yellow-300 font-medium">{optimalRange.optimalMin}-{optimalRange.optimalMax} {optimalRange.unit}</div></div>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
             </div>
-          </div>
 
-          <div className="col-span-3">
-            <div className="bg-white/5 border border-white/10 rounded-lg sticky top-64">
-              <div className="p-4 border-b border-white/10">
-                <h2 className="font-bold flex items-center gap-2"><FileText className="w-4 h-4 text-yellow-400" />Treatment Plan</h2>
-              </div>
-              <div className="p-4">
-                <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Click 'AI Interpret' for comprehensive clinical interpretation..." rows={24} className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed font-mono" />
+            {/* Right - Treatment Plan */}
+            <div className="col-span-3">
+              <div className="bg-white/5 border border-white/10 rounded-lg sticky top-56">
+                <div className="p-4 border-b border-white/10">
+                  <h2 className="font-bold flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-yellow-400" />
+                    Treatment Plan
+                  </h2>
+                </div>
+                <div className="p-4">
+                  <textarea 
+                    value={notes} 
+                    onChange={(e) => setNotes(e.target.value)} 
+                    placeholder="Click 'AI Interpret' for clinical interpretation..." 
+                    rows={28} 
+                    className="w-full px-3 py-2.5 bg-black/40 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed font-mono"
+                  />
+                </div>
               </div>
             </div>
           </div>
