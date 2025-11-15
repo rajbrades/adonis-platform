@@ -244,9 +244,9 @@ export default function LabReviewPage() {
     : categorizedBiomarkers[activeCategory] || []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32">
       {/* Header */}
-      <div className="border-b border-white/10 bg-black/40 backdrop-blur-lg sticky top-0 z-50">
+      <div className="border-b border-white/10 bg-black/40 backdrop-blur-lg fixed top-20 left-0 right-0 z-40">
         <div className="max-w-[1800px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-3">
             <Link href="/provider/labs" className="text-gray-400 hover:text-white text-sm flex items-center gap-2">
@@ -459,7 +459,7 @@ export default function LabReviewPage() {
               </div>
 
               {/* Biomarkers List */}
-              <div className="divide-y divide-white/5 max-h-[calc(100vh-300px)] overflow-y-auto">
+              <div className="divide-y divide-white/5 max-h-[calc(100vh-400px)] overflow-y-auto">
                 {displayBiomarkers.map((biomarker: any, i: number) => {
                   const { status, color, icon: Icon } = getBiomarkerStatus(biomarker)
                   const optimalRange = getOptimalRange(biomarker.biomarker)
@@ -513,7 +513,7 @@ export default function LabReviewPage() {
 
           {/* Right - Treatment Plan */}
           <div className="col-span-3 space-y-4">
-            <div className="bg-white/5 border border-white/10 rounded-lg sticky top-24">
+            <div className="bg-white/5 border border-white/10 rounded-lg sticky top-64">
               <div className="p-4 border-b border-white/10">
                 <h2 className="font-bold flex items-center gap-2">
                   <FileText className="w-4 h-4 text-yellow-400" />
@@ -526,7 +526,7 @@ export default function LabReviewPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="Clinical interpretation and treatment recommendations will appear here after clicking 'AI Interpret' or you can write your own..."
-                  rows={25}
+                  rows={22}
                   className="w-full px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 resize-none leading-relaxed"
                 />
               </div>
