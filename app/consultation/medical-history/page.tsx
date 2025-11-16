@@ -100,17 +100,48 @@ export default function MedicalHistoryPage() {
   }
 
   const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    let labFileUrls: string[] = []
+    
+    // Upload files immediately if any
+    if (uploadedFiles.length > 0) {
+      try {
+        const uploadFormData = new FormData()
+        uploadedFiles.forEach((file) => {
+          uploadFormData.append('files', file)
+        })
+
+        const uploadResponse = await fetch('/api/upload-lab-files', {
+          method: 'POST',
+          body: uploadFormData
+        })
+
+        if (uploadResponse.ok) {
+          const { urls } = await uploadResponse.json()
+          labFileUrls = urls
+        } else {
+          alert('Failed to upload files')
+          return
+        }
+      } catch (error) {
+        console.error('Upload error:', error)
+        alert('Failed to upload files')
+        return
+      }
+    }
     
     const intakeData = JSON.parse(sessionStorage.getItem('consultationData') || '{}')
     const fullData = { 
       ...intakeData, 
       ...formData,
-      uploadedLabFiles: uploadedFiles // Store files temporarily for submission
+      lab_files: labFileUrls // Store URLs instead of File objects
     }
     
     sessionStorage.setItem('consultationData', JSON.stringify(fullData))
     router.push('/consultation/review')
+  }
   }
 
   const handleBack = () => {
