@@ -3,26 +3,18 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
-import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Loader2, CheckCircle, User, Mail, Phone, Calendar, MapPin, Heart, Pill, Activity, Dumbbell } from 'lucide-react'
 
-// Helper function to convert camelCase to snake_case
-const toSnakeCase = (str: string) => {
-  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
-}
-
-const transformKeysToSnakeCase = (obj: any): any => {
+function transformKeysToSnakeCase(obj: any): any {
   if (Array.isArray(obj)) {
     return obj.map(transformKeysToSnakeCase)
-  }
-  
-  if (obj !== null && typeof obj === 'object') {
-    return Object.keys(obj).reduce((result, key) => {
-      const snakeKey = toSnakeCase(key)
-      result[snakeKey] = transformKeysToSnakeCase(obj[key])
-      return result
+  } else if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((acc, key) => {
+      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase()
+      acc[snakeKey] = transformKeysToSnakeCase(obj[key])
+      return acc
     }, {} as any)
   }
-  
   return obj
 }
 
@@ -31,7 +23,6 @@ export default function ReviewPage() {
   const router = useRouter()
   const [formData, setFormData] = useState<any>(null)
   const [submitting, setSubmitting] = useState(false)
-  const [uploadingFiles, setUploadingFiles] = useState(false)
 
   useEffect(() => {
     const data = sessionStorage.getItem('consultationData')
@@ -46,38 +37,9 @@ export default function ReviewPage() {
     setSubmitting(true)
     
     try {
-      let labFileUrls: string[] = []
-      
-      // Upload files if any
-      if (formData.uploadedLabFiles && formData.uploadedLabFiles.length > 0) {
-        setUploadingFiles(true)
-        
-        const uploadFormData = new FormData()
-        formData.uploadedLabFiles.forEach((file: File) => {
-          uploadFormData.append('files', file)
-        })
-
-        const uploadResponse = await fetch('/api/upload-lab-files', {
-          method: 'POST',
-          body: uploadFormData
-        })
-
-        if (uploadResponse.ok) {
-          const { urls } = await uploadResponse.json()
-          labFileUrls = urls
-        }
-        
-        setUploadingFiles(false)
-      }
-
-      // Remove temporary file objects
-      const cleanedData = { ...formData }
-      delete cleanedData.uploadedLabFiles
-
-      // Transform to snake_case and add lab_files
+      // Transform to snake_case - lab_files already contains URLs from medical-history upload
       const consultationData = transformKeysToSnakeCase({
-        ...cleanedData,
-        lab_files: labFileUrls,
+        ...formData,
         status: 'pending'
       })
 
@@ -101,7 +63,6 @@ export default function ReviewPage() {
       alert('Failed to submit consultation')
     } finally {
       setSubmitting(false)
-      setUploadingFiles(false)
     }
   }
 
@@ -142,88 +103,164 @@ export default function ReviewPage() {
           </div>
         </div>
 
-        <div className="space-y-6 mb-12">
+        <div className="space-y-6">
+          
           {/* Personal Information */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-            <h2 className="text-2xl font-bold mb-6" style={{ color: brand.colors.primary }}>Personal Information</h2>
-            <div className="grid md:grid-cols-2 gap-4 text-sm">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <User className="w-6 h-6" style={{ color: brand.colors.primary }} />
+              Personal Information
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
               <div>
-                <span className="text-white/60">Name:</span>
-                <span className="ml-2 text-white font-medium">{formData.firstName} {formData.lastName}</span>
+                <p className="text-sm text-white/50 mb-1">Full Name</p>
+                <p className="text-lg">{formData.firstName} {formData.lastName}</p>
               </div>
               <div>
-                <span className="text-white/60">Email:</span>
-                <span className="ml-2 text-white font-medium">{formData.email}</span>
+                <p className="text-sm text-white/50 mb-1">Email</p>
+                <p className="text-lg">{formData.email}</p>
               </div>
               <div>
-                <span className="text-white/60">Phone:</span>
-                <span className="ml-2 text-white font-medium">{formData.phone}</span>
+                <p className="text-sm text-white/50 mb-1">Phone</p>
+                <p className="text-lg">{formData.phone}</p>
               </div>
               <div>
-                <span className="text-white/60">Date of Birth:</span>
-                <span className="ml-2 text-white font-medium">{formData.dateOfBirth}</span>
+                <p className="text-sm text-white/50 mb-1">Date of Birth</p>
+                <p className="text-lg">{formData.dateOfBirth}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Address</p>
+                <p className="text-lg">{formData.address}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">City, State ZIP</p>
+                <p className="text-lg">{formData.city}, {formData.state} {formData.zipCode}</p>
               </div>
             </div>
           </div>
 
-          {/* Goals */}
-          {formData.optimizationGoals && formData.optimizationGoals.length > 0 && (
+          {/* Medical Conditions */}
+          {formData.medicalConditions && formData.medicalConditions.length > 0 && (
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold mb-4" style={{ color: brand.colors.primary }}>Optimization Goals</h2>
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <Heart className="w-6 h-6" style={{ color: brand.colors.primary }} />
+                Medical Conditions
+              </h2>
               <div className="flex flex-wrap gap-2">
-                {formData.optimizationGoals.map((goal: string, i: number) => (
-                  <span key={i} className="px-3 py-1 bg-blue-500/10 text-blue-300 rounded-full text-sm">
-                    {goal}
+                {formData.medicalConditions.map((condition: string, idx: number) => (
+                  <span key={idx} className="px-4 py-2 bg-white/10 rounded-lg text-sm">
+                    {condition}
                   </span>
                 ))}
               </div>
             </div>
           )}
 
-          {/* Medical History */}
+          {/* Symptoms */}
+          {formData.symptoms && formData.symptoms.length > 0 && (
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <Activity className="w-6 h-6" style={{ color: brand.colors.primary }} />
+                Current Symptoms
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {formData.symptoms.map((symptom: string, idx: number) => (
+                  <span key={idx} className="px-4 py-2 bg-white/10 rounded-lg text-sm">
+                    {symptom}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Medications & Supplements */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
-            <h2 className="text-2xl font-bold mb-6" style={{ color: brand.colors.primary }}>Medical History</h2>
-            <div className="space-y-4 text-sm">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Pill className="w-6 h-6" style={{ color: brand.colors.primary }} />
+              Medications & Supplements
+            </h2>
+            <div className="space-y-4">
               {formData.currentMedications && (
                 <div>
-                  <span className="text-white/60 font-semibold">Current Medications:</span>
-                  <p className="text-white mt-1">{formData.currentMedications}</p>
+                  <p className="text-sm text-white/50 mb-2">Current Medications</p>
+                  <p className="text-white/80 whitespace-pre-wrap">{formData.currentMedications || 'None'}</p>
                 </div>
               )}
               {formData.currentSupplements && (
                 <div>
-                  <span className="text-white/60 font-semibold">Current Supplements:</span>
-                  <p className="text-white mt-1">{formData.currentSupplements}</p>
+                  <p className="text-sm text-white/50 mb-2">Current Supplements</p>
+                  <p className="text-white/80 whitespace-pre-wrap">{formData.currentSupplements || 'None'}</p>
                 </div>
               )}
               {formData.allergies && (
                 <div>
-                  <span className="text-white/60 font-semibold">Allergies:</span>
-                  <p className="text-white mt-1">{formData.allergies}</p>
-                </div>
-              )}
-              {formData.uploadedLabFiles && formData.uploadedLabFiles.length > 0 && (
-                <div>
-                  <span className="text-white/60 font-semibold">Uploaded Lab Files:</span>
-                  <div className="mt-2 space-y-1">
-                    {formData.uploadedLabFiles.map((file: File, i: number) => (
-                      <div key={i} className="text-white text-xs">
-                        • {file.name}
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-sm text-white/50 mb-2">Allergies</p>
+                  <p className="text-white/80 whitespace-pre-wrap">{formData.allergies || 'None'}</p>
                 </div>
               )}
             </div>
           </div>
+
+          {/* Lab Files */}
+          {formData.lab_files && formData.lab_files.length > 0 && (
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                <CheckCircle className="w-6 h-6" style={{ color: brand.colors.primary }} />
+                Uploaded Lab Results
+              </h2>
+              <div className="space-y-2">
+                {formData.lab_files.map((url: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-400" />
+                    <span className="text-sm">Lab file {idx + 1} uploaded successfully</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Lifestyle */}
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
+              <Dumbbell className="w-6 h-6" style={{ color: brand.colors.primary }} />
+              Lifestyle
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm text-white/50 mb-1">Exercise Frequency</p>
+                <p className="text-lg">{formData.lifestyle?.exerciseFrequency || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Sleep Hours</p>
+                <p className="text-lg">{formData.lifestyle?.sleepHours || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Stress Level</p>
+                <p className="text-lg">{formData.lifestyle?.stressLevel || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Alcohol Consumption</p>
+                <p className="text-lg">{formData.lifestyle?.alcohol || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Smoking Status</p>
+                <p className="text-lg">{formData.lifestyle?.smoking || 'Not specified'}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/50 mb-1">Diet Type</p>
+                <p className="text-lg">{formData.lifestyle?.diet || 'Not specified'}</p>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <div className="flex justify-between items-center pt-8">
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center gap-2 text-white/60 hover:text-white transition"
-            disabled={submitting || uploadingFiles}
+            disabled={submitting}
+            className="flex items-center gap-2 text-white/60 hover:text-white transition disabled:opacity-50"
           >
             <ArrowLeft className="w-5 h-5" />
             Back
@@ -231,19 +268,14 @@ export default function ReviewPage() {
           
           <button
             onClick={handleSubmit}
-            disabled={submitting || uploadingFiles}
+            disabled={submitting}
             className="px-8 py-4 rounded-lg font-bold transition-all duration-300 flex items-center gap-2 disabled:opacity-50"
             style={{
               background: `linear-gradient(to right, ${brand.colors.primary}, ${brand.colors.primaryDark})`,
               color: brand.id === 'adonis' ? '#000000' : '#FFFFFF'
             }}
           >
-            {uploadingFiles ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Uploading Files...
-              </>
-            ) : submitting ? (
+            {submitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
                 Submitting...
