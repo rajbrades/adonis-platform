@@ -251,7 +251,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
                 </h2>
                 <div className="space-y-3">
                   {consultation.lab_files.map((fileUrl: string, index: number) => (
-                    
+                    <a
                       key={index}
                       href={fileUrl}
                       target="_blank"
