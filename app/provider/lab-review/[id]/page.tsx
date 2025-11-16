@@ -324,7 +324,7 @@ export default function LabReviewPage() {
             </div>
           </div>
 
-          {/* Alert Summary - Clickable Filters */}
+          {/* Alert Summary */}
           {flaggedBiomarkers.length > 0 && (
             <div className="border-t border-white/10 py-3 bg-gradient-to-r from-red-500/5 via-yellow-500/5 to-red-500/5">
               <div className="flex items-center justify-between">
@@ -383,7 +383,6 @@ export default function LabReviewPage() {
             {/* Left Sidebar */}
             <div className="col-span-2">
               <div className="space-y-3">
-                {/* Context */}
                 <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
                   <button onClick={() => toggleSection('context')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
                     <div className="flex items-center gap-2">
@@ -424,7 +423,6 @@ export default function LabReviewPage() {
                   )}
                 </div>
 
-                {/* Medications */}
                 <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
                   <button onClick={() => toggleSection('medications')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
                     <div className="flex items-center gap-2">
@@ -440,7 +438,6 @@ export default function LabReviewPage() {
                   )}
                 </div>
 
-                {/* Lifestyle */}
                 {consultation.lifestyle && (
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                     <h3 className="font-bold mb-2.5 flex items-center gap-2 text-sm">
@@ -470,8 +467,8 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Center - Labs (NARROWER) */}
-            <div className="col-span-6">
+            {/* Center - Labs (NARROWER, TIGHTER) */}
+            <div className="col-span-5">
               <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center justify-between mb-3">
@@ -481,7 +478,6 @@ export default function LabReviewPage() {
                     <span className="text-xs text-gray-400">{labResult.panel_name}</span>
                   </div>
                   
-                  {/* Category Tabs */}
                   <div className="flex gap-2 flex-wrap">
                     <button 
                       onClick={() => setActiveCategory('all')} 
@@ -512,7 +508,7 @@ export default function LabReviewPage() {
                   </div>
                 </div>
 
-                {/* Biomarkers - More compact, more spacing */}
+                {/* Biomarkers - TIGHT LAYOUT */}
                 <div className="divide-y divide-white/5 max-h-[calc(100vh-420px)] overflow-y-auto">
                   {sortedBiomarkers.map((biomarker: any, i: number) => {
                     const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
@@ -521,19 +517,19 @@ export default function LabReviewPage() {
                     
                     return (
                       <div key={i} className={`p-4 hover:bg-white/5 transition-colors ${isCritical ? 'bg-red-500/5 border-l-2 border-red-500/40' : ''}`}>
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1.5">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
                               <span className="font-semibold text-xs text-gray-300">{biomarker.biomarker}</span>
                               {isCritical && <AlertCircle className="w-3 h-3 text-red-500 animate-pulse" />}
                             </div>
-                            <div className="flex items-baseline gap-2">
+                            <div className="flex items-baseline gap-1.5">
                               <span className="text-3xl font-bold leading-none">{biomarker.value}</span>
                               <span className="text-sm text-gray-400">{biomarker.unit}</span>
                             </div>
                           </div>
                           
-                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
+                          <span className={`ml-auto px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 whitespace-nowrap ${
                             color === 'green' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                             color === 'yellow' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
                             color === 'red' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
@@ -565,8 +561,8 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Right - Treatment Plan (WIDER - THE HERO) */}
-            <div className="col-span-4">
+            {/* Right - Treatment Plan (WIDER) */}
+            <div className="col-span-5">
               <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
                   <h2 className="font-bold flex items-center gap-2 text-base">
