@@ -142,7 +142,6 @@ export default function MedicalHistoryPage() {
     sessionStorage.setItem('consultationData', JSON.stringify(fullData))
     router.push('/consultation/review')
   }
-  }
 
   const handleBack = () => {
     const intakeData = JSON.parse(sessionStorage.getItem('consultationData') || '{}')
