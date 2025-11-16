@@ -62,7 +62,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
     try {
       setSubmitting(true)
 
-      // Get full panel details for selected panels - match backend format
       const recommendedLabs = labPanels
         .filter(panel => selectedPanels.includes(panel.id))
         .map(panel => ({
@@ -79,7 +78,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
         body: JSON.stringify({
           recommendedLabs,
           providerNotes,
-          providerName: 'Dr. Provider' // TODO: Get from auth context
+          providerName: 'Dr. Provider'
         })
       })
 
@@ -97,7 +96,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
     }
   }
 
-  // Calculate age and BMI
   const calculateAge = (dob: string) => {
     const birthDate = new Date(dob)
     const today = new Date()
@@ -143,7 +141,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
   const age = consultation.date_of_birth ? calculateAge(consultation.date_of_birth) : null
   const bmi = consultation.height && consultation.weight ? calculateBMI(consultation.weight, consultation.height) : null
 
-  // Red flag conditions
   const redFlagConditions = ['Heart Disease', 'Liver Disease', 'Kidney Disease']
   const hasRedFlags = consultation.medical_conditions?.some((condition: string) => 
     redFlagConditions.includes(condition)
@@ -152,7 +149,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32 px-8 pb-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-6">
           <Link 
             href="/provider"
@@ -172,7 +168,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        {/* Clinical Summary Bar */}
         <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6 mb-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="flex items-center gap-3">
@@ -225,9 +220,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Patient Information (2/3 width) */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Contact Info */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Contact Information</h2>
               <div className="grid grid-cols-2 gap-4">
@@ -250,7 +243,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             </div>
 
-            {/* Uploaded Lab Results */}
             {consultation.lab_files && consultation.lab_files.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
                 <h2 className="text-xl font-bold mb-4 text-yellow-400 flex items-center gap-2">
@@ -282,7 +274,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             )}
 
-            {/* Optimization Goals */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Optimization Goals</h2>
               <div className="flex flex-wrap gap-2">
@@ -297,7 +288,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             </div>
 
-            {/* Current Symptoms */}
             {consultation.symptoms && consultation.symptoms.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
                 <h2 className="text-xl font-bold mb-4 text-yellow-400">Current Symptoms</h2>
@@ -314,11 +304,9 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             )}
 
-            {/* Medical History */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Medical History</h2>
               
-              {/* Medical Conditions */}
               {consultation.medical_conditions && consultation.medical_conditions.length > 0 && (
                 <div className="mb-4">
                   <div className="text-sm text-gray-400 mb-2">Medical Conditions</div>
@@ -343,7 +331,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
                 </div>
               )}
 
-              {/* Medications & Allergies */}
               <div className="space-y-3 pt-4 border-t border-white/10">
                 {consultation.current_medications && (
                   <div>
@@ -378,9 +365,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
             </div>
           </div>
 
-          {/* Right Column - Actions (1/3 width) */}
           <div className="space-y-6">
-            {/* Lab Panel Selection */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Recommend Lab Panels</h2>
               
@@ -412,7 +397,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
                 </div>
               )}
 
-              {/* Selection Summary */}
               {selectedPanels.length > 0 && (
                 <div className="mt-4 p-4 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
                   <div className="flex justify-between text-sm mb-2">
@@ -427,7 +411,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               )}
             </div>
 
-            {/* Provider Notes */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Provider Notes</h2>
               <textarea
@@ -438,7 +421,6 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               />
             </div>
 
-            {/* Approve Button */}
             <button
               onClick={handleApprove}
               disabled={submitting || selectedPanels.length === 0}
