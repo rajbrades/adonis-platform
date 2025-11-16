@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
