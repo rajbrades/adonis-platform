@@ -5,6 +5,27 @@ import { useRouter } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
 import { ArrowLeft, ArrowRight, Loader2 } from 'lucide-react'
 
+// Helper function to convert camelCase to snake_case
+const toSnakeCase = (str: string) => {
+  return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`)
+}
+
+const transformKeysToSnakeCase = (obj: any): any => {
+  if (Array.isArray(obj)) {
+    return obj.map(transformKeysToSnakeCase)
+  }
+  
+  if (obj !== null && typeof obj === 'object') {
+    return Object.keys(obj).reduce((result, key) => {
+      const snakeKey = toSnakeCase(key)
+      result[snakeKey] = transformKeysToSnakeCase(obj[key])
+      return result
+    }, {} as any)
+  }
+  
+  return obj
+}
+
 export default function ReviewPage() {
   const brand = getBrand()
   const router = useRouter()
@@ -49,15 +70,16 @@ export default function ReviewPage() {
         setUploadingFiles(false)
       }
 
-      // Prepare consultation data
-      const consultationData = {
-        ...formData,
+      // Remove temporary file objects
+      const cleanedData = { ...formData }
+      delete cleanedData.uploadedLabFiles
+
+      // Transform to snake_case and add lab_files
+      const consultationData = transformKeysToSnakeCase({
+        ...cleanedData,
         lab_files: labFileUrls,
         status: 'pending'
-      }
-
-      // Remove temporary file objects
-      delete consultationData.uploadedLabFiles
+      })
 
       // Submit to database
       const response = await fetch('/api/consultations', {
@@ -70,7 +92,9 @@ export default function ReviewPage() {
         sessionStorage.removeItem('consultationData')
         router.push('/consultation/success')
       } else {
-        alert('Failed to submit consultation')
+        const errorData = await response.json()
+        console.error('Submission error:', errorData)
+        alert('Failed to submit consultation: ' + (errorData.error || 'Unknown error'))
       }
     } catch (error) {
       console.error('Submission error:', error)
