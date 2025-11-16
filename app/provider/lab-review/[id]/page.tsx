@@ -472,7 +472,6 @@ export default function LabReviewPage() {
                       <div className="px-3 pb-3 space-y-2">
                         {consultation.lab_files.map((fileUrl, i) => (
                           <a
-                          <a
                             key={i}
                             href={fileUrl}
                             target="_blank"
