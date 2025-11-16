@@ -6,20 +6,22 @@ import Link from 'next/link'
 import { getBrand } from '@/lib/brand'
 import { 
   ArrowRight, ArrowLeft, Heart, Pill, AlertCircle, Activity,
-  Droplet, Utensils, Moon, Dumbbell, Wine, Cigarette
+  Droplet, Utensils, Moon, Dumbbell, Wine, Cigarette, Upload, X, FileText
 } from 'lucide-react'
 
 export default function MedicalHistoryPage() {
   const brand = getBrand()
   const router = useRouter()
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const [formData, setFormData] = useState({
     currentMedications: '',
+    currentSupplements: '',
     allergies: '',
     medicalConditions: [] as string[],
     surgeries: '',
     familyHistory: '',
     previousHormoneTherapy: '',
-    labsRecent: '',
+    labFiles: [] as string[],
     lifestyle: {
       exerciseFrequency: '',
       sleepHours: '',
@@ -82,11 +84,30 @@ export default function MedicalHistoryPage() {
     }))
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    const pdfFiles = files.filter(file => file.type === 'application/pdf')
+    
+    if (pdfFiles.length !== files.length) {
+      alert('Only PDF files are allowed')
+    }
+    
+    setUploadedFiles(prev => [...prev, ...pdfFiles])
+  }
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
     const intakeData = JSON.parse(sessionStorage.getItem('consultationData') || '{}')
-    const fullData = { ...intakeData, ...formData }
+    const fullData = { 
+      ...intakeData, 
+      ...formData,
+      uploadedLabFiles: uploadedFiles // Store files temporarily for submission
+    }
     
     sessionStorage.setItem('consultationData', JSON.stringify(fullData))
     router.push('/consultation/review')
@@ -221,7 +242,7 @@ export default function MedicalHistoryPage() {
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               <Pill className="w-6 h-6" style={{ color: brand.colors.primary }} />
-              Medications & Allergies
+              Medications, Supplements & Allergies
             </h2>
             
             <div className="space-y-6">
@@ -229,12 +250,27 @@ export default function MedicalHistoryPage() {
                 <label className="block text-sm font-semibold mb-2 text-white/80">
                   Current Medications
                 </label>
+                <p className="text-xs text-white/50 mb-2">Include dosage and frequency</p>
                 <textarea
                   value={formData.currentMedications}
                   onChange={(e) => setFormData({...formData, currentMedications: e.target.value})}
                   rows={3}
                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition"
-                  placeholder="List any medications you're currently taking..."
+                  placeholder="Example: Metformin 500mg - twice daily"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold mb-2 text-white/80">
+                  Current Supplements
+                </label>
+                <p className="text-xs text-white/50 mb-2">Include dosage and frequency</p>
+                <textarea
+                  value={formData.currentSupplements}
+                  onChange={(e) => setFormData({...formData, currentSupplements: e.target.value})}
+                  rows={3}
+                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition"
+                  placeholder="Example: Vitamin D3 5000 IU - daily, Fish Oil 1000mg - twice daily"
                 />
               </div>
 
@@ -299,17 +335,57 @@ export default function MedicalHistoryPage() {
                 />
               </div>
 
+              {/* FILE UPLOAD SECTION */}
               <div>
                 <label className="block text-sm font-semibold mb-2 text-white/80">
-                  Recent Lab Work
+                  Upload Recent Lab Results (Optional)
                 </label>
-                <textarea
-                  value={formData.labsRecent}
-                  onChange={(e) => setFormData({...formData, labsRecent: e.target.value})}
-                  rows={3}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:bg-white/10 transition"
-                  placeholder="Recent lab results or tests (if available)..."
-                />
+                <p className="text-xs text-white/50 mb-3">PDF files only - you can upload multiple files</p>
+                
+                <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center hover:border-yellow-400/50 transition-colors">
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    id="lab-upload"
+                  />
+                  <label htmlFor="lab-upload" className="cursor-pointer">
+                    <Upload className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-sm text-gray-400 mb-1">
+                      Click to upload lab results (PDF only)
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Multiple files supported
+                    </p>
+                  </label>
+                </div>
+
+                {uploadedFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {uploadedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <FileText className="w-5 h-5 text-red-400" />
+                          <div>
+                            <div className="text-sm font-medium">{file.name}</div>
+                            <div className="text-xs text-gray-400">
+                              {(file.size / 1024 / 1024).toFixed(2)} MB
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="p-1 hover:bg-white/10 rounded"
+                        >
+                          <X className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </div>
