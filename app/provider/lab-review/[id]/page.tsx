@@ -469,6 +469,7 @@ export default function LabReviewPage() {
                     {expandedSections.has('lab_files') && (
                       <div className="px-3 pb-3 space-y-2">
                         {consultation.lab_files.map((fileUrl, i) => (
+                          <a
                           
                             key={i}
                             href={fileUrl}
