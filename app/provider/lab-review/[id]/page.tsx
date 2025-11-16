@@ -33,6 +33,7 @@ interface Consultation {
   optimization_goals: string[]
   symptoms: string[]
   current_medications: string
+  current_supplements: string
   allergies: string
   medical_conditions: string[]
   lifestyle: any
