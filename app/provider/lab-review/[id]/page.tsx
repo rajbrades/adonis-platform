@@ -454,6 +454,22 @@ export default function LabReviewPage() {
                   )}
                 </div>
 
+                {/* Supplements */}
+                <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
+                  <button onClick={() => toggleSection('supplements')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-4 h-4 text-green-400" />
+                      <span className="font-bold text-sm">Supplements</span>
+                    </div>
+                    {expandedSections.has('supplements') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.has('supplements') && (
+                    <div className="px-3 pb-3 text-xs text-white whitespace-pre-wrap">
+                      {consultation.current_supplements || 'None'}
+                    </div>
+                  )}
+                </div>
+
                 {consultation.lifestyle && (
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3">
                     <h3 className="font-bold mb-2.5 flex items-center gap-2 text-sm">
