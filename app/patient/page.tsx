@@ -161,9 +161,7 @@ function PatientPortalContent() {
 
           {/* Profile */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 relative overflow-hidden">
-          {/* Profile */}
           <Link
-            href="/patient/profile"
             className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all duration-300 group"
           >
             <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
