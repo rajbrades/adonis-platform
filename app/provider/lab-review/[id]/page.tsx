@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
@@ -33,11 +33,9 @@ interface Consultation {
   optimization_goals: string[]
   symptoms: string[]
   current_medications: string
-  current_supplements: string
   allergies: string
   medical_conditions: string[]
   lifestyle: any
-  lab_files: string[]
 }
 
 export default function LabReviewPage() {
@@ -72,9 +70,7 @@ export default function LabReviewPage() {
         const consultRes = await fetch('/api/consultations')
         const allConsultations = await consultRes.json()
         const foundConsult = allConsultations.find((c: Consultation) => c.id === foundLab.user_id)
-        if (foundConsult) {
-          setConsultation(foundConsult)
-        }
+        setConsultation(foundConsult)
       }
       
       setLoading(false)
@@ -128,8 +124,7 @@ export default function LabReviewPage() {
             goals: consultation.optimization_goals || [],
             conditions: consultation.medical_conditions || [],
             lifestyle: consultation.lifestyle || {},
-            medications: consultation.current_medications,
-            supplements: consultation.current_supplements
+            medications: consultation.current_medications
           },
           labResults: labResult
         })
@@ -273,6 +268,7 @@ export default function LabReviewPage() {
       {/* Fixed Header */}
       <div className="fixed top-20 left-0 right-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
         <div className="mx-auto px-8" style={{ maxWidth: '1800px' }}>
+          {/* Top Bar */}
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-6">
               <Link href="/provider/labs" className="text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-colors">
@@ -328,6 +324,7 @@ export default function LabReviewPage() {
             </div>
           </div>
 
+          {/* Alert Summary */}
           {flaggedBiomarkers.length > 0 && (
             <div className="border-t border-white/10 py-3 bg-gradient-to-r from-red-500/5 via-yellow-500/5 to-red-500/5">
               <div className="flex items-center justify-between">
@@ -426,7 +423,6 @@ export default function LabReviewPage() {
                   )}
                 </div>
 
-                {/* Medications */}
                 <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
                   <button onClick={() => toggleSection('medications')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
                     <div className="flex items-center gap-2">
@@ -436,112 +432,11 @@ export default function LabReviewPage() {
                     {expandedSections.has('medications') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                   </button>
                   {expandedSections.has('medications') && (
-                    <div className="px-3 pb-3 text-xs">
-                      <div className="text-white whitespace-pre-wrap">{consultation.current_medications || 'None'}</div>
+                    <div className="px-3 pb-3 text-xs text-white whitespace-pre-wrap">
+                      {consultation.current_medications || 'None'}
                     </div>
                   )}
                 </div>
-
-                {/* Supplements */}
-                <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-                  <button onClick={() => toggleSection('supplements')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Pill className="w-4 h-4 text-green-400" />
-                      <span className="font-bold text-sm">Supplements</span>
-                    </div>
-                    {expandedSections.has('supplements') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                  </button>
-                  {expandedSections.has('supplements') && (
-                    <div className="px-3 pb-3 text-xs">
-                      <div className="text-white whitespace-pre-wrap">{consultation.current_supplements || 'None'}</div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Uploaded Lab Files */}
-                {consultation.lab_files && consultation.lab_files.length > 0 && (
-                  <div className="bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-                    <button onClick={() => toggleSection('lab_files')} className="w-full p-3 flex items-center justify-between hover:bg-white/5 transition-colors">
-                      <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-red-400" />
-                        <span className="font-bold text-sm">Lab Files</span>
-                      </div>
-                      {expandedSections.has('lab_files') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-                    </button>
-                    {expandedSections.has('lab_files') && (
-                      <div className="px-3 pb-3 space-y-2">
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                        {consultation.lab_files.map((fileUrl, i) => (
-                          <a
-                            key={i}
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            <span>Lab File {i + 1}</span>
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {consultation.lifestyle && (
                   <div className="bg-white/5 border border-white/10 rounded-lg p-3">
@@ -572,7 +467,7 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Center - Labs */}
+            {/* Center - Labs (NARROWER, TIGHTER) */}
             <div className="col-span-5">
               <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
@@ -613,6 +508,7 @@ export default function LabReviewPage() {
                   </div>
                 </div>
 
+                {/* Biomarkers - TIGHT LAYOUT */}
                 <div className="divide-y divide-white/5 max-h-[calc(100vh-420px)] overflow-y-auto">
                   {sortedBiomarkers.map((biomarker: any, i: number) => {
                     const { status, color, icon: Icon, severity } = getBiomarkerStatus(biomarker)
@@ -665,7 +561,7 @@ export default function LabReviewPage() {
               </div>
             </div>
 
-            {/* Right - Treatment Plan */}
+            {/* Right - Treatment Plan (WIDER) */}
             <div className="col-span-5">
               <div className="bg-white/5 border border-white/10 rounded-lg">
                 <div className="p-4 border-b border-white/10">
