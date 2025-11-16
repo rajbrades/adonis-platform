@@ -99,13 +99,11 @@ export default function MedicalHistoryPage() {
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     let labFileUrls: string[] = []
     
-    // Upload files immediately if any
     if (uploadedFiles.length > 0) {
       try {
         const uploadFormData = new FormData()
@@ -136,7 +134,7 @@ export default function MedicalHistoryPage() {
     const fullData = { 
       ...intakeData, 
       ...formData,
-      lab_files: labFileUrls // Store URLs instead of File objects
+      lab_files: labFileUrls
     }
     
     sessionStorage.setItem('consultationData', JSON.stringify(fullData))
@@ -365,7 +363,6 @@ export default function MedicalHistoryPage() {
                 />
               </div>
 
-              {/* FILE UPLOAD SECTION */}
               <div>
                 <label className="block text-sm font-semibold mb-2 text-white/80">
                   Upload Recent Lab Results (Optional)
@@ -562,5 +559,4 @@ export default function MedicalHistoryPage() {
       </div>
     </div>
   )
-}
 }
