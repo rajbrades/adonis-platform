@@ -471,7 +471,64 @@ export default function LabReviewPage() {
                     {expandedSections.has('lab_files') && (
                       <div className="px-3 pb-3 space-y-2">
                         {consultation.lab_files.map((fileUrl, i) => (
-                          
+                          <a
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
+                            key={i}
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                          >
+                        {consultation.lab_files.map((fileUrl, i) => (
+                          <a
                             key={i}
                             href={fileUrl}
                             target="_blank"
