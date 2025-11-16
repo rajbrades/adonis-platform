@@ -2,7 +2,7 @@
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CheckCircle, Loader2, User, Calendar, Ruler, Weight, AlertTriangle, Pill, Activity } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Loader2, User, Calendar, Ruler, Weight, AlertTriangle, Pill, Activity, FileText, ExternalLink } from 'lucide-react'
 
 interface LabPanel {
   id: string
@@ -250,6 +250,38 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             </div>
 
+            {/* Uploaded Lab Results */}
+            {consultation.lab_files && consultation.lab_files.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
+                <h2 className="text-xl font-bold mb-4 text-yellow-400 flex items-center gap-2">
+                  <FileText className="w-6 h-6" />
+                  Patient Uploaded Lab Results
+                </h2>
+                <div className="space-y-3">
+                  {consultation.lab_files.map((fileUrl: string, index: number) => (
+                    
+                      key={index}
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 hover:border-yellow-400/30 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center">
+                          <FileText className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div>
+                          <div className="font-medium">Lab Results {index + 1}</div>
+                          <div className="text-xs text-gray-400">PDF Document</div>
+                        </div>
+                      </div>
+                      <ExternalLink className="w-5 h-5 text-gray-400 group-hover:text-yellow-400 transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Optimization Goals */}
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Optimization Goals</h2>
@@ -320,6 +352,16 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
                       Current Medications
                     </div>
                     <div className="text-white pl-6">{consultation.current_medications}</div>
+                  </div>
+                )}
+
+                {consultation.current_supplements && (
+                  <div>
+                    <div className="text-sm text-gray-400 mb-1 flex items-center gap-2">
+                      <Pill className="w-4 h-4" />
+                      Current Supplements
+                    </div>
+                    <div className="text-white pl-6">{consultation.current_supplements}</div>
                   </div>
                 )}
                 
