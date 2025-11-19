@@ -14,99 +14,163 @@ export const ConsultationSubmittedEmail = ({
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADONIS Health - Consultation Received</title>
   </head>
-  <body style="margin: 0; padding: 0; background-color: #000000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #000000; padding: 40px 20px;">
+  <body style="margin: 0; padding: 0; background-color: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0a0a0a;">
       <tr>
-        <td align="center">
-          <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;">
+        <td align="center" style="padding: 40px 20px;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: #1a1a1a; border: 1px solid #2a2a2a;">
             
-            <!-- Logo -->
+            <!-- Header with Logo -->
             <tr>
-              <td align="center" style="padding-bottom: 40px;">
-                <h1 style="margin: 0; font-size: 36px; font-weight: 900; color: #FDB912; letter-spacing: 3px;">ADONIS</h1>
+              <td style="background-color: #000000; padding: 32px 40px; text-align: center; border-bottom: 2px solid #FDB912;">
+                <h1 style="margin: 0; font-size: 42px; font-weight: 900; color: #FDB912; letter-spacing: 4px; text-shadow: 0 2px 10px rgba(253, 185, 18, 0.3);">ADONIS</h1>
+                <p style="margin: 8px 0 0 0; font-size: 12px; color: #888888; letter-spacing: 2px; text-transform: uppercase;">Health Optimization</p>
               </td>
             </tr>
             
-            <!-- Main Card -->
+            <!-- Success Icon -->
             <tr>
-              <td style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 40px;">
-                
-                <!-- Checkmark -->
-                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <td align="center" style="padding: 40px 40px 24px 40px;">
+                <table cellpadding="0" cellspacing="0" border="0">
                   <tr>
-                    <td align="center" style="padding-bottom: 24px;">
-                      <div style="width: 64px; height: 64px; background-color: rgba(34, 197, 94, 0.15); border: 2px solid #22C55E; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                        <span style="font-size: 32px; color: #22C55E; line-height: 1;">✓</span>
-                      </div>
+                    <td style="width: 80px; height: 80px; background-color: #1e4620; border: 3px solid #22c55e; border-radius: 50%; text-align: center; vertical-align: middle;">
+                      <span style="font-size: 48px; line-height: 80px; color: #22c55e;">✓</span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            
+            <!-- Main Content -->
+            <tr>
+              <td style="padding: 0 40px 40px 40px;">
+                
+                <!-- Title -->
+                <h2 style="margin: 0 0 24px 0; font-size: 28px; font-weight: 700; color: #FDB912; text-align: center; line-height: 1.3;">
+                  Consultation Received
+                </h2>
+                
+                <!-- Greeting -->
+                <p style="margin: 0 0 16px 0; color: #e5e5e5; font-size: 17px; line-height: 1.6;">
+                  Hi <strong style="color: #FDB912;">${patientName}</strong>,
+                </p>
+                
+                <p style="margin: 0 0 24px 0; color: #cccccc; font-size: 16px; line-height: 1.6;">
+                  Thank you for choosing ADONIS Health. Our medical team has received your consultation and will begin reviewing your information.
+                </p>
+                
+                <!-- Goals Section -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0;">
+                  <tr>
+                    <td>
+                      <p style="margin: 0 0 16px 0; color: #FDB912; font-size: 18px; font-weight: 700;">
+                        Your Optimization Goals
+                      </p>
+                    </td>
+                  </tr>
+                  ${goals.map(goal => `
+                    <tr>
+                      <td style="padding-bottom: 12px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                          <tr>
+                            <td style="background-color: #2a2416; border-left: 4px solid #FDB912; padding: 14px 20px;">
+                              <p style="margin: 0; color: #FDB912; font-size: 15px; font-weight: 600;">
+                                • ${goal}
+                              </p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  `).join('')}
+                </table>
+                
+                <!-- Next Steps -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 32px 0; background-color: #1e1e1e; border: 1px solid #2a2a2a;">
+                  <tr>
+                    <td style="padding: 24px;">
+                      <p style="margin: 0 0 16px 0; color: #FDB912; font-size: 18px; font-weight: 700;">
+                        What Happens Next
+                      </p>
+                      
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding-bottom: 12px;">
+                            <table cellpadding="0" cellspacing="0" border="0">
+                              <tr>
+                                <td style="width: 32px; height: 32px; background-color: #FDB912; color: #000000; text-align: center; vertical-align: middle; font-weight: 700; font-size: 16px;">1</td>
+                                <td style="padding-left: 12px; color: #cccccc; font-size: 15px; line-height: 1.5;">
+                                  A licensed provider reviews your consultation <strong style="color: #FDB912;">(24-48 hours)</strong>
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding-bottom: 12px;">
+                            <table cellpadding="0" cellspacing="0" border="0">
+                              <tr>
+                                <td style="width: 32px; height: 32px; background-color: #FDB912; color: #000000; text-align: center; vertical-align: middle; font-weight: 700; font-size: 16px;">2</td>
+                                <td style="padding-left: 12px; color: #cccccc; font-size: 15px; line-height: 1.5;">
+                                  Receive personalized lab recommendations via email
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <table cellpadding="0" cellspacing="0" border="0">
+                              <tr>
+                                <td style="width: 32px; height: 32px; background-color: #FDB912; color: #000000; text-align: center; vertical-align: middle; font-weight: 700; font-size: 16px;">3</td>
+                                <td style="padding-left: 12px; color: #cccccc; font-size: 15px; line-height: 1.5;">
+                                  Order recommended labs with one click
+                                </td>
+                              </tr>
+                            </table>
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
                 
-                <!-- Title -->
-                <h2 style="margin: 0 0 24px 0; font-size: 24px; font-weight: 700; color: #FDB912; text-align: center;">
-                  Consultation Submitted Successfully
-                </h2>
-                
-                <!-- Body Text -->
-                <p style="margin: 0 0 16px 0; color: rgba(255, 255, 255, 0.85); font-size: 16px; line-height: 1.6;">
-                  Hi ${patientName},
-                </p>
-                
-                <p style="margin: 0 0 24px 0; color: rgba(255, 255, 255, 0.85); font-size: 16px; line-height: 1.6;">
-                  Thank you for submitting your health optimization consultation. Our medical team has received your information and will review it shortly.
-                </p>
-                
-                <!-- Goals Section -->
-                <div style="margin: 24px 0;">
-                  <p style="margin: 0 0 12px 0; color: rgba(255, 255, 255, 0.95); font-size: 16px; font-weight: 600;">
-                    Your Optimization Goals:
-                  </p>
-                  ${goals.map(goal => `
-                    <div style="background-color: rgba(253, 185, 18, 0.12); border: 1px solid rgba(253, 185, 18, 0.3); border-radius: 8px; padding: 12px 16px; margin-bottom: 8px;">
-                      <span style="color: #FDB912; font-weight: 600; font-size: 15px;">• ${goal}</span>
-                    </div>
-                  `).join('')}
-                </div>
-                
-                <!-- What's Next -->
-                <div style="background-color: rgba(253, 185, 18, 0.08); border-left: 3px solid #FDB912; border-radius: 4px; padding: 16px; margin: 24px 0;">
-                  <p style="margin: 0 0 12px 0; color: #FDB912; font-size: 16px; font-weight: 700;">
-                    What happens next?
-                  </p>
-                  <p style="margin: 0 0 8px 0; color: rgba(255, 255, 255, 0.85); font-size: 14px; line-height: 1.5;">
-                    <strong>1.</strong> A licensed provider will review your consultation within 24-48 hours
-                  </p>
-                  <p style="margin: 0 0 8px 0; color: rgba(255, 255, 255, 0.85); font-size: 14px; line-height: 1.5;">
-                    <strong>2.</strong> You'll receive an email with their recommendations and lab test suggestions
-                  </p>
-                  <p style="margin: 0; color: rgba(255, 255, 255, 0.85); font-size: 14px; line-height: 1.5;">
-                    <strong>3.</strong> You can then order any recommended labs directly from that email
-                  </p>
-                </div>
-                
-                <!-- Consultation Info -->
-                <div style="background-color: rgba(255, 255, 255, 0.03); border-radius: 8px; padding: 16px; margin-top: 24px;">
-                  <p style="margin: 0 0 4px 0; color: rgba(255, 255, 255, 0.6); font-size: 13px;">
-                    <strong style="color: rgba(255, 255, 255, 0.8);">Consultation ID:</strong> ${consultationId}
-                  </p>
-                  <p style="margin: 0; color: rgba(255, 255, 255, 0.6); font-size: 13px;">
-                    <strong style="color: rgba(255, 255, 255, 0.8);">Submitted:</strong> ${submittedDate}
-                  </p>
-                </div>
+                <!-- Reference Info -->
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0; background-color: #0f0f0f; border: 1px solid #2a2a2a;">
+                  <tr>
+                    <td style="padding: 20px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                        <tr>
+                          <td style="padding-bottom: 8px;">
+                            <span style="color: #888888; font-size: 13px;">Consultation ID:</span>
+                            <span style="color: #FDB912; font-size: 13px; font-weight: 600; margin-left: 8px;">${consultationId}</span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <span style="color: #888888; font-size: 13px;">Submitted:</span>
+                            <span style="color: #cccccc; font-size: 13px; margin-left: 8px;">${submittedDate}</span>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
                 
               </td>
             </tr>
             
             <!-- Footer -->
             <tr>
-              <td align="center" style="padding-top: 40px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-                <p style="margin: 0 0 8px 0; color: rgba(255, 255, 255, 0.5); font-size: 14px;">
-                  Questions? Reply to this email or contact us at 
-                  <a href="mailto:support@adonis.com" style="color: #FDB912; text-decoration: none;">support@adonis.com</a>
+              <td style="background-color: #000000; padding: 32px 40px; text-align: center; border-top: 1px solid #2a2a2a;">
+                <p style="margin: 0 0 12px 0; color: #888888; font-size: 14px;">
+                  Questions? Contact us at 
+                  <a href="mailto:support@getadonishealth.com" style="color: #FDB912; text-decoration: none;">support@getadonishealth.com</a>
                 </p>
-                <p style="margin: 0; color: rgba(255, 255, 255, 0.4); font-size: 13px;">
-                  © 2025 Adonis Health. All rights reserved.
+                <p style="margin: 0; color: #555555; font-size: 12px;">
+                  © 2025 ADONIS Health. All rights reserved.
                 </p>
               </td>
             </tr>
