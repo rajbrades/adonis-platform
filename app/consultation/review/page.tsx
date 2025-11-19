@@ -5,19 +5,6 @@ import { useRouter } from 'next/navigation'
 import { getBrand } from '@/lib/brand'
 import { ArrowRight, ArrowLeft, Loader2, CheckCircle, User, Mail, Phone, Calendar, MapPin, Heart, Pill, Activity, Dumbbell } from 'lucide-react'
 
-function transformKeysToSnakeCase(obj: any): any {
-  if (Array.isArray(obj)) {
-    return obj.map(transformKeysToSnakeCase)
-  } else if (obj !== null && typeof obj === 'object') {
-    return Object.keys(obj).reduce((acc, key) => {
-      const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase()
-      acc[snakeKey] = transformKeysToSnakeCase(obj[key])
-      return acc
-    }, {} as any)
-  }
-  return obj
-}
-
 export default function ReviewPage() {
   const brand = getBrand()
   const router = useRouter()
@@ -37,17 +24,11 @@ export default function ReviewPage() {
     setSubmitting(true)
     
     try {
-      // Transform to snake_case - lab_files already contains URLs from medical-history upload
-      const consultationData = transformKeysToSnakeCase({
-        ...formData,
-        status: 'pending'
-      })
-
-      // Submit to database
+      // Send data as-is in camelCase - the submit endpoint expects camelCase
       const response = await fetch('/api/consultations/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(consultationData)
+        body: JSON.stringify(formData)
       })
 
       if (response.ok) {
@@ -105,7 +86,6 @@ export default function ReviewPage() {
 
         <div className="space-y-6">
           
-          {/* Personal Information */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               <User className="w-6 h-6" style={{ color: brand.colors.primary }} />
@@ -139,7 +119,6 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          {/* Medical Conditions */}
           {formData.medicalConditions && formData.medicalConditions.length > 0 && (
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
@@ -156,7 +135,6 @@ export default function ReviewPage() {
             </div>
           )}
 
-          {/* Symptoms */}
           {formData.symptoms && formData.symptoms.length > 0 && (
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
@@ -173,7 +151,6 @@ export default function ReviewPage() {
             </div>
           )}
 
-          {/* Medications & Supplements */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               <Pill className="w-6 h-6" style={{ color: brand.colors.primary }} />
@@ -201,7 +178,6 @@ export default function ReviewPage() {
             </div>
           </div>
 
-          {/* Lab Files */}
           {formData.lab_files && formData.lab_files.length > 0 && (
             <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
               <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
@@ -219,7 +195,6 @@ export default function ReviewPage() {
             </div>
           )}
 
-          {/* Lifestyle */}
           <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
               <Dumbbell className="w-6 h-6" style={{ color: brand.colors.primary }} />
