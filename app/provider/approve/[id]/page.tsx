@@ -2,7 +2,7 @@
 import { use, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, CheckCircle, Loader2, User, Calendar, Ruler, Weight, AlertTriangle, Pill, Activity, FileText, ExternalLink } from 'lucide-react'
+import { ArrowLeft, CheckCircle, Loader2, User, Calendar, Ruler, Weight, AlertTriangle, Pill, Activity, FileText, ExternalLink, Microscope, CalendarCheck } from 'lucide-react'
 
 interface LabPanel {
   id: string
@@ -22,6 +22,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
   const [providerNotes, setProviderNotes] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [parsingLabs, setParsingLabs] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -53,7 +54,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
     )
   }
 
-  const handleApprove = async () => {
+  const handleRecommendLabs = async () => {
     if (selectedPanels.length === 0) {
       alert('Please select at least one lab panel to recommend')
       return
@@ -93,6 +94,42 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
       alert('Failed to approve consultation')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const handleScheduleConsultation = async () => {
+    // TODO: Implement Cal.com scheduling integration
+    alert('Scheduling feature coming soon! For now, manually contact patient.')
+  }
+
+  const handleReviewUploadedLabs = async () => {
+    if (!consultation.lab_files || consultation.lab_files.length === 0) {
+      alert('No lab files uploaded by patient')
+      return
+    }
+
+    try {
+      setParsingLabs(true)
+
+      const response = await fetch(`/api/provider/parse-uploaded-labs/${resolvedParams.id}`, {
+        method: 'POST'
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'Failed to parse lab files'}`)
+        return
+      }
+
+      // Redirect to lab review page
+      router.push(`/provider/lab-review/${data.labResultId}`)
+
+    } catch (error) {
+      console.error('Error parsing labs:', error)
+      alert('Failed to parse lab files')
+    } finally {
+      setParsingLabs(false)
     }
   }
 
@@ -146,6 +183,8 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
     redFlagConditions.includes(condition)
   )
 
+  const hasUploadedLabs = consultation.lab_files && consultation.lab_files.length > 0
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white pt-32 px-8 pb-8">
       <div className="max-w-7xl mx-auto">
@@ -160,7 +199,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">{consultation.first_name} {consultation.last_name}</h1>
-              <p className="text-gray-400 mt-1">Review consultation and recommend lab panels</p>
+              <p className="text-gray-400 mt-1">Review consultation and determine next steps</p>
             </div>
             <div className="px-4 py-2 bg-yellow-400/10 border border-yellow-400/20 rounded-lg">
               <span className="text-yellow-400 font-semibold uppercase text-sm">Pending Review</span>
@@ -243,7 +282,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
               </div>
             </div>
 
-            {consultation.lab_files && consultation.lab_files.length > 0 && (
+            {hasUploadedLabs && (
               <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
                 <h2 className="text-xl font-bold mb-4 text-yellow-400 flex items-center gap-2">
                   <FileText className="w-6 h-6" />
@@ -251,7 +290,7 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
                 </h2>
                 <div className="space-y-3">
                   {consultation.lab_files.map((fileUrl: string, index: number) => (
-                    <a
+                    
                       key={index}
                       href={fileUrl}
                       target="_blank"
@@ -366,6 +405,40 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
           </div>
 
           <div className="space-y-6">
+            
+            {hasUploadedLabs && (
+              <div className="bg-gradient-to-br from-yellow-400/10 to-yellow-600/10 border-2 border-yellow-400/30 rounded-xl p-6">
+                <h2 className="text-xl font-bold mb-2 text-yellow-400">Patient Has Labs</h2>
+                <p className="text-sm text-white/70 mb-4">Choose your next step based on clinical judgment</p>
+                
+                <button
+                  onClick={handleReviewUploadedLabs}
+                  disabled={parsingLabs}
+                  className="w-full bg-yellow-400 text-black font-bold py-4 rounded-lg hover:bg-yellow-300 transition-all disabled:opacity-50 flex items-center justify-center gap-2 mb-3"
+                >
+                  {parsingLabs ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Parsing Labs...
+                    </>
+                  ) : (
+                    <>
+                      <Microscope className="w-5 h-5" />
+                      Review Labs & Create Treatment
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={handleScheduleConsultation}
+                  className="w-full bg-white/10 text-white font-bold py-4 rounded-lg hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                >
+                  <CalendarCheck className="w-5 h-5" />
+                  Schedule Consultation Required
+                </button>
+              </div>
+            )}
+
             <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl p-6">
               <h2 className="text-xl font-bold mb-4 text-yellow-400">Recommend Lab Panels</h2>
               
@@ -422,17 +495,17 @@ export default function ApprovalPage({ params }: { params: Promise<{ id: string 
             </div>
 
             <button
-              onClick={handleApprove}
+              onClick={handleRecommendLabs}
               disabled={submitting || selectedPanels.length === 0}
               className="w-full bg-yellow-400 text-black font-bold py-4 rounded-lg hover:bg-yellow-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {submitting ? (
                 <>
                   <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  Approving...
+                  Sending...
                 </>
               ) : (
-                'Approve & Send Recommendations'
+                'Send Lab Recommendations'
               )}
             </button>
           </div>
