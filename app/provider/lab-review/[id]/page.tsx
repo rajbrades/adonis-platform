@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react'
+import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, Video, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react'
 import { getBrand } from '@/lib/brand'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
@@ -315,6 +315,16 @@ export default function LabReviewPage() {
                 )}
               </button>
               
+              
+              <a
+                href={process.env.NEXT_PUBLIC_ZOOM_MEETING_URL || "https://10xhealthsystem.zoom.us/j/5359639689"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+              >
+                <Video className="w-4 h-4" />
+                Start Video Call
+              </a>
               <button 
                 onClick={handleSaveNotes} 
                 disabled={submitting} 
