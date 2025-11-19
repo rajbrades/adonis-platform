@@ -13,7 +13,8 @@ export async function POST(request: Request) {
     console.log('📋 Data received:', {
       name: `${data.firstName} ${data.lastName}`,
       email: data.email,
-      goals: data.optimizationGoals?.length || 0
+      goals: data.optimizationGoals?.length || 0,
+      labFiles: data.lab_files?.length || 0
     })
 
     if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -44,11 +45,13 @@ export async function POST(request: Request) {
           medical_conditions: data.medicalConditions || [],
           symptoms: data.symptoms || [],
           current_medications: data.currentMedications || null,
+          current_supplements: data.currentSupplements || null,
           allergies: data.allergies || null,
           surgeries: data.surgeries || null,
           family_history: data.familyHistory || null,
           previous_hormone_therapy: data.previousHormoneTherapy || null,
           labs_recent: data.labsRecent || null,
+          lab_files: data.lab_files || [],
           lifestyle: data.lifestyle || {},
           status: 'pending'
         }
