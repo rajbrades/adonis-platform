@@ -44,7 +44,7 @@ export default function ReviewPage() {
       })
 
       // Submit to database
-      const response = await fetch('/api/consultations', {
+      const response = await fetch('/api/consultations/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(consultationData)
