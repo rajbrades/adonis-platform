@@ -17,14 +17,18 @@ export async function POST(
 
     console.log('📋 Parsing uploaded labs for consultation:', consultationId)
 
-    // Fetch consultation with lab_files
     const { data: consultation, error: consultationError } = await supabase
       .from('consultations')
       .select('*')
       .eq('id', consultationId)
       .single()
 
-    if (consultationError || !consultation) {
+    if (consultationError) {
+      console.error('Consultation fetch error:', consultationError)
+      return NextResponse.json({ error: `Database error: ${consultationError.message}` }, { status: 500 })
+    }
+
+    if (!consultation) {
       return NextResponse.json({ error: 'Consultation not found' }, { status: 404 })
     }
 
@@ -34,23 +38,21 @@ export async function POST(
 
     console.log(`📎 Found ${consultation.lab_files.length} uploaded file(s)`)
 
-    // Parse each PDF
     const allBiomarkers: any[] = []
     let latestTestDate = ''
 
-    for (const fileUrl of consultation.lab_files) {
+    for (let i = 0; i < consultation.lab_files.length; i++) {
+      const fileUrl = consultation.lab_files[i]
       try {
-        // Fetch PDF from URL
         const response = await fetch(fileUrl)
         if (!response.ok) {
-          console.error(`Failed to fetch PDF: ${fileUrl}`)
+          console.error(`Failed to fetch PDF (${response.status}): ${fileUrl}`)
           continue
         }
 
         const arrayBuffer = await response.arrayBuffer()
         const buffer = Buffer.from(arrayBuffer)
-
-        // Parse the PDF
+        
         const parsed = await parseQuestPDF(buffer)
         
         allBiomarkers.push(...parsed.biomarkers)
@@ -59,36 +61,40 @@ export async function POST(
           latestTestDate = parsed.testDate
         }
 
-        console.log(`✅ Parsed ${parsed.biomarkers.length} biomarkers from file`)
-      } catch (error) {
-        console.error('Error parsing PDF:', error)
-        // Continue with other files
+        console.log(`✅ Parsed ${parsed.biomarkers.length} biomarkers from file ${i + 1}`)
+      } catch (error: any) {
+        console.error(`Error parsing PDF ${i + 1}:`, error.message)
       }
     }
 
     if (allBiomarkers.length === 0) {
-      return NextResponse.json({ error: 'No biomarkers could be extracted from PDFs' }, { status: 400 })
+      return NextResponse.json({ 
+        error: 'No biomarkers could be extracted from PDFs'
+      }, { status: 400 })
     }
 
-    // Create lab_results record
+    console.log(`Creating lab_results record with ${allBiomarkers.length} biomarkers`)
+
     const { data: labResult, error: labError } = await supabase
       .from('lab_results')
       .insert({
-        patient_id: consultationId,
+        user_id: consultationId,
         patient_name: `${consultation.first_name} ${consultation.last_name}`,
         patient_dob: consultation.date_of_birth,
+        panel_name: 'Quest Diagnostics - Patient Uploaded',
         test_date: latestTestDate || new Date().toISOString().split('T')[0],
-        lab_name: 'Quest Diagnostics',
         pdf_url: consultation.lab_files[0],
         biomarkers: allBiomarkers,
-        status: 'pending_review'
+        uploaded_by: 'Provider Portal'
       })
       .select()
       .single()
 
     if (labError) {
       console.error('Error creating lab results:', labError)
-      return NextResponse.json({ error: 'Failed to save lab results' }, { status: 500 })
+      return NextResponse.json({ 
+        error: `Failed to save lab results: ${labError.message}`
+      }, { status: 500 })
     }
 
     console.log(`✅ Created lab_results record: ${labResult.id}`)
@@ -100,9 +106,9 @@ export async function POST(
     })
 
   } catch (error: any) {
-    console.error('❌ Error parsing uploaded labs:', error)
+    console.error('❌ Unexpected error:', error)
     return NextResponse.json({ 
-      error: error.message 
+      error: error.message
     }, { status: 500 })
   }
 }
