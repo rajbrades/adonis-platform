@@ -53,51 +53,93 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
+  // Track if we're in sections to skip
+  let inPerformingSite = false
+  let skipUntilNextSection = false
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
+    // Detect and skip PERFORMING SITE section
+    if (line.includes('PERFORMING SITE')) {
+      inPerformingSite = true
+      continue
+    }
+    
+    // Exit PERFORMING SITE when we hit end markers
+    if (inPerformingSite && (line.includes('PAGE') || line.includes('CLIENT SERVICES'))) {
+      inPerformingSite = false
+      continue
+    }
+    
+    // Skip everything in PERFORMING SITE section
+    if (inPerformingSite) continue
+    
+    // Skip lines that are clearly not biomarkers
     if (!line || 
+        line.length < 5 ||
         line.includes('Test Name') || 
+        line.includes('In Range') ||
+        line.includes('Out Of Range') ||
+        line.includes('Reference Range') ||
         line.includes('PAGE') ||
         line.includes('CLIENT SERVICES') ||
         line.includes('Quest, Quest') ||
         line.includes('PANEL') ||
-        line.length < 5) continue
+        line.includes('Laboratory Director') ||
+        line.includes('QUEST DIAGNOSTICS') ||
+        line.includes('CHANTILLY') ||
+        line.includes('ORTEGA') ||
+        line.includes('FOWLER') ||
+        line.includes('NEWBROOK') ||
+        line.includes('CLIA:') ||
+        line.includes('DRIVE') ||
+        line.includes('AVE') ||
+        line.includes('HWY') ||
+        line.match(/^\d{5}\s+/) || // Starts with 5-digit zip
+        line.match(/^[A-Z]{2}\s+QUEST/) // State code + QUEST
+    ) continue
     
-    const patterns = [
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
-    ]
+    // Pattern requires spaces around value to prevent digit concatenation
+    const pattern = /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d+\.?\d*)\s+([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*[-–]\s*\d+\.?\d*)?|> OR = \d+\.?\d*|< OR = \d+\.?\d*)\s+([a-zA-Z\/\%\(\)]+.*?)\s*(TP|EZ|AMD)?$/
     
-    let matched = false
+    const match = line.match(pattern)
     
-    for (const pattern of patterns) {
-      const match = line.match(pattern)
+    if (match) {
+      const name = match[1].trim()
+      const value = match[2]
+      const flag = match[3] || ''
+      const range = match[4] || ''
+      const unit = match[5] || ''
       
-      if (match) {
-        const name = match[1].trim()
-        const value = match[2]
-        const flag = match[3] || ''
-        const range = match[4] || ''
-        const unit = match[5] || ''
-        
-        if (name.length < 3 || 
-            name.includes('Reference') ||
-            name.includes('For ages') ||
-            name.includes('Desirable') ||
-            name.includes('Risk Category')) continue
-        
-        biomarkers.push({
-          biomarker: name.replace(/\s+/g, ' ').trim(),
-          value: value,
-          unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
-          referenceRange: range.replace('> OR =', '>=').replace('< OR =', '<=').trim(),
-          status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
-        })
-        
-        matched = true
-        break
-      }
+      // Additional filters for non-biomarker lines
+      if (name.length < 3 || 
+          name.includes('Reference') ||
+          name.includes('For ages') ||
+          name.includes('Desirable') ||
+          name.includes('Risk Category') ||
+          name.includes('Optimal') ||
+          name.includes('Moderate') ||
+          name.includes('High Risk') ||
+          name.includes('DIAGNOSTICS') ||
+          name.includes('NICHOLS') ||
+          name.includes('SJC') ||
+          name.includes('TAMPA') ||
+          /^\d+$/.test(name) || // Pure numbers
+          /^[A-Z]{2,5}$/.test(name) // State codes
+      ) continue
+      
+      // Skip unreasonably large values (likely addresses/zip codes)
+      const numValue = parseFloat(value)
+      if (numValue > 50000) continue
+      
+      biomarkers.push({
+        biomarker: name.replace(/\s+/g, ' ').trim(),
+        value: value,
+        unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
+        referenceRange: range.replace('> OR =', '>=').replace('< OR =', '<=').trim(),
+        status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
+      })
     }
   }
   
