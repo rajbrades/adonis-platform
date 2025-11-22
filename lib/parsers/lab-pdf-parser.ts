@@ -80,11 +80,19 @@ function extractAllBiomarkers(text: string): any[] {
         line.includes('CLIA:') ||
         line.length < 5) continue
     
-    // Same patterns that got us 41 biomarkers
+    // Multiple patterns - added support for commas in names and very short names
     const patterns = [
+      // Pattern 1: Most specific with all components (allows commas in name)
       /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      
+      // Pattern 2: Without flag (allows commas)
       /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4}\.?\d*)\b/
+      
+      // Pattern 3: Very lenient - NAME followed by 1-4 digit VALUE
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4}\.?\d*)\b/,
+      
+      // Pattern 4: SPECIAL - Very short names (like AST) - at least 2 chars
+      /^([A-Z]{2,})\s+(\d{1,4}\.?\d*)\b/
     ]
     
     let matched = false
@@ -99,8 +107,8 @@ function extractAllBiomarkers(text: string): any[] {
         const range = match[4] || ''
         const unit = match[5] || ''
         
-        // Skip invalid names
-        if (name.length < 3 || 
+        // Relaxed validation - allow shorter names (was < 3, now < 2)
+        if (name.length < 2 || 
             name.includes('Reference') ||
             name.includes('For ages') ||
             name.includes('Desirable') ||
@@ -111,11 +119,6 @@ function extractAllBiomarkers(text: string): any[] {
         // Skip unreasonably large values
         const numValue = parseFloat(value)
         if (numValue > 10000) continue
-        
-        // Debug log only for our 4 targets
-        if (name.includes('FERRITIN') || name.includes('ALKALINE') || name === 'AST' || name.includes('PREGNENOLONE')) {
-          console.log(`Found target: ${name} = ${value}`)
-        }
         
         biomarkers.push({
           biomarker: name.replace(/\s+/g, ' ').trim(),
@@ -159,7 +162,9 @@ function extractUnitFromName(name: string): string {
     'CRP': 'mg/L',
     'PREGNENOLONE': 'ng/dL',
     'ALKALINE': 'U/L',
-    'AST': 'U/L'
+    'PHOSPHATASE': 'U/L',
+    'AST': 'U/L',
+    'ALT': 'U/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
