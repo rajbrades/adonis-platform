@@ -55,8 +55,18 @@ function extractAllBiomarkers(text: string): any[] {
   
   let inPerformingSite = false
   
+  // Debug: Look for our 4 critical biomarkers
+  const targetBiomarkers = ['FERRITIN', 'ALKALINE', 'AST', 'PREGNENOLONE']
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
+    
+    // Debug logging for target biomarkers
+    for (const target of targetBiomarkers) {
+      if (line.includes(target)) {
+        console.log(`DEBUG: Found ${target} in line: "${line}"`)
+      }
+    }
     
     // Skip PERFORMING SITE section
     if (line.includes('PERFORMING SITE')) {
@@ -80,16 +90,16 @@ function extractAllBiomarkers(text: string): any[] {
         line.includes('CLIA:') ||
         line.length < 5) continue
     
-    // Three patterns - from strictest to most lenient
+    // Multiple patterns
     const patterns = [
-      // Pattern 1: NAME VALUE H/L RANGE UNIT LAB (most specific)
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      // Pattern 1: Most specific with all components
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d+\.?\d*)\s*([HL])?\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s+([a-zA-Z\/\%\(\)]+.*?)\s*(TP|EZ|AMD)?$/,
       
-      // Pattern 2: NAME VALUE RANGE UNIT (no flag)
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+      // Pattern 2: Without flag
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d+\.?\d*)\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s+([a-zA-Z\/\%]+.*?)\s*(TP|EZ|AMD)?$/,
       
-      // Pattern 3: Most lenient - just NAME VALUE with anything after
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4}\.?\d*)\b/
+      // Pattern 3: Very lenient - NAME followed by 1-4 digit VALUE
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4})(?:\s|$)/
     ]
     
     let matched = false
@@ -113,7 +123,7 @@ function extractAllBiomarkers(text: string): any[] {
             name.includes('Optimal') ||
             name.includes('DIAGNOSTICS')) continue
         
-        // Skip unreasonably large values (addresses)
+        // Skip unreasonably large values
         const numValue = parseFloat(value)
         if (numValue > 10000) continue
         
