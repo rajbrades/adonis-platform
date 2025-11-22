@@ -1,0 +1,95 @@
+export const VALID_BIOMARKERS = new Set([
+  'TESTOSTERONE, TOTAL',
+  'TESTOSTERONE, FREE',
+  'TESTOSTERONE,BIOAVAILABLE',
+  'ESTRADIOL',
+  'PROGESTERONE',
+  'DHEA SULFATE',
+  'PREGNENOLONE',
+  'CORTISOL',
+  'IGF 1',
+  'IGF 1, LC/MS',
+  'TSH',
+  'T4, FREE',
+  'T3, FREE',
+  'CHOLESTEROL, TOTAL',
+  'HDL CHOLESTEROL',
+  'LDL CHOLESTEROL',
+  'LDL-CHOLESTEROL',
+  'TRIGLYCERIDES',
+  'NON HDL CHOLESTEROL',
+  'CHOL/HDLC RATIO',
+  'LDL/HDL RATIO',
+  'APOLIPOPROTEIN B',
+  'LIPOPROTEIN (a)',
+  'GLUCOSE',
+  'HEMOGLOBIN A1c',
+  'INSULIN',
+  'CREATININE',
+  'UREA NITROGEN (BUN)',
+  'BUN/CREATININE RATIO',
+  'EGFR',
+  'ALT',
+  'AST',
+  'ALKALINE PHOSPHATASE',
+  'BILIRUBIN, TOTAL',
+  'GGT',
+  'PROTEIN, TOTAL',
+  'ALBUMIN',
+  'GLOBULIN',
+  'ALBUMIN/GLOBULIN RATIO',
+  'WHITE BLOOD CELL COUNT',
+  'RED BLOOD CELL COUNT',
+  'HEMOGLOBIN',
+  'HEMATOCRIT',
+  'MCV',
+  'MCH',
+  'MCHC',
+  'RDW',
+  'PLATELET COUNT',
+  'MPV',
+  'ABSOLUTE NEUTROPHILS',
+  'ABSOLUTE LYMPHOCYTES',
+  'ABSOLUTE MONOCYTES',
+  'ABSOLUTE EOSINOPHILS',
+  'ABSOLUTE BASOPHILS',
+  'NEUTROPHILS',
+  'LYMPHOCYTES',
+  'MONOCYTES',
+  'EOSINOPHILS',
+  'BASOPHILS',
+  'SODIUM',
+  'POTASSIUM',
+  'CHLORIDE',
+  'CARBON DIOXIDE',
+  'CALCIUM',
+  'IRON, TOTAL',
+  'IRON BINDING CAPACITY',
+  '% SATURATION',
+  'FERRITIN',
+  'VITAMIN D,25-OH,TOTAL,IA',
+  'VITAMIN B12',
+  'FOLATE',
+  'HS CRP',
+  'HOMOCYSTEINE',
+  'PSA, TOTAL',
+  'URIC ACID',
+  'SEX HORMONE BINDING GLOBULIN',
+  'Z SCORE (MALE)',
+])
+
+export function isValidBiomarker(name: string): boolean {
+  const normalized = name.toUpperCase().trim()
+  
+  if (VALID_BIOMARKERS.has(normalized)) {
+    return true
+  }
+  
+  for (const valid of VALID_BIOMARKERS) {
+    if (normalized.includes(valid) || valid.includes(normalized)) {
+      return true
+    }
+  }
+  
+  return false
+}
