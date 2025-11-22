@@ -84,7 +84,7 @@ function extractAllBiomarkers(text: string): any[] {
       
       if (match) {
         const name = match[1].trim()
-        const value = match[2]
+        let value = match[2]
         const flag = match[3] || ''
         const range = match[4] || ''
         const unit = match[5] || ''
@@ -94,6 +94,9 @@ function extractAllBiomarkers(text: string): any[] {
             name.includes('For ages') ||
             name.includes('Desirable') ||
             name.includes('Risk Category')) continue
+        
+        // POST-PROCESSING: Fix concatenated values
+        value = fixConcatenation(value, range, name)
         
         biomarkers.push({
           biomarker: name.replace(/\s+/g, ' ').trim(),
@@ -110,6 +113,40 @@ function extractAllBiomarkers(text: string): any[] {
   }
   
   return biomarkers.filter(b => b.biomarker && b.value)
+}
+
+function fixConcatenation(value: string, range: string, biomarkerName: string): string {
+  // Only process integer values (no decimals)
+  if (!value || value.includes('.')) return value
+  
+  const numValue = parseInt(value)
+  if (isNaN(numValue)) return value
+  
+  // Extract first digit of range
+  const rangeMatch = range.match(/(\d+)/)
+  if (!rangeMatch) return value
+  
+  const rangeFirstDigit = rangeMatch[1][0]
+  const valueLastDigit = value[value.length - 1]
+  
+  // If value's last digit matches range's first digit, likely concatenated
+  if (valueLastDigit === rangeFirstDigit) {
+    // Additional validation: is the truncated value more reasonable?
+    const truncated = value.slice(0, -1)
+    const truncatedNum = parseInt(truncated)
+    
+    // Only fix if:
+    // 1. Original value is 3-4 digits
+    // 2. Truncated value is 2-3 digits
+    // 3. Makes biological sense (< 1000 for most biomarkers)
+    if (value.length >= 3 && value.length <= 4 && 
+        truncated.length >= 2 && truncatedNum < 1000) {
+      console.log(`Fixed concatenation: ${biomarkerName} ${value} → ${truncated}`)
+      return truncated
+    }
+  }
+  
+  return value
 }
 
 function extractUnitFromName(name: string): string {
@@ -134,7 +171,12 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L'
+    'CRP': 'mg/L',
+    'PREGNENOLONE': 'ng/dL',
+    'ALKALINE': 'U/L',
+    'PHOSPHATASE': 'U/L',
+    'AST': 'U/L',
+    'ALT': 'U/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
