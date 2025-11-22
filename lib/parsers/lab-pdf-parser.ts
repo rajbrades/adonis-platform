@@ -51,88 +51,111 @@ function extractTestDate(text: string): string {
 
 function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
-  
-  // Quest format: NAME VALUE [H|L] RANGE UNIT [LAB]
-  // Must have at least NAME, VALUE, and RANGE
-  
-  // This regex requires:
-  // 1. Biomarker name (uppercase, can have spaces/punctuation)
-  // 2. Single space before value
-  // 3. Value (number with optional decimal)
-  // 4. Single space after value
-  // 5. Optional H or L flag
-  // 6. Reference range
-  // 7. Unit
-  const pattern = /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s(\d{1,4}(?:\.\d{1,2})?)\s*([HL])?\s+([<>]?\s*\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?|>\s*OR\s*=\s*\d+|<\s*OR\s*=\s*\d+)\s+([a-zA-Z\/\%\(\)]+.*?)\s*(TP|EZ|AMD)?$/
-  
   const lines = text.split('\n')
-  let skipSection = false
+  
+  let inPerformingSite = false
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Skip sections
+    // Skip PERFORMING SITE section
     if (line.includes('PERFORMING SITE')) {
-      skipSection = true
+      inPerformingSite = true
       continue
     }
-    if (skipSection && line.includes('PAGE')) {
-      skipSection = false
+    if (inPerformingSite) {
+      if (line.includes('PAGE') || line.includes('CLIENT SERVICES')) {
+        inPerformingSite = false
+      }
       continue
     }
-    if (skipSection) continue
     
-    // Skip non-data lines
-    if (!line ||
-        line.length < 15 ||
-        line.startsWith('Test Name') ||
-        line.startsWith('In Range') ||
-        line.includes('PAGE OF') ||
-        line.includes('CLIENT SERVICES') ||
-        line.includes('Quest, Quest Diagnostics') ||
-        line.includes('Laboratory Director') ||
-        line.includes('CLIA:') ||
-        line.includes('For ages') ||
-        line.includes('Reference range') ||
-        line.includes('Desirable range') ||
-        line.includes('Risk Category') ||
-        line.includes('Optimal') ||
-        line.includes('DIAGNOSTICS') ||
-        /^\d{4,5}\s+[A-Z]/.test(line) || // Starts with 4-5 digits (address)
-        /^[A-Z]{2,3}\s+QUEST/.test(line) // State code + QUEST
-    ) continue
+    // Skip obvious non-biomarker lines
+    if (!line || line.length < 10) continue
+    if (line.includes('Test Name')) continue
+    if (line.includes('PAGE OF')) continue
+    if (line.includes('CLIENT SERVICES')) continue
+    if (line.includes('Quest, Quest')) continue
+    if (line.includes('Laboratory Director')) continue
+    if (line.includes('CLIA:')) continue
     
-    const match = line.match(pattern)
+    // Multiple patterns to try (from most specific to most lenient)
+    const patterns = [
+      // Pattern 1: NAME VALUE H/L RANGE UNIT LAB
+      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([HL])\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
+      // Pattern 2: NAME VALUE RANGE UNIT LAB
+      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
+      // Pattern 3: NAME VALUE H/L RANGE UNIT
+      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([HL])\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
+      // Pattern 4: NAME VALUE RANGE UNIT (most lenient)
+      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/
+    ]
     
-    if (match) {
-      const name = match[1].trim()
-      const value = match[2]
-      const flag = match[3] || ''
-      const range = match[4]
-      const unit = match[5]
+    let matched = false
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern)
       
-      // Additional validation
-      if (name.length < 3) continue
-      if (name.includes('PANEL')) continue
-      if (name.includes('et al')) continue
-      if (name.includes('Pearson')) continue
-      
-      // Validate value is reasonable
-      const numValue = parseFloat(value)
-      if (isNaN(numValue)) continue
-      if (numValue > 10000) continue // Too large
-      
-      biomarkers.push({
-        biomarker: name.replace(/\s+/g, ' ').trim(),
-        value: value,
-        unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
-        referenceRange: range.replace(/\s+/g, ' ').replace('> OR =', '>=').replace('< OR =', '<=').trim(),
-        status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
-      })
+      if (match) {
+        const name = match[1].trim()
+        const value = match[2]
+        
+        // Check if match[3] is H/L or part of range
+        let flag = ''
+        let range = ''
+        let unit = ''
+        
+        if (match[3] === 'H' || match[3] === 'L') {
+          flag = match[3]
+          range = match[4]
+          unit = match[5] || ''
+        } else {
+          flag = ''
+          range = match[3]
+          unit = match[4] || ''
+        }
+        
+        // Validate biomarker name
+        if (name.length < 3) continue
+        if (name.includes('PANEL')) continue
+        if (name.includes('For ages')) continue
+        if (name.includes('Reference')) continue
+        if (name.includes('Desirable')) continue
+        if (name.includes('et al')) continue
+        if (name.includes('DIAGNOSTICS')) continue
+        if (/^\d{4,5}/.test(name)) continue // Starts with address number
+        
+        // Validate value
+        const numValue = parseFloat(value)
+        if (isNaN(numValue) || numValue > 10000) continue
+        
+        // Clean up range
+        range = range.replace(/\s+/g, ' ').replace('> OR =', '>=').replace('< OR =', '<=').trim()
+        
+        // Clean up unit
+        unit = unit.replace(/\(calc\)/g, '').replace('TP', '').replace('EZ', '').replace('AMD', '').trim()
+        
+        biomarkers.push({
+          biomarker: name.replace(/\s+/g, ' ').trim(),
+          value: value,
+          unit: unit || extractUnitFromName(name),
+          referenceRange: range,
+          status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
+        })
+        
+        matched = true
+        break
+      }
     }
   }
   
-  return biomarkers
+  // Deduplicate by name
+  const seen = new Set()
+  return biomarkers.filter(b => {
+    if (seen.has(b.biomarker)) return false
+    seen.add(b.biomarker)
+    return true
+  })
 }
 
 function extractUnitFromName(name: string): string {
