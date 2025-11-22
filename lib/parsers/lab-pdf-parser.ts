@@ -53,25 +53,20 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  // Track if we're in PERFORMING SITE section
   let inPerformingSite = false
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Detect PERFORMING SITE section
+    // Skip PERFORMING SITE section
     if (line.includes('PERFORMING SITE')) {
       inPerformingSite = true
       continue
     }
-    
-    // Exit PERFORMING SITE section
     if (inPerformingSite && (line.includes('PAGE') || line.includes('CLIENT SERVICES'))) {
       inPerformingSite = false
       continue
     }
-    
-    // Skip lines in PERFORMING SITE section
     if (inPerformingSite) continue
     
     // Skip empty lines and headers
@@ -83,14 +78,18 @@ function extractAllBiomarkers(text: string): any[] {
         line.includes('PANEL') ||
         line.includes('Laboratory Director') ||
         line.includes('CLIA:') ||
-        line.includes('DIAGNOSTICS') ||
         line.length < 5) continue
     
-    // CRITICAL FIX: Use word boundary \b after the value to prevent digit concatenation
-    // Changed: (\d+\.?\d*) to (\d+\.?\d*)\b
+    // Three patterns - from strictest to most lenient
     const patterns = [
+      // Pattern 1: NAME VALUE H/L RANGE UNIT LAB (most specific)
       /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+      
+      // Pattern 2: NAME VALUE RANGE UNIT (no flag)
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+      
+      // Pattern 3: Most lenient - just NAME VALUE with anything after
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4}\.?\d*)\b/
     ]
     
     let matched = false
@@ -111,9 +110,8 @@ function extractAllBiomarkers(text: string): any[] {
             name.includes('For ages') ||
             name.includes('Desirable') ||
             name.includes('Risk Category') ||
-            name.includes('NICHOLS') ||
-            name.includes('TAMPA') ||
-            name.includes('CHANTILLY')) continue
+            name.includes('Optimal') ||
+            name.includes('DIAGNOSTICS')) continue
         
         // Skip unreasonably large values (addresses)
         const numValue = parseFloat(value)
@@ -158,7 +156,12 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L'
+    'CRP': 'mg/L',
+    'PREGNENOLONE': 'ng/dL',
+    'ALKALINE': 'U/L',
+    'PHOSPHATASE': 'U/L',
+    'AST': 'U/L',
+    'ALT': 'U/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
