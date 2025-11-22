@@ -87,6 +87,22 @@ export default function LabReviewPage() {
     }
   }
 
+  const fetchEncounterNotes = async () => {
+    if (!consultation) return
+    setLoadingNotes(true)
+    try {
+      const response = await fetch(`/api/provider/encounter-notes?patient_id=${consultation.id}`)
+      if (response.ok) {
+        const data = await response.json()
+        setEncounterNotes(data)
+      }
+    } catch (error) {
+      console.error("Error fetching notes:", error)
+    } finally {
+      setLoadingNotes(false)
+    }
+  }
+
 const handleSaveNotes = async () => {
     if (!labResult || !consultation || !userId) return
     
