@@ -6,7 +6,6 @@ export async function parseQuestPDF(buffer: Buffer) {
     const text = data.text
 
     console.log('📄 Parsing Quest PDF...')
-    console.log('First 500 chars:', text.substring(0, 500))
 
     const patientName = extractPatientName(text)
     const patientDOB = extractDOB(text)
@@ -54,104 +53,55 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  console.log(`Total lines: ${lines.length}`)
-  
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
+    const line = lines[i].trim()
     
-    // Look for lines with biomarker patterns
-    // Very simple: uppercase word(s), then a number, then something that looks like a range
-    
-    // Skip obvious headers/footers
-    if (line.includes('Test Name') || 
+    if (!line || 
+        line.includes('Test Name') || 
         line.includes('PAGE') ||
         line.includes('CLIENT SERVICES') ||
         line.includes('Quest, Quest') ||
-        line.includes('PERFORMING SITE') ||
-        line.includes('Laboratory Director')) {
-      continue
-    }
+        line.includes('PANEL') ||
+        line.length < 5) continue
     
-    // Look for pattern: WORD(S) NUMBER ... RANGE ... UNIT
-    // Example: "IRON, TOTAL 152 50-180 mcg/dL"
-    // Example: "FERRITIN 65 38-380 ng/mL"
+    const patterns = [
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+    ]
     
-    // Match: starts with letters, has a number somewhere, has a dash (for range)
-    if (/^[A-Z]/.test(line) && /\d+/.test(line) && /-/.test(line)) {
+    let matched = false
+    
+    for (const pattern of patterns) {
+      const match = line.match(pattern)
       
-      // Extract parts using a simpler approach
-      const parts = line.trim().split(/\s+/)
-      
-      if (parts.length < 4) continue
-      
-      // Find the first number - that's probably the value
-      let valueIdx = -1
-      for (let j = 0; j < parts.length; j++) {
-        if (/^\d+\.?\d*$/.test(parts[j])) {
-          valueIdx = j
-          break
-        }
-      }
-      
-      if (valueIdx === -1 || valueIdx === 0) continue
-      
-      // Everything before the value is the name
-      const name = parts.slice(0, valueIdx).join(' ')
-      const value = parts[valueIdx]
-      
-      // Skip if name is too short or looks like garbage
-      if (name.length < 3) continue
-      if (name.includes('For ages')) continue
-      if (name.includes('Desirable')) continue
-      if (name.includes('DIAGNOSTICS')) continue
-      if (/^\d{4,}/.test(name)) continue
-      
-      // Check for H/L flag
-      let flag = ''
-      let rangeStart = valueIdx + 1
-      if (rangeStart < parts.length && (parts[rangeStart] === 'H' || parts[rangeStart] === 'L')) {
-        flag = parts[rangeStart]
-        rangeStart++
-      }
-      
-      // Find the range (something with a dash or < or >)
-      let range = ''
-      let unitStart = rangeStart
-      for (let j = rangeStart; j < parts.length; j++) {
-        if (parts[j].includes('-') || parts[j].includes('<') || parts[j].includes('>') || parts[j] === 'OR' || parts[j] === '=') {
-          range += (range ? ' ' : '') + parts[j]
-          unitStart = j + 1
-        } else if (range && /^\d/.test(parts[j])) {
-          range += ' ' + parts[j]
-          unitStart = j + 1
-        } else {
-          break
-        }
-      }
-      
-      // Rest is unit
-      const unit = parts.slice(unitStart).filter(p => p !== 'TP' && p !== 'EZ' && p !== 'AMD' && !p.includes('(calc)')).join(' ')
-      
-      // Validate value is reasonable
-      const numValue = parseFloat(value)
-      if (isNaN(numValue) || numValue > 50000) continue
-      
-      if (name && value && range) {
-        console.log(`Found: ${name} = ${value} ${flag} (${range}) ${unit}`)
+      if (match) {
+        const name = match[1].trim()
+        const value = match[2]
+        const flag = match[3] || ''
+        const range = match[4] || ''
+        const unit = match[5] || ''
+        
+        if (name.length < 3 || 
+            name.includes('Reference') ||
+            name.includes('For ages') ||
+            name.includes('Desirable') ||
+            name.includes('Risk Category')) continue
         
         biomarkers.push({
-          biomarker: name,
+          biomarker: name.replace(/\s+/g, ' ').trim(),
           value: value,
-          unit: unit || extractUnitFromName(name),
-          referenceRange: range,
+          unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
+          referenceRange: range.replace('> OR =', '>=').replace('< OR =', '<=').trim(),
           status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
         })
+        
+        matched = true
+        break
       }
     }
   }
   
-  console.log(`Extracted ${biomarkers.length} total biomarkers`)
-  return biomarkers
+  return biomarkers.filter(b => b.biomarker && b.value)
 }
 
 function extractUnitFromName(name: string): string {
@@ -176,11 +126,7 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L',
-    'PREGNENOLONE': 'ng/dL',
-    'ALKALINE': 'U/L',
-    'AST': 'U/L',
-    'ALT': 'U/L'
+    'CRP': 'mg/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
