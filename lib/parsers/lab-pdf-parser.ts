@@ -53,31 +53,25 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  // Track if we're in sections to skip
   let inPerformingSite = false
-  let skipUntilNextSection = false
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Detect and skip PERFORMING SITE section
+    // Skip PERFORMING SITE section entirely
     if (line.includes('PERFORMING SITE')) {
       inPerformingSite = true
       continue
     }
-    
-    // Exit PERFORMING SITE when we hit end markers
-    if (inPerformingSite && (line.includes('PAGE') || line.includes('CLIENT SERVICES'))) {
+    if (inPerformingSite && (line.includes('PAGE') || i === lines.length - 1)) {
       inPerformingSite = false
       continue
     }
-    
-    // Skip everything in PERFORMING SITE section
     if (inPerformingSite) continue
     
-    // Skip lines that are clearly not biomarkers
+    // Skip obvious non-biomarker lines
     if (!line || 
-        line.length < 5 ||
+        line.length < 10 ||
         line.includes('Test Name') || 
         line.includes('In Range') ||
         line.includes('Out Of Range') ||
@@ -85,65 +79,113 @@ function extractAllBiomarkers(text: string): any[] {
         line.includes('PAGE') ||
         line.includes('CLIENT SERVICES') ||
         line.includes('Quest, Quest') ||
-        line.includes('PANEL') ||
         line.includes('Laboratory Director') ||
         line.includes('QUEST DIAGNOSTICS') ||
         line.includes('CHANTILLY') ||
         line.includes('ORTEGA') ||
         line.includes('FOWLER') ||
         line.includes('NEWBROOK') ||
-        line.includes('CLIA:') ||
+        line.includes('CLIA') ||
         line.includes('DRIVE') ||
         line.includes('AVE') ||
-        line.includes('HWY') ||
-        line.match(/^\d{5}\s+/) || // Starts with 5-digit zip
-        line.match(/^[A-Z]{2}\s+QUEST/) // State code + QUEST
+        line.includes('HWY')
     ) continue
     
-    // Pattern requires spaces around value to prevent digit concatenation
-    const pattern = /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d+\.?\d*)\s+([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*[-–]\s*\d+\.?\d*)?|> OR = \d+\.?\d*|< OR = \d+\.?\d*)\s+([a-zA-Z\/\%\(\)]+.*?)\s*(TP|EZ|AMD)?$/
+    // Split line into tokens
+    const tokens = line.split(/\s+/)
     
-    const match = line.match(pattern)
+    // Need at least: [NAME, VALUE, RANGE, UNIT]
+    if (tokens.length < 3) continue
     
-    if (match) {
-      const name = match[1].trim()
-      const value = match[2]
-      const flag = match[3] || ''
-      const range = match[4] || ''
-      const unit = match[5] || ''
+    // Find where the biomarker name ends (first all-caps token that's not followed by another name token)
+    let nameEndIdx = 0
+    let biomarkerName = ''
+    
+    for (let j = 0; j < tokens.length; j++) {
+      const token = tokens[j]
       
-      // Additional filters for non-biomarker lines
-      if (name.length < 3 || 
-          name.includes('Reference') ||
-          name.includes('For ages') ||
-          name.includes('Desirable') ||
-          name.includes('Risk Category') ||
-          name.includes('Optimal') ||
-          name.includes('Moderate') ||
-          name.includes('High Risk') ||
-          name.includes('DIAGNOSTICS') ||
-          name.includes('NICHOLS') ||
-          name.includes('SJC') ||
-          name.includes('TAMPA') ||
-          /^\d+$/.test(name) || // Pure numbers
-          /^[A-Z]{2,5}$/.test(name) // State codes
-      ) continue
+      // If token is a number or flag, name has ended
+      if (/^\d+\.?\d*$/.test(token) || token === 'H' || token === 'L') {
+        nameEndIdx = j - 1
+        biomarkerName = tokens.slice(0, j).join(' ')
+        break
+      }
+    }
+    
+    if (!biomarkerName || nameEndIdx < 0) continue
+    
+    // Skip if name is too short or contains exclude words
+    if (biomarkerName.length < 3 ||
+        biomarkerName.includes('PANEL') ||
+        biomarkerName.includes('DIAGNOSTICS') ||
+        biomarkerName.includes('NICHOLS') ||
+        biomarkerName.includes('Reference') ||
+        biomarkerName.includes('Optimal') ||
+        biomarkerName.includes('Risk Category')
+    ) continue
+    
+    // Next token after name should be the value
+    const valueIdx = nameEndIdx + 1
+    if (valueIdx >= tokens.length) continue
+    
+    const valueToken = tokens[valueIdx]
+    
+    // Validate it's a number
+    if (!/^\d+\.?\d*$/.test(valueToken)) continue
+    
+    const value = valueToken
+    const numValue = parseFloat(value)
+    
+    // Skip unreasonably large values (addresses/zips)
+    if (numValue > 50000) continue
+    
+    // Check for H/L flag
+    let flag = ''
+    let rangeIdx = valueIdx + 1
+    
+    if (rangeIdx < tokens.length && (tokens[rangeIdx] === 'H' || tokens[rangeIdx] === 'L')) {
+      flag = tokens[rangeIdx]
+      rangeIdx++
+    }
+    
+    // Find reference range (should start with number or < or >)
+    let referenceRange = ''
+    let unitIdx = rangeIdx
+    
+    for (let j = rangeIdx; j < tokens.length; j++) {
+      const token = tokens[j]
       
-      // Skip unreasonably large values (likely addresses/zip codes)
-      const numValue = parseFloat(value)
-      if (numValue > 50000) continue
-      
+      // If it looks like a reference range
+      if (/^[<>]?\.?\d+/.test(token) || token === 'OR' || token === '=') {
+        referenceRange += (referenceRange ? ' ' : '') + token
+        unitIdx = j + 1
+      } else if (token.includes('-') && /\d/.test(token)) {
+        // Range like "38-380"
+        referenceRange += (referenceRange ? ' ' : '') + token
+        unitIdx = j + 1
+      } else {
+        break
+      }
+    }
+    
+    // Remaining tokens are unit
+    const unit = tokens.slice(unitIdx).filter(t => 
+      t !== 'TP' && t !== 'EZ' && t !== 'AMD' && !t.includes('(calc)')
+    ).join(' ')
+    
+    // Only add if we have valid data
+    if (biomarkerName && value && referenceRange) {
       biomarkers.push({
-        biomarker: name.replace(/\s+/g, ' ').trim(),
+        biomarker: biomarkerName.trim(),
         value: value,
-        unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
-        referenceRange: range.replace('> OR =', '>=').replace('< OR =', '<=').trim(),
+        unit: unit.trim() || extractUnitFromName(biomarkerName),
+        referenceRange: referenceRange.replace(/\s+/g, ' ').trim(),
         status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
       })
     }
   }
   
-  return biomarkers.filter(b => b.biomarker && b.value)
+  return biomarkers
 }
 
 function extractUnitFromName(name: string): string {
@@ -168,7 +210,8 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L'
+    'CRP': 'mg/L',
+    'PREGNENOLONE': 'ng/dL'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
