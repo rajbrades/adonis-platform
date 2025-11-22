@@ -53,46 +53,20 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  let inPerformingSite = false
-  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Skip PERFORMING SITE section
-    if (line.includes('PERFORMING SITE')) {
-      inPerformingSite = true
-      continue
-    }
-    if (inPerformingSite && (line.includes('PAGE') || line.includes('CLIENT SERVICES'))) {
-      inPerformingSite = false
-      continue
-    }
-    if (inPerformingSite) continue
-    
-    // Skip empty lines and headers
     if (!line || 
         line.includes('Test Name') || 
         line.includes('PAGE') ||
         line.includes('CLIENT SERVICES') ||
         line.includes('Quest, Quest') ||
         line.includes('PANEL') ||
-        line.includes('Laboratory Director') ||
-        line.includes('CLIA:') ||
         line.length < 5) continue
     
-    // Multiple patterns - added support for commas in names and very short names
     const patterns = [
-      // Pattern 1: Most specific with all components (allows commas in name)
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
-      
-      // Pattern 2: Without flag (allows commas)
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
-      
-      // Pattern 3: Very lenient - NAME followed by 1-4 digit VALUE
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s+(\d{1,4}\.?\d*)\b/,
-      
-      // Pattern 4: SPECIAL - Very short names (like AST) - at least 2 chars
-      /^([A-Z]{2,})\s+(\d{1,4}\.?\d*)\b/
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
     ]
     
     let matched = false
@@ -107,18 +81,11 @@ function extractAllBiomarkers(text: string): any[] {
         const range = match[4] || ''
         const unit = match[5] || ''
         
-        // Relaxed validation - allow shorter names (was < 3, now < 2)
-        if (name.length < 2 || 
+        if (name.length < 3 || 
             name.includes('Reference') ||
             name.includes('For ages') ||
             name.includes('Desirable') ||
-            name.includes('Risk Category') ||
-            name.includes('Optimal') ||
-            name.includes('DIAGNOSTICS')) continue
-        
-        // Skip unreasonably large values
-        const numValue = parseFloat(value)
-        if (numValue > 10000) continue
+            name.includes('Risk Category')) continue
         
         biomarkers.push({
           biomarker: name.replace(/\s+/g, ' ').trim(),
@@ -159,12 +126,7 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L',
-    'PREGNENOLONE': 'ng/dL',
-    'ALKALINE': 'U/L',
-    'PHOSPHATASE': 'U/L',
-    'AST': 'U/L',
-    'ALT': 'U/L'
+    'CRP': 'mg/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
