@@ -53,20 +53,44 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
+  // Track if we're in PERFORMING SITE section
+  let inPerformingSite = false
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
+    // Detect PERFORMING SITE section
+    if (line.includes('PERFORMING SITE')) {
+      inPerformingSite = true
+      continue
+    }
+    
+    // Exit PERFORMING SITE section
+    if (inPerformingSite && (line.includes('PAGE') || line.includes('CLIENT SERVICES'))) {
+      inPerformingSite = false
+      continue
+    }
+    
+    // Skip lines in PERFORMING SITE section
+    if (inPerformingSite) continue
+    
+    // Skip empty lines and headers
     if (!line || 
         line.includes('Test Name') || 
         line.includes('PAGE') ||
         line.includes('CLIENT SERVICES') ||
         line.includes('Quest, Quest') ||
         line.includes('PANEL') ||
+        line.includes('Laboratory Director') ||
+        line.includes('CLIA:') ||
+        line.includes('DIAGNOSTICS') ||
         line.length < 5) continue
     
+    // CRITICAL FIX: Use word boundary \b after the value to prevent digit concatenation
+    // Changed: (\d+\.?\d*) to (\d+\.?\d*)\b
     const patterns = [
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\b([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
     ]
     
     let matched = false
@@ -81,11 +105,19 @@ function extractAllBiomarkers(text: string): any[] {
         const range = match[4] || ''
         const unit = match[5] || ''
         
+        // Skip invalid names
         if (name.length < 3 || 
             name.includes('Reference') ||
             name.includes('For ages') ||
             name.includes('Desirable') ||
-            name.includes('Risk Category')) continue
+            name.includes('Risk Category') ||
+            name.includes('NICHOLS') ||
+            name.includes('TAMPA') ||
+            name.includes('CHANTILLY')) continue
+        
+        // Skip unreasonably large values (addresses)
+        const numValue = parseFloat(value)
+        if (numValue > 10000) continue
         
         biomarkers.push({
           biomarker: name.replace(/\s+/g, ' ').trim(),
