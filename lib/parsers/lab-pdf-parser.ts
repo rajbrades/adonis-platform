@@ -72,15 +72,9 @@ function extractAllBiomarkers(text: string): any[] {
         line.includes('PANEL') ||
         line.length < 5) continue
     
-    // CRITICAL FIX: Require at least one space before the range to prevent concatenation
-    // Changed: (\d+\.?\d*) to (\d+\.?\d*)\s+
-    // This ensures value and range are separated
     const patterns = [
-      // Pattern 1: NAME VALUE H/L RANGE UNIT LAB
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s+([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
-      
-      // Pattern 2: NAME VALUE RANGE UNIT LAB (no flag)
-      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s+([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)\s*([HL])?\s*([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)?\s*([a-zA-Z\/\%\(\)]+.*?)?(TP|EZ|AMD)?$/,
+      /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)(\d+\.?\d*)([<>]?\s*\d+\.?\d*(?:\s*-\s*\d+\.?\d*)?|> OR = \d+|< OR = \d+)\s*([a-zA-Z\/\%]+.*?)?(TP|EZ|AMD)?$/,
     ]
     
     let matched = false
@@ -140,12 +134,7 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L',
-    'PREGNENOLONE': 'ng/dL',
-    'ALKALINE': 'U/L',
-    'PHOSPHATASE': 'U/L',
-    'AST': 'U/L',
-    'ALT': 'U/L'
+    'CRP': 'mg/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
