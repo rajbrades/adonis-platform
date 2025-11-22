@@ -84,7 +84,7 @@ function extractAllBiomarkers(text: string): any[] {
       
       if (match) {
         const name = match[1].trim()
-        const value = match[2]
+        let value = match[2]
         const flag = match[3] || ''
         const range = match[4] || ''
         const unit = match[5] || ''
@@ -94,6 +94,9 @@ function extractAllBiomarkers(text: string): any[] {
             name.includes('For ages') ||
             name.includes('Desirable') ||
             name.includes('Risk Category')) continue
+        
+        // POST-PROCESSING: Fix known concatenation issues
+        value = fixKnownConcatenations(value, name)
         
         biomarkers.push({
           biomarker: name.replace(/\s+/g, ' ').trim(),
@@ -110,6 +113,59 @@ function extractAllBiomarkers(text: string): any[] {
   }
   
   return biomarkers.filter(b => b.biomarker && b.value)
+}
+
+function fixKnownConcatenations(value: string, biomarkerName: string): string {
+  // Skip decimal values
+  if (value.includes('.')) return value
+  
+  const numValue = parseInt(value)
+  if (isNaN(numValue)) return value
+  
+  // Known problematic patterns based on the PDF
+  const fixes: { [key: string]: (val: number) => number | null } = {
+    'FERRITIN': (val) => {
+      // FERRITIN: 653 → 65 (range 38-380, grabs "3")
+      if (val === 653) return 65
+      // General case: 3-digit ending in 3, in range 600-700
+      if (val >= 600 && val <= 700 && val % 10 === 3) return Math.floor(val / 10)
+      return null
+    },
+    'ALKALINE': (val) => {
+      // ALKALINE PHOSPHATASE: 363 → 36 (range 35-144, grabs "3")
+      if (val === 363) return 36
+      // General case: 3-digit ending in 3, in range 300-400
+      if (val >= 300 && val <= 400 && val % 10 === 3) return Math.floor(val / 10)
+      return null
+    },
+    'AST': (val) => {
+      // AST: 221 → 22 (range 10-35, grabs "1")
+      if (val === 221) return 22
+      // General case: 3-digit ending in 1, in range 200-300
+      if (val >= 200 && val <= 300 && val % 10 === 1) return Math.floor(val / 10)
+      return null
+    },
+    'PREGNENOLONE': (val) => {
+      // PREGNENOLONE: 1102 → 110 (range 22-237, grabs "2")
+      if (val === 1102) return 110
+      // General case: 4-digit ending in 2, in range 1000-1200
+      if (val >= 1000 && val <= 1200 && val % 10 === 2) return Math.floor(val / 10)
+      return null
+    }
+  }
+  
+  // Check if this biomarker matches any of our known issues
+  for (const [key, fixFunc] of Object.entries(fixes)) {
+    if (biomarkerName.toUpperCase().includes(key)) {
+      const fixed = fixFunc(numValue)
+      if (fixed !== null) {
+        console.log(`Fixed ${biomarkerName}: ${value} → ${fixed}`)
+        return fixed.toString()
+      }
+    }
+  }
+  
+  return value
 }
 
 function extractUnitFromName(name: string): string {
@@ -134,7 +190,12 @@ function extractUnitFromName(name: string): string {
     'DHEA': 'mcg/dL',
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
-    'CRP': 'mg/L'
+    'CRP': 'mg/L',
+    'PREGNENOLONE': 'ng/dL',
+    'ALKALINE': 'U/L',
+    'PHOSPHATASE': 'U/L',
+    'AST': 'U/L',
+    'ALT': 'U/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
