@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, Video, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink, Clock, X } from 'lucide-react'
 import { useAuth } from '@clerk/nextjs'
+import { getBrand } from '@/lib/brand'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
 interface LabResult {
