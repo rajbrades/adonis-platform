@@ -53,8 +53,20 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
+  // Track PERFORMING SITE section
+  let inPerformingSite = false
+  
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
+    
+    // Detect start of PERFORMING SITE section
+    if (line.includes('PERFORMING SITE')) {
+      inPerformingSite = true
+      continue
+    }
+    
+    // Skip all lines in PERFORMING SITE section
+    if (inPerformingSite) continue
     
     if (!line || 
         line.includes('Test Name') || 
