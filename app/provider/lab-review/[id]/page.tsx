@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, Video, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink } from 'lucide-react'
-import { getBrand } from '@/lib/brand'
+import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, Video, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink, Clock, X } from 'lucide-react'
+import { useAuth } from '@clerk/nextjs'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
 interface LabResult {
@@ -54,6 +54,10 @@ export default function LabReviewPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all')
   const [activeSeverity, setActiveSeverity] = useState<number | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['context', 'medications']))
+  const { userId } = useAuth()
+  const [showNotesHistory, setShowNotesHistory] = useState(false)
+  const [encounterNotes, setEncounterNotes] = useState<any[]>([])
+  const [loadingNotes, setLoadingNotes] = useState(false)
 
   useEffect(() => {
     fetchLabResult()
@@ -82,26 +86,29 @@ export default function LabReviewPage() {
     }
   }
 
-  const handleSaveNotes = async () => {
-    if (!labResult) return
+const handleSaveNotes = async () => {
+    if (!labResult || !consultation || !userId) return
     
     setSubmitting(true)
     try {
-      const response = await fetch('/api/admin/lab-results', {
-        method: 'PATCH',
+      const response = await fetch('/api/provider/encounter-notes', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: labResult.id,
-          provider_notes: notes
+          patient_id: consultation.id,
+          provider_id: userId,
+          lab_result_id: labResult.id,
+          note_content: notes,
+          note_type: 'clinical_assessment',
+          biomarkers_reviewed: labResult.biomarkers
         })
       })
 
       if (response.ok) {
-        alert('Treatment plan saved')
-        fetchLabResult()
+        alert('Treatment plan saved!')
       }
     } catch (error) {
-      console.error('Error saving notes:', error)
+      console.error('Error:', error)
       alert('Failed to save')
     } finally {
       setSubmitting(false)
