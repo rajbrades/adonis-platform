@@ -6,6 +6,7 @@ export async function parseQuestPDF(buffer: Buffer) {
     const text = data.text
 
     console.log('📄 Parsing Quest PDF...')
+    console.log('First 500 chars:', text.substring(0, 500))
 
     const patientName = extractPatientName(text)
     const patientDOB = extractDOB(text)
@@ -53,109 +54,104 @@ function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
   const lines = text.split('\n')
   
-  let inPerformingSite = false
+  console.log(`Total lines: ${lines.length}`)
   
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = lines[i]
     
-    // Skip PERFORMING SITE section
-    if (line.includes('PERFORMING SITE')) {
-      inPerformingSite = true
+    // Look for lines with biomarker patterns
+    // Very simple: uppercase word(s), then a number, then something that looks like a range
+    
+    // Skip obvious headers/footers
+    if (line.includes('Test Name') || 
+        line.includes('PAGE') ||
+        line.includes('CLIENT SERVICES') ||
+        line.includes('Quest, Quest') ||
+        line.includes('PERFORMING SITE') ||
+        line.includes('Laboratory Director')) {
       continue
     }
-    if (inPerformingSite) {
-      if (line.includes('PAGE') || line.includes('CLIENT SERVICES')) {
-        inPerformingSite = false
-      }
-      continue
-    }
     
-    // Skip obvious non-biomarker lines
-    if (!line || line.length < 10) continue
-    if (line.includes('Test Name')) continue
-    if (line.includes('PAGE OF')) continue
-    if (line.includes('CLIENT SERVICES')) continue
-    if (line.includes('Quest, Quest')) continue
-    if (line.includes('Laboratory Director')) continue
-    if (line.includes('CLIA:')) continue
+    // Look for pattern: WORD(S) NUMBER ... RANGE ... UNIT
+    // Example: "IRON, TOTAL 152 50-180 mcg/dL"
+    // Example: "FERRITIN 65 38-380 ng/mL"
     
-    // Multiple patterns to try (from most specific to most lenient)
-    const patterns = [
-      // Pattern 1: NAME VALUE H/L RANGE UNIT LAB
-      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([HL])\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
-      // Pattern 2: NAME VALUE RANGE UNIT LAB
-      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
-      // Pattern 3: NAME VALUE H/L RANGE UNIT
-      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([HL])\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/,
-      // Pattern 4: NAME VALUE RANGE UNIT (most lenient)
-      /^([A-Z][A-Z\s,\(\)\/\-\.]+?)\s+(\d+\.?\d*)\s+([<>]?[\d\.\-\s]+)\s+([a-zA-Z\/\%]+)/
-    ]
-    
-    let matched = false
-    
-    for (const pattern of patterns) {
-      const match = line.match(pattern)
+    // Match: starts with letters, has a number somewhere, has a dash (for range)
+    if (/^[A-Z]/.test(line) && /\d+/.test(line) && /-/.test(line)) {
       
-      if (match) {
-        const name = match[1].trim()
-        const value = match[2]
-        
-        // Check if match[3] is H/L or part of range
-        let flag = ''
-        let range = ''
-        let unit = ''
-        
-        if (match[3] === 'H' || match[3] === 'L') {
-          flag = match[3]
-          range = match[4]
-          unit = match[5] || ''
-        } else {
-          flag = ''
-          range = match[3]
-          unit = match[4] || ''
+      // Extract parts using a simpler approach
+      const parts = line.trim().split(/\s+/)
+      
+      if (parts.length < 4) continue
+      
+      // Find the first number - that's probably the value
+      let valueIdx = -1
+      for (let j = 0; j < parts.length; j++) {
+        if (/^\d+\.?\d*$/.test(parts[j])) {
+          valueIdx = j
+          break
         }
-        
-        // Validate biomarker name
-        if (name.length < 3) continue
-        if (name.includes('PANEL')) continue
-        if (name.includes('For ages')) continue
-        if (name.includes('Reference')) continue
-        if (name.includes('Desirable')) continue
-        if (name.includes('et al')) continue
-        if (name.includes('DIAGNOSTICS')) continue
-        if (/^\d{4,5}/.test(name)) continue // Starts with address number
-        
-        // Validate value
-        const numValue = parseFloat(value)
-        if (isNaN(numValue) || numValue > 10000) continue
-        
-        // Clean up range
-        range = range.replace(/\s+/g, ' ').replace('> OR =', '>=').replace('< OR =', '<=').trim()
-        
-        // Clean up unit
-        unit = unit.replace(/\(calc\)/g, '').replace('TP', '').replace('EZ', '').replace('AMD', '').trim()
+      }
+      
+      if (valueIdx === -1 || valueIdx === 0) continue
+      
+      // Everything before the value is the name
+      const name = parts.slice(0, valueIdx).join(' ')
+      const value = parts[valueIdx]
+      
+      // Skip if name is too short or looks like garbage
+      if (name.length < 3) continue
+      if (name.includes('For ages')) continue
+      if (name.includes('Desirable')) continue
+      if (name.includes('DIAGNOSTICS')) continue
+      if (/^\d{4,}/.test(name)) continue
+      
+      // Check for H/L flag
+      let flag = ''
+      let rangeStart = valueIdx + 1
+      if (rangeStart < parts.length && (parts[rangeStart] === 'H' || parts[rangeStart] === 'L')) {
+        flag = parts[rangeStart]
+        rangeStart++
+      }
+      
+      // Find the range (something with a dash or < or >)
+      let range = ''
+      let unitStart = rangeStart
+      for (let j = rangeStart; j < parts.length; j++) {
+        if (parts[j].includes('-') || parts[j].includes('<') || parts[j].includes('>') || parts[j] === 'OR' || parts[j] === '=') {
+          range += (range ? ' ' : '') + parts[j]
+          unitStart = j + 1
+        } else if (range && /^\d/.test(parts[j])) {
+          range += ' ' + parts[j]
+          unitStart = j + 1
+        } else {
+          break
+        }
+      }
+      
+      // Rest is unit
+      const unit = parts.slice(unitStart).filter(p => p !== 'TP' && p !== 'EZ' && p !== 'AMD' && !p.includes('(calc)')).join(' ')
+      
+      // Validate value is reasonable
+      const numValue = parseFloat(value)
+      if (isNaN(numValue) || numValue > 50000) continue
+      
+      if (name && value && range) {
+        console.log(`Found: ${name} = ${value} ${flag} (${range}) ${unit}`)
         
         biomarkers.push({
-          biomarker: name.replace(/\s+/g, ' ').trim(),
+          biomarker: name,
           value: value,
           unit: unit || extractUnitFromName(name),
           referenceRange: range,
           status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
         })
-        
-        matched = true
-        break
       }
     }
   }
   
-  // Deduplicate by name
-  const seen = new Set()
-  return biomarkers.filter(b => {
-    if (seen.has(b.biomarker)) return false
-    seen.add(b.biomarker)
-    return true
-  })
+  console.log(`Extracted ${biomarkers.length} total biomarkers`)
+  return biomarkers
 }
 
 function extractUnitFromName(name: string): string {
