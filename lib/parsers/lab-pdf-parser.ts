@@ -51,135 +51,82 @@ function extractTestDate(text: string): string {
 
 function extractAllBiomarkers(text: string): any[] {
   const biomarkers: any[] = []
-  const lines = text.split('\n')
   
-  let inPerformingSite = false
+  // Quest format: NAME VALUE [H|L] RANGE UNIT [LAB]
+  // Must have at least NAME, VALUE, and RANGE
+  
+  // This regex requires:
+  // 1. Biomarker name (uppercase, can have spaces/punctuation)
+  // 2. Single space before value
+  // 3. Value (number with optional decimal)
+  // 4. Single space after value
+  // 5. Optional H or L flag
+  // 6. Reference range
+  // 7. Unit
+  const pattern = /^([A-Z][A-Z\s,\(\)\/\-\.%]+?)\s(\d{1,4}(?:\.\d{1,2})?)\s*([HL])?\s+([<>]?\s*\d+(?:\.\d+)?(?:\s*[-–]\s*\d+(?:\.\d+)?)?|>\s*OR\s*=\s*\d+|<\s*OR\s*=\s*\d+)\s+([a-zA-Z\/\%\(\)]+.*?)\s*(TP|EZ|AMD)?$/
+  
+  const lines = text.split('\n')
+  let skipSection = false
   
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim()
     
-    // Skip PERFORMING SITE section entirely
+    // Skip sections
     if (line.includes('PERFORMING SITE')) {
-      inPerformingSite = true
+      skipSection = true
       continue
     }
-    if (inPerformingSite && (line.includes('PAGE') || i === lines.length - 1)) {
-      inPerformingSite = false
+    if (skipSection && line.includes('PAGE')) {
+      skipSection = false
       continue
     }
-    if (inPerformingSite) continue
+    if (skipSection) continue
     
-    // Skip obvious non-biomarker lines
-    if (!line || 
-        line.length < 10 ||
-        line.includes('Test Name') || 
-        line.includes('In Range') ||
-        line.includes('Out Of Range') ||
-        line.includes('Reference Range') ||
-        line.includes('PAGE') ||
+    // Skip non-data lines
+    if (!line ||
+        line.length < 15 ||
+        line.startsWith('Test Name') ||
+        line.startsWith('In Range') ||
+        line.includes('PAGE OF') ||
         line.includes('CLIENT SERVICES') ||
-        line.includes('Quest, Quest') ||
+        line.includes('Quest, Quest Diagnostics') ||
         line.includes('Laboratory Director') ||
-        line.includes('QUEST DIAGNOSTICS') ||
-        line.includes('CHANTILLY') ||
-        line.includes('ORTEGA') ||
-        line.includes('FOWLER') ||
-        line.includes('NEWBROOK') ||
-        line.includes('CLIA') ||
-        line.includes('DRIVE') ||
-        line.includes('AVE') ||
-        line.includes('HWY')
+        line.includes('CLIA:') ||
+        line.includes('For ages') ||
+        line.includes('Reference range') ||
+        line.includes('Desirable range') ||
+        line.includes('Risk Category') ||
+        line.includes('Optimal') ||
+        line.includes('DIAGNOSTICS') ||
+        /^\d{4,5}\s+[A-Z]/.test(line) || // Starts with 4-5 digits (address)
+        /^[A-Z]{2,3}\s+QUEST/.test(line) // State code + QUEST
     ) continue
     
-    // Split line into tokens
-    const tokens = line.split(/\s+/)
+    const match = line.match(pattern)
     
-    // Need at least: [NAME, VALUE, RANGE, UNIT]
-    if (tokens.length < 3) continue
-    
-    // Find where the biomarker name ends (first all-caps token that's not followed by another name token)
-    let nameEndIdx = 0
-    let biomarkerName = ''
-    
-    for (let j = 0; j < tokens.length; j++) {
-      const token = tokens[j]
+    if (match) {
+      const name = match[1].trim()
+      const value = match[2]
+      const flag = match[3] || ''
+      const range = match[4]
+      const unit = match[5]
       
-      // If token is a number or flag, name has ended
-      if (/^\d+\.?\d*$/.test(token) || token === 'H' || token === 'L') {
-        nameEndIdx = j - 1
-        biomarkerName = tokens.slice(0, j).join(' ')
-        break
-      }
-    }
-    
-    if (!biomarkerName || nameEndIdx < 0) continue
-    
-    // Skip if name is too short or contains exclude words
-    if (biomarkerName.length < 3 ||
-        biomarkerName.includes('PANEL') ||
-        biomarkerName.includes('DIAGNOSTICS') ||
-        biomarkerName.includes('NICHOLS') ||
-        biomarkerName.includes('Reference') ||
-        biomarkerName.includes('Optimal') ||
-        biomarkerName.includes('Risk Category')
-    ) continue
-    
-    // Next token after name should be the value
-    const valueIdx = nameEndIdx + 1
-    if (valueIdx >= tokens.length) continue
-    
-    const valueToken = tokens[valueIdx]
-    
-    // Validate it's a number
-    if (!/^\d+\.?\d*$/.test(valueToken)) continue
-    
-    const value = valueToken
-    const numValue = parseFloat(value)
-    
-    // Skip unreasonably large values (addresses/zips)
-    if (numValue > 50000) continue
-    
-    // Check for H/L flag
-    let flag = ''
-    let rangeIdx = valueIdx + 1
-    
-    if (rangeIdx < tokens.length && (tokens[rangeIdx] === 'H' || tokens[rangeIdx] === 'L')) {
-      flag = tokens[rangeIdx]
-      rangeIdx++
-    }
-    
-    // Find reference range (should start with number or < or >)
-    let referenceRange = ''
-    let unitIdx = rangeIdx
-    
-    for (let j = rangeIdx; j < tokens.length; j++) {
-      const token = tokens[j]
+      // Additional validation
+      if (name.length < 3) continue
+      if (name.includes('PANEL')) continue
+      if (name.includes('et al')) continue
+      if (name.includes('Pearson')) continue
       
-      // If it looks like a reference range
-      if (/^[<>]?\.?\d+/.test(token) || token === 'OR' || token === '=') {
-        referenceRange += (referenceRange ? ' ' : '') + token
-        unitIdx = j + 1
-      } else if (token.includes('-') && /\d/.test(token)) {
-        // Range like "38-380"
-        referenceRange += (referenceRange ? ' ' : '') + token
-        unitIdx = j + 1
-      } else {
-        break
-      }
-    }
-    
-    // Remaining tokens are unit
-    const unit = tokens.slice(unitIdx).filter(t => 
-      t !== 'TP' && t !== 'EZ' && t !== 'AMD' && !t.includes('(calc)')
-    ).join(' ')
-    
-    // Only add if we have valid data
-    if (biomarkerName && value && referenceRange) {
+      // Validate value is reasonable
+      const numValue = parseFloat(value)
+      if (isNaN(numValue)) continue
+      if (numValue > 10000) continue // Too large
+      
       biomarkers.push({
-        biomarker: biomarkerName.trim(),
+        biomarker: name.replace(/\s+/g, ' ').trim(),
         value: value,
-        unit: unit.trim() || extractUnitFromName(biomarkerName),
-        referenceRange: referenceRange.replace(/\s+/g, ' ').trim(),
+        unit: unit.replace(/\(calc\)/g, '').trim() || extractUnitFromName(name),
+        referenceRange: range.replace(/\s+/g, ' ').replace('> OR =', '>=').replace('< OR =', '<=').trim(),
         status: flag === 'H' ? 'high' : flag === 'L' ? 'low' : 'normal'
       })
     }
@@ -211,7 +158,10 @@ function extractUnitFromName(name: string): string {
     'INSULIN': 'uIU/mL',
     'IGF': 'ng/mL',
     'CRP': 'mg/L',
-    'PREGNENOLONE': 'ng/dL'
+    'PREGNENOLONE': 'ng/dL',
+    'ALKALINE': 'U/L',
+    'AST': 'U/L',
+    'ALT': 'U/L'
   }
   
   for (const [key, unit] of Object.entries(unitMap)) {
