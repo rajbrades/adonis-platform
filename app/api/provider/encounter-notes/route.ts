@@ -9,22 +9,32 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { patient_id, provider_id, lab_result_id, note_content, note_type, biomarkers_reviewed } = body
+    const { patient_id, provider_id, lab_result_id, note_content, note_type, biomarkers_reviewed, status, action } = body
 
     if (!patient_id || !provider_id || !note_content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    // Determine status and signing fields
+    const noteData: any = {
+      patient_id,
+      provider_id,
+      lab_result_id,
+      note_content,
+      note_type: note_type || 'clinical_assessment',
+      biomarkers_reviewed,
+      status: action === 'sign' ? 'signed' : 'draft'
+    }
+
+    // If signing, add signature timestamp and provider
+    if (action === 'sign') {
+      noteData.signed_at = new Date().toISOString()
+      noteData.signed_by = provider_id
+    }
+
     const { data, error } = await supabase
       .from('provider_encounter_notes')
-      .insert({
-        patient_id,
-        provider_id,
-        lab_result_id,
-        note_content,
-        note_type: note_type || 'clinical_assessment',
-        biomarkers_reviewed
-      })
+      .insert(noteData)
       .select()
       .single()
 
@@ -41,16 +51,25 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const patient_id = searchParams.get('patient_id')
+    const status = searchParams.get('status') // optional filter
 
     if (!patient_id) {
       return NextResponse.json({ error: 'patient_id required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('provider_encounter_notes')
       .select('*')
       .eq('patient_id', patient_id)
-      .order('created_at', { ascending: false })
+
+    // Filter by status if provided
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    query = query.order('created_at', { ascending: false })
+
+    const { data, error } = await query
 
     if (error) throw error
 
