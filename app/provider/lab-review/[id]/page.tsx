@@ -296,6 +296,28 @@ const handleSaveNotes = async () => {
   const flaggedBiomarkers = labResult.biomarkers.filter(b => getBiomarkerStatus(b).severity > 0)
 
   return (
+<>
+      {showNotesHistory && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8">
+          <div className="bg-gray-900 border border-white/10 rounded-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-white/10 flex justify-between">
+              <h2 className="text-xl font-bold">Notes History ({encounterNotes.length})</h2>
+              <button onClick={() => setShowNotesHistory(false)}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {encounterNotes.map((note: any) => (
+                <div key={note.id} className="bg-black/40 border border-white/10 rounded-lg p-4">
+                  <div className="text-xs text-gray-400 mb-2">{new Date(note.created_at).toLocaleString()}</div>
+                  <div className="text-sm whitespace-pre-wrap">{note.note_content}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Fixed Header */}
       <div className="fixed top-20 left-0 right-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
@@ -328,6 +350,13 @@ const handleSaveNotes = async () => {
             </div>
             
             <div className="flex items-center gap-3">
+<button 
+                onClick={() => setShowNotesHistory(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all text-sm"
+              >
+                <Clock className="w-4 h-4" />
+                History ({encounterNotes.length})
+              </button>
               <button 
                 onClick={handleInterpret} 
                 disabled={analyzing} 
@@ -674,5 +703,5 @@ const handleSaveNotes = async () => {
         </div>
       </div>
     </div>
-  )
+  )</>)
 }
