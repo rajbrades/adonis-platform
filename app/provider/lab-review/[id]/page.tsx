@@ -64,9 +64,12 @@ export default function LabReviewPage() {
     fetchLabResult()
   }, [labResultId])
 
+
   useEffect(() => {
     if (consultation) {
       fetchEncounterNotes()
+    }
+  }, [consultation])
 
   const loadDraftIntoEditor = (draftContent: string) => {
     setNotes(draftContent)
@@ -88,10 +91,6 @@ export default function LabReviewPage() {
       console.error("Error deleting draft:", error)
     }
   }
-    }
-  }
-    }
-  }, [consultation])
 
   const fetchLabResult = async () => {
     try {
