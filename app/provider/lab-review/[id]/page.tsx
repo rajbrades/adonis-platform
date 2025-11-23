@@ -93,6 +93,36 @@ export default function LabReviewPage() {
     }
   }
 
+
+  const downloadNotePDF = (note: any) => {
+    // Dynamic import to avoid SSR issues
+    import('jspdf').then(({ default: jsPDF }) => {
+      const doc = new jsPDF()
+      
+      // Header
+      doc.setFontSize(20)
+      doc.text('Clinical Encounter Note', 20, 20)
+      
+      doc.setFontSize(12)
+      doc.text(`Patient: ${consultation.first_name} ${consultation.last_name}`, 20, 35)
+      doc.text(`Date: ${new Date(note.signed_at).toLocaleDateString()}`, 20, 42)
+      doc.text(`Provider: Dr. ${note.signed_by}`, 20, 49)
+      
+      // Content
+      doc.setFontSize(11)
+      const splitText = doc.splitTextToSize(note.note_content, 170)
+      doc.text(splitText, 20, 60)
+      
+      // Footer
+      const pageHeight = doc.internal.pageSize.height
+      doc.setFontSize(8)
+      doc.text(`Note ID: ${note.id}`, 20, pageHeight - 10)
+      doc.text(`Signed: ${new Date(note.signed_at).toLocaleString()}`, 120, pageHeight - 10)
+      
+      // Save
+      doc.save(`clinical-note-${consultation.last_name}-${new Date(note.signed_at).toISOString().split('T')[0]}.pdf`)
+    })
+  }
   const fetchLabResult = async () => {
     try {
       const labRes = await fetch('/api/admin/lab-results')
@@ -443,7 +473,7 @@ const handleSaveDraft = async () => {
               <div className="text-xs text-gray-400">
                 Note ID: {viewingNote.id}
               </div>
-              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold">
+              <button onClick={() => downloadNotePDF(viewingNote)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold">
                 Download PDF
               </button>
             </div>
