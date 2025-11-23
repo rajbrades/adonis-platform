@@ -67,6 +67,29 @@ export default function LabReviewPage() {
   useEffect(() => {
     if (consultation) {
       fetchEncounterNotes()
+
+  const loadDraftIntoEditor = (draftContent: string) => {
+    setNotes(draftContent)
+    setShowNotesHistory(false)
+    alert("Draft loaded into editor")
+  }
+
+  const deleteDraft = async (noteId: string) => {
+    if (!confirm("Delete this draft? This cannot be undone.")) return
+    try {
+      const response = await fetch(`/api/provider/encounter-notes?note_id=${noteId}`, {
+        method: "DELETE"
+      })
+      if (response.ok) {
+        alert("Draft deleted")
+        fetchEncounterNotes()
+      }
+    } catch (error) {
+      console.error("Error deleting draft:", error)
+    }
+  }
+    }
+  }
     }
   }, [consultation])
 
@@ -341,7 +364,7 @@ const handleSaveDraft = async () => {
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {encounterNotes.map((note: any) => (
-                <div key={note.id} className="bg-black/40 border border-white/10 rounded-lg p-4">
+              <div key={note.id} className="bg-black/40 border border-white/10 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -362,7 +385,7 @@ const handleSaveDraft = async () => {
                     )}
                   </div>
                   
-                  <div className="text-sm text-white whitespace-pre-wrap mb-3 line-clamp-3">
+                  <div className="text-sm text-white whitespace-pre-wrap mb-3 max-h-20 overflow-hidden">
                     {note.note_content}
                   </div>
                   
@@ -391,6 +414,7 @@ const handleSaveDraft = async () => {
                     )}
                   </div>
                 </div>
+              ))}
             </div>
           </div>
         </div>
