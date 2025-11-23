@@ -96,6 +96,7 @@ export default function LabReviewPage() {
 
   const downloadNotePDF = (note: any) => {
     if (!consultation) return
+    if (!consultation) return
     // Dynamic import to avoid SSR issues
     import('jspdf').then(({ default: jsPDF }) => {
       const doc = new jsPDF()
