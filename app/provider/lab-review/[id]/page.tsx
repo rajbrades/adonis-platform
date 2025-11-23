@@ -308,7 +308,7 @@ const handleSaveNotes = async () => {
               {encounterNotes.map((note: any) => (
                 <div key={note.id} className="bg-black/40 border border-white/10 rounded-lg p-4">
                   <div className="text-xs text-gray-400 mb-2">{new Date(note.created_at).toLocaleString()}</div>
-                  <div className="text-sm whitespace-pre-wrap">{note.note_content}</div>
+                 <div className="text-sm text-white whitespace-pre-wrap">">{note.note_content}</div>
                 </div>
               ))}
             </div>
