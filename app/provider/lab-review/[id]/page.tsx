@@ -64,6 +64,12 @@ export default function LabReviewPage() {
     fetchLabResult()
   }, [labResultId])
 
+  useEffect(() => {
+    if (consultation) {
+      fetchEncounterNotes()
+    }
+  }, [consultation])
+
   const fetchLabResult = async () => {
     try {
       const labRes = await fetch('/api/admin/lab-results')
@@ -122,7 +128,7 @@ const handleSaveNotes = async () => {
       })
 
       if (response.ok) {
-        alert('Treatment plan saved!')
+        alert('Treatment plan saved!'); fetchEncounterNotes()
       }
     } catch (error) {
       console.error('Error:', error)
