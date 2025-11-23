@@ -109,30 +109,65 @@ export default function LabReviewPage() {
     }
   }
 
-const handleSaveNotes = async () => {
+const handleSaveDraft = async () => {
     if (!labResult || !consultation || !userId) return
     
     setSubmitting(true)
     try {
-      const response = await fetch('/api/provider/encounter-notes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/provider/encounter-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           patient_id: consultation.id,
           provider_id: userId,
           lab_result_id: labResult.id,
           note_content: notes,
-          note_type: 'clinical_assessment',
-          biomarkers_reviewed: labResult.biomarkers
+          note_type: "clinical_assessment",
+          biomarkers_reviewed: labResult.biomarkers,
+          action: "draft"
         })
       })
 
       if (response.ok) {
-        alert('Treatment plan saved!'); fetchEncounterNotes()
+        alert("Draft saved!")
+        fetchEncounterNotes()
       }
     } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to save')
+      console.error("Error:", error)
+      alert("Failed to save")
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleSignNote = async () => {
+    if (!labResult || !consultation || !userId) return
+    if (!confirm("Sign and finalize this note? You cannot edit it after signing.")) return
+    
+    setSubmitting(true)
+    try {
+      const response = await fetch("/api/provider/encounter-notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patient_id: consultation.id,
+          provider_id: userId,
+          lab_result_id: labResult.id,
+          note_content: notes,
+          note_type: "clinical_assessment",
+          biomarkers_reviewed: labResult.biomarkers,
+          action: "sign"
+        })
+      })
+
+      if (response.ok) {
+        alert("Note signed and finalized!")
+        setNotes("")
+        fetchEncounterNotes()
+      }
+    } catch (error) {
+      console.error("Error:", error)
+      alert("Failed to sign")
     } finally {
       setSubmitting(false)
     }
@@ -385,9 +420,9 @@ const handleSaveNotes = async () => {
                 Start Video Call
               </a>
               <button 
-                onClick={handleSaveNotes} 
+                onClick={handleSaveDraft} 
                 disabled={submitting} 
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save
