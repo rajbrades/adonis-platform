@@ -428,6 +428,14 @@ const handleSaveDraft = async () => {
                 Save
               </button>
             </div>
+              <button 
+                onClick={handleSignNote} 
+                disabled={submitting} 
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Sign & Finalize
+              </button>
           </div>
 
           {/* Alert Summary */}
