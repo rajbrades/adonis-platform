@@ -568,14 +568,13 @@ const handleSaveDraft = async () => {
                 <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
                   <span>{consultation.age}yo</span>
                   <span>•</span>
-                  <span>{consultation.occupation}</span>
+                  <span>DOB: {consultation.date_of_birth}</span>
                   <span>•</span>
-                  <span>BMI: {bmi || 'N/A'}</span>
+                  <span>BMI: {bmi || "N/A"}</span>
                   <span>•</span>
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    {labResult.test_date}
-                  </span>
+                  <span>Patient Since: {new Date(consultation.created_at || labResult.test_date).toLocaleDateString()}</span>
+                </div>
+              </div>
                 </div>
               </div>
             </div>
