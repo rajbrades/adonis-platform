@@ -576,68 +576,78 @@ const handleSaveDraft = async () => {
                 </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
-<button 
+
+            <div className="flex items-center gap-2">
+              {/* Secondary Actions */}
+              <button 
                 onClick={() => setShowNotesHistory(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg font-semibold transition-all text-sm"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all"
               >
                 <Clock className="w-4 h-4" />
                 History ({encounterNotes.length})
               </button>
-              <button 
-                onClick={handleInterpret} 
-                disabled={analyzing} 
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all text-sm disabled:opacity-50"
-                style={{
-                  backgroundColor: analyzing ? 'rgba(234, 179, 8, 0.1)' : brand.colors.primary,
-                  color: analyzing ? '#EAB308' : brand.colors.primaryText,
-                  border: analyzing ? '1px solid rgba(234, 179, 8, 0.3)' : 'none'
-                }}
-              >
-                {analyzing ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" />Analyzing</>
-                ) : (
-                  <><Sparkles className="w-4 h-4" />AI Interpret</>
-                )}
-              </button>
-              
               
               <a
                 href={process.env.NEXT_PUBLIC_ZOOM_MEETING_URL || "https://10xhealthsystem.zoom.us/j/5359639689"}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm text-gray-300 hover:text-white transition-all"
               >
                 <Video className="w-4 h-4" />
-                Start Video Call
+                Video Call
               </a>
+              
+              <div className="w-px h-6 bg-white/20 mx-1"></div>
+              
+              {/* AI Action */}
+              <button 
+                onClick={handleInterpret} 
+                disabled={analyzing} 
+                className="flex items-center gap-1.5 px-3 py-2 rounded-lg font-semibold transition-all text-sm disabled:opacity-50"
+                style={{
+                  backgroundColor: analyzing ? "rgba(234, 179, 8, 0.1)" : brand.colors.primary,
+                  color: analyzing ? "#EAB308" : brand.colors.primaryText,
+                  border: analyzing ? "1px solid rgba(234, 179, 8, 0.3)" : "none"
+                }}
+              >
+                {analyzing ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" />Analyzing...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" />AI Interpret</>
+                )}
+              </button>
+              
+              <div className="w-px h-6 bg-white/20 mx-1"></div>
+              
+              {/* Document Actions */}
               <button 
                 onClick={handleSaveDraft} 
                 disabled={submitting} 
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm disabled:opacity-50 transition-all"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Draft
               </button>
+              
               <button 
                 onClick={() => setShowPreview(true)}
                 disabled={!notes.trim()}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                className="flex items-center gap-1.5 px-3 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-sm disabled:opacity-50 transition-all"
               >
                 <FileText className="w-4 h-4" />
-                Preview Note
+                Preview
               </button>
-
-            </div>
+              
+              {/* Primary Action */}
               <button 
                 onClick={handleSignNote} 
-                disabled={submitting} 
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+                disabled={submitting || !notes.trim()} 
+                className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm ml-2"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Sign & Finalize
               </button>
+            </div>
           </div>
 
           {/* Alert Summary */}
