@@ -575,9 +575,6 @@ const handleSaveDraft = async () => {
                   <span>Patient Since: {new Date(consultation.created_at || labResult.test_date).toLocaleDateString()}</span>
                 </div>
               </div>
-                </div>
-              </div>
-            </div>
             
             <div className="flex items-center gap-3">
 <button 
