@@ -566,7 +566,7 @@ const handleSaveDraft = async () => {
                   {consultation.first_name} {consultation.last_name} <span className="ml-3 px-2 py-0.5 bg-white/10 rounded text-sm font-mono">{getPatientId(consultation.id)}</span>
                 </h1>
                 <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                  <span>{consultation.age}yo</span>
+                  <span>{Math.floor((new Date().getTime() - new Date(consultation.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))}yo</span>
                   <span>•</span>
                   <span>DOB: {consultation.date_of_birth}</span>
                   <span>•</span>
