@@ -342,9 +342,6 @@ const handleSaveDraft = async () => {
     return `ADN-${id.slice(0, 8).toUpperCase()}`
   }
 
-  const getPatientId = (id: string) => {
-    return `ADN-${id.slice(0, 8).toUpperCase()}`
-  }
 
   if (loading) {
     return (
