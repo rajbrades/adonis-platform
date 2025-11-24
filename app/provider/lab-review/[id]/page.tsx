@@ -338,6 +338,14 @@ const handleSaveDraft = async () => {
     return (weightInKg / (heightInMeters * heightInMeters)).toFixed(1)
   }
 
+  const getPatientId = (id: string) => {
+    return `ADN-${id.slice(0, 8).toUpperCase()}`
+  }
+
+  const getPatientId = (id: string) => {
+    return `ADN-${id.slice(0, 8).toUpperCase()}`
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center">
@@ -514,7 +522,7 @@ const handleSaveDraft = async () => {
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 text-sm border-t border-gray-300 pt-3">
-                    <div><span className="font-semibold">Patient:</span> {consultation.first_name} {consultation.last_name}</div>
+                    <div><span className="font-semibold">Patient:</span> {consultation.first_name} {consultation.last_name} ({getPatientId(consultation.id)})</div>
                     <div><span className="font-semibold">DOB:</span> {consultation.date_of_birth}</div>
                     <div><span className="font-semibold">Sex:</span> M</div>
                   </div>
@@ -558,7 +566,7 @@ const handleSaveDraft = async () => {
               <div className="h-4 w-px bg-white/20"></div>
               <div>
                 <h1 className="text-xl font-bold" style={{ color: brand.colors.primary }}>
-                  {consultation.first_name} {consultation.last_name}
+                  {consultation.first_name} {consultation.last_name} <span className="ml-3 px-2 py-0.5 bg-white/10 rounded text-sm font-mono">{getPatientId(consultation.id)}</span>
                 </h1>
                 <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
                   <span>{consultation.age}yo</span>
