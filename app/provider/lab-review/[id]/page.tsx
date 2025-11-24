@@ -613,6 +613,7 @@ const handleSaveDraft = async () => {
               >
                 <FileText className="w-4 h-4" />
                 Preview Note
+              </button>
 
             </div>
               <button 
