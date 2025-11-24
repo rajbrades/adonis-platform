@@ -606,7 +606,6 @@ const handleSaveDraft = async () => {
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Draft
               </button>
-              </button>
               <button 
                 onClick={() => setShowPreview(true)}
                 disabled={!notes.trim()}
