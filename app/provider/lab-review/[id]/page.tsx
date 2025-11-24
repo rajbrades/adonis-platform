@@ -485,42 +485,53 @@ const handleSaveDraft = async () => {
       )}
 
 
+
       {showPreview && consultation && labResult && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
-          <div className="bg-white text-black rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
-            <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Clinical Note Preview</h2>
-                <p className="text-sm text-gray-500">Review before signing</p>
-              </div>
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white">
+          <div className="bg-white text-black max-w-4xl w-full max-h-[90vh] flex flex-col print:max-h-none print:shadow-none">
+            <div className="p-4 border-b flex justify-between items-center print:hidden">
+              <h2 className="text-lg font-bold">Clinical Note Preview</h2>
               <div className="flex gap-2">
-                <button onClick={() => window.print()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+                <button onClick={() => window.print()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold">
                   Print / Save PDF
                 </button>
-                <button onClick={() => setShowPreview(false)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
-                  <X className="w-5 h-5 text-gray-600" />
+                <button onClick={() => setShowPreview(false)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-8" id="printable-note">
-              <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-8 pb-6 border-b-2 border-gray-200">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-1">ADONIS Health</h1>
-                  <p className="text-gray-500">Clinical Encounter Note</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
-                  <div><span className="text-gray-500">Patient:</span> <strong>{consultation.first_name} {consultation.last_name}</strong></div>
-                  <div><span className="text-gray-500">DOB:</span> <strong>{consultation.date_of_birth}</strong></div>
-                  <div><span className="text-gray-500">Test Date:</span> <strong>{labResult.test_date}</strong></div>
-                  <div><span className="text-gray-500">Panel:</span> <strong>{labResult.panel_name}</strong></div>
+            <div className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible" id="printable-note">
+              <div className="max-w-3xl mx-auto print:max-w-none">
+                <div className="border-b-2 border-black pb-4 mb-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h1 className="text-xl font-bold">ADONIS Health</h1>
+                      <p className="text-sm text-gray-600">Premium Mens Health Optimization</p>
+                    </div>
+                    <div className="text-right text-sm">
+                      <p>Phone: (305) 555-0100</p>
+                      <p>Fax: (305) 555-0101</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm border-t border-gray-300 pt-3">
+                    <div><span className="font-semibold">Patient:</span> {consultation.first_name} {consultation.last_name}</div>
+                    <div><span className="font-semibold">DOB:</span> {consultation.date_of_birth}</div>
+                    <div><span className="font-semibold">Sex:</span> M</div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 text-sm mt-1">
+                    <div><span className="font-semibold">Provider:</span> ADONIS Health, MD</div>
+                    <div><span className="font-semibold">Visit:</span> {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</div>
+                    <div><span className="font-semibold">Chart:</span> {consultation.id.slice(0,12).toUpperCase()}</div>
+                  </div>
                 </div>
                 <div className="mb-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">Clinical Assessment</h3>
-                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">{notes}</div>
+                  <h3 className="text-base font-bold mb-3 border-b border-gray-300 pb-1">CLINICAL ASSESSMENT</h3>
+                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{notes}</div>
                 </div>
-                <div className="mt-8 pt-6 border-t-2 border-gray-200 text-sm text-gray-500">
+                <div className="mt-8 pt-4 border-t border-gray-300 text-xs text-gray-500 print:fixed print:bottom-0 print:left-0 print:right-0 print:bg-white print:p-4">
                   <div className="flex justify-between">
                     <span>Generated: {new Date().toLocaleString()}</span>
+                    <span>Lab Panel: {labResult.panel_name}</span>
                     <span>Status: Draft - Pending Signature</span>
                   </div>
                 </div>
@@ -529,6 +540,7 @@ const handleSaveDraft = async () => {
           </div>
         </div>
       )}
+
 
 
 
