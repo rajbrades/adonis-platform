@@ -572,7 +572,7 @@ const handleSaveDraft = async () => {
                   <span>•</span>
                   <span>BMI: {bmi || "N/A"}</span>
                   <span>•</span>
-                  <span>Patient Since: {new Date(consultation.created_at || labResult.test_date).toLocaleDateString()}</span>
+                  <span>Patient Since: {new Date(labResult.test_date).toLocaleDateString()}</span>
                 </div>
               </div>
             
@@ -946,6 +946,7 @@ const handleSaveDraft = async () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
     </>
   )

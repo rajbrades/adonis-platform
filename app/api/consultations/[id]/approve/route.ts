@@ -7,7 +7,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
 export async function POST(
   request: Request,
@@ -36,7 +36,7 @@ export async function POST(
 
     const totalPrice = recommendedLabs.reduce((sum: any, lab: any) => sum + (lab.price || 0), 0)
 
-    await resend.emails.send({
+    if (resend) await resend.emails.send({
       from: 'ADONIS Health <noreply@getadonishealth.com>',
       to: consultation.email,
       subject: 'Your Health Optimization Plan is Ready',
