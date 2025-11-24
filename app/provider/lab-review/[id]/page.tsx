@@ -61,6 +61,7 @@ export default function LabReviewPage() {
   const [loadingNotes, setLoadingNotes] = useState(false)
 
   const [viewingNote, setViewingNote] = useState<any>(null)
+  const [showPreview, setShowPreview] = useState(false)
   useEffect(() => {
     fetchLabResult()
   }, [labResultId])
@@ -484,6 +485,52 @@ const handleSaveDraft = async () => {
       )}
 
 
+      {showPreview && consultation && labResult && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="bg-white text-black rounded-xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div className="p-6 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Clinical Note Preview</h2>
+                <p className="text-sm text-gray-500">Review before signing</p>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => window.print()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold">
+                  Print / Save PDF
+                </button>
+                <button onClick={() => setShowPreview(false)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg">
+                  <X className="w-5 h-5 text-gray-600" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto p-8" id="printable-note">
+              <div className="max-w-3xl mx-auto">
+                <div className="text-center mb-8 pb-6 border-b-2 border-gray-200">
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">ADONIS Health</h1>
+                  <p className="text-gray-500">Clinical Encounter Note</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div><span className="text-gray-500">Patient:</span> <strong>{consultation.first_name} {consultation.last_name}</strong></div>
+                  <div><span className="text-gray-500">DOB:</span> <strong>{consultation.date_of_birth}</strong></div>
+                  <div><span className="text-gray-500">Test Date:</span> <strong>{labResult.test_date}</strong></div>
+                  <div><span className="text-gray-500">Panel:</span> <strong>{labResult.panel_name}</strong></div>
+                </div>
+                <div className="mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b">Clinical Assessment</h3>
+                  <div className="whitespace-pre-wrap text-gray-700 leading-relaxed">{notes}</div>
+                </div>
+                <div className="mt-8 pt-6 border-t-2 border-gray-200 text-sm text-gray-500">
+                  <div className="flex justify-between">
+                    <span>Generated: {new Date().toLocaleString()}</span>
+                    <span>Status: Draft - Pending Signature</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Fixed Header */}
@@ -559,6 +606,15 @@ const handleSaveDraft = async () => {
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Draft
               </button>
+              </button>
+              <button 
+                onClick={() => setShowPreview(true)}
+                disabled={!notes.trim()}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 rounded-lg font-semibold transition-all text-sm flex items-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                Preview Note
+
             </div>
               <button 
                 onClick={handleSignNote} 
