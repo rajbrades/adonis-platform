@@ -532,7 +532,6 @@ const handleSaveDraft = async () => {
       )}
 
       )}
-
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Fixed Header */}
       <div className="fixed top-20 left-0 right-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
