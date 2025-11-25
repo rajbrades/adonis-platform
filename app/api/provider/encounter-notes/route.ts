@@ -9,7 +9,7 @@ const supabase = createClient(
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { patient_id, provider_id, lab_result_id, note_content, note_type, biomarkers_reviewed, action, encounter_type } = body
+    const { patient_id, provider_id, lab_result_id, note_content, note_type, biomarkers_reviewed, action, encounter_type, signed_by_name } = body
 
     if (!patient_id || !provider_id || !note_content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
           biomarkers_reviewed,
           status: 'signed',
           signed_at: new Date().toISOString(),
-          signed_by: provider_id,
+          signed_by: signed_by_name || provider_id,
           is_active_draft: false
         })
         .select()

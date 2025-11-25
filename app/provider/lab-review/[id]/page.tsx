@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Calendar, FileText, Sparkles, Loader2, Save, Video, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronRight, Pill, Activity, User, AlertCircle, AlertTriangle, ExternalLink, Clock, X } from 'lucide-react'
-import { useAuth } from '@clerk/nextjs'
+import { useAuth, useUser } from '@clerk/nextjs'
 import { getBrand } from '@/lib/brand'
 import { getOptimalRange, calculateFunctionalStatus } from '@/lib/functional-ranges'
 
@@ -57,6 +57,8 @@ export default function LabReviewPage() {
   const [activeSeverity, setActiveSeverity] = useState<number | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['context', 'medications']))
   const { userId } = useAuth()
+  const { user } = useUser()
+  const { user } = useUser()
   const [showNotesHistory, setShowNotesHistory] = useState(false)
   const [encounterNotes, setEncounterNotes] = useState<any[]>([])
   const [loadingNotes, setLoadingNotes] = useState(false)
@@ -182,7 +184,7 @@ const handleSaveDraft = async () => {
           note_type: "clinical_assessment",
           biomarkers_reviewed: labResult.biomarkers,
           action: "draft",
-          encounter_type: encounterType
+          encounter_type: encounterType,
         })
       })
 
@@ -215,7 +217,8 @@ const handleSaveDraft = async () => {
           note_type: "clinical_assessment",
           biomarkers_reviewed: labResult.biomarkers,
           action: "sign",
-          encounter_type: encounterType
+          encounter_type: encounterType,
+          signed_by_name: user?.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : "Provider",
         })
       })
 
