@@ -58,7 +58,6 @@ export default function LabReviewPage() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['context', 'medications']))
   const { userId } = useAuth()
   const { user } = useUser()
-  const { user } = useUser()
   const [showNotesHistory, setShowNotesHistory] = useState(false)
   const [encounterNotes, setEncounterNotes] = useState<any[]>([])
   const [loadingNotes, setLoadingNotes] = useState(false)
