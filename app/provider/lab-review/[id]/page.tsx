@@ -50,6 +50,7 @@ export default function LabReviewPage() {
   const [consultation, setConsultation] = useState<Consultation | null>(null)
   const [loading, setLoading] = useState(true)
   const [notes, setNotes] = useState('')
+  const [encounterType, setEncounterType] = useState("followup_lab_review")
   const [submitting, setSubmitting] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -180,7 +181,8 @@ const handleSaveDraft = async () => {
           note_content: notes,
           note_type: "clinical_assessment",
           biomarkers_reviewed: labResult.biomarkers,
-          action: "draft"
+          action: "draft",
+          encounter_type: encounterType
         })
       })
 
@@ -212,7 +214,8 @@ const handleSaveDraft = async () => {
           note_content: notes,
           note_type: "clinical_assessment",
           biomarkers_reviewed: labResult.biomarkers,
-          action: "sign"
+          action: "sign",
+          encounter_type: encounterType
         })
       })
 
@@ -879,6 +882,37 @@ const handleSaveDraft = async () => {
                       </button>
                     ))}
                   </div>
+                  
+                  {/* Priority Biomarkers */}
+                  {flaggedBiomarkers.length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-gray-500 font-medium">Priority:</span>
+                        {flaggedBiomarkers.slice(0, 5).map((b, i) => {
+                          const { color } = getBiomarkerStatus(b)
+                          return (
+                            <button
+                              key={i}
+                              onClick={() => {
+                                const el = document.getElementById(`biomarker-${b.biomarker}`)
+                                el?.scrollIntoView({ behavior: "smooth", block: "center" })
+                              }}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-all hover:scale-105 ${
+                                color === "red" ? "bg-red-500/20 text-red-400 border border-red-500/30" :
+                                "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                              }`}
+                            >
+                              {b.biomarker}
+                            </button>
+                          )
+                        })}
+                        {flaggedBiomarkers.length > 5 && (
+                          <span className="text-xs text-gray-500">+{flaggedBiomarkers.length - 5} more</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
 
                 {/* Biomarkers - TIGHT LAYOUT */}
@@ -944,6 +978,22 @@ const handleSaveDraft = async () => {
                   </h2>
                 </div>
                 <div className="p-4">
+                  {/* Encounter Type Dropdown */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-400 mb-1.5">Encounter Type</label>
+                    <select
+                      value={encounterType}
+                      onChange={(e) => setEncounterType(e.target.value)}
+                      className="w-full px-3 py-2 bg-black/40 border border-white/10 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-yellow-400/50"
+                    >
+                      <option value="initial_consultation">Initial Consultation</option>
+                      <option value="followup_lab_review">Follow-Up: Lab Review</option>
+                      <option value="followup_treatment_adjustment">Follow-Up: Treatment Adjustment</option>
+                      <option value="followup_symptom_check">Follow-Up: Symptom Check</option>
+                      <option value="annual_wellness">Annual Wellness Review</option>
+                      <option value="treatment_planning">Treatment Planning Session</option>
+                    </select>
+                  </div>
                   <textarea 
                     value={notes} 
                     onChange={(e) => setNotes(e.target.value)} 
