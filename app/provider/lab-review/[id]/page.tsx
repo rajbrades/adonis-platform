@@ -399,9 +399,9 @@ const handleSaveDraft = async () => {
 
       {showNotesHistory && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
-          <div className="bg-gray-900 border border-white/20 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
-            {/* Header - Improved contrast */}
-            <div className="p-6 border-b border-white/20 flex justify-between items-center bg-gray-800/50">
+          <div className="bg-black border border-yellow-400/30 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            {/* Header */}
+            <div className="p-6 border-b border-yellow-400/20 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-white">Notes History <span className="text-yellow-400">({encounterNotes.length})</span></h2>
               <button onClick={() => setShowNotesHistory(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
                 <X className="w-6 h-6 text-gray-400 hover:text-white" />
@@ -413,21 +413,21 @@ const handleSaveDraft = async () => {
               {encounterNotes.map((note: any) => (
                 <div 
                   key={note.id} 
-                  className={`rounded-xl p-5 transition-all ${
+                  className={`rounded-xl p-5 transition-all border ${
                     note.status === "signed" 
-                      ? "bg-gradient-to-r from-green-900/20 to-green-800/10 border-2 border-green-500/30" 
-                      : "bg-black/40 border border-white/10"
+                      ? "bg-white/5 border-yellow-400/40" 
+                      : "bg-white/5 border-white/10"
                   }`}
                 >
                   {/* Note Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                      <span className={`px-3 py-1.5 rounded text-xs font-bold ${
                         note.status === "signed" 
-                          ? "bg-green-500/30 text-green-300 border border-green-400/50" 
-                          : "bg-yellow-500/30 text-yellow-300 border border-yellow-400/50"
+                          ? "bg-yellow-400 text-black" 
+                          : "bg-white/20 text-gray-300"
                       }`}>
-                        {note.status === "signed" ? "✓ SIGNED" : "📝 DRAFT"}
+                        {note.status === "signed" ? "✓ SIGNED" : "DRAFT"}
                       </span>
                       <div className="flex flex-col">
                         <span className="text-sm text-white">
@@ -435,21 +435,21 @@ const handleSaveDraft = async () => {
                         </span>
                         {note.encounter_type && (
                           <span className="text-xs text-gray-400">
-                            {note.encounter_type.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                            {note.encounter_type.replace(/_/g, " ").replace(/followup/gi, "Follow-Up:").replace(/\b\w/g, (l: string) => l.toUpperCase())}
                           </span>
                         )}
                       </div>
                     </div>
                     {note.status === "signed" && (
                       <div className="text-right">
-                        <span className="text-sm text-green-400 block">Signed: {new Date(note.signed_at).toLocaleDateString()}</span>
+                        <span className="text-sm text-yellow-400 block">Signed: {new Date(note.signed_at).toLocaleDateString()}</span>
                         <span className="text-xs text-gray-500">by {note.signed_by || "Provider"}</span>
                       </div>
                     )}
                   </div>
                   
-                  {/* Note Content - Expanded preview */}
-                  <div className="text-sm text-gray-200 whitespace-pre-wrap mb-4 line-clamp-4 leading-relaxed">
+                  {/* Note Content */}
+                  <div className="text-sm text-gray-300 whitespace-pre-wrap mb-4 line-clamp-4 leading-relaxed">
                     {note.note_content}
                   </div>
                   
@@ -459,13 +459,13 @@ const handleSaveDraft = async () => {
                       <>
                         <button
                           onClick={() => loadDraftIntoEditor(note.note_content)}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm font-semibold transition-colors"
                         >
                           Continue Editing
                         </button>
                         <button
                           onClick={() => deleteDraft(note.id)}
-                          className="px-4 py-2 bg-red-600/80 hover:bg-red-500 rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                           Delete Draft
                         </button>
@@ -474,13 +474,13 @@ const handleSaveDraft = async () => {
                       <>
                         <button
                           onClick={() => setViewingNote(note)}
-                          className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm font-semibold transition-colors"
                         >
                           View Full Note
                         </button>
                         <button
                           onClick={() => downloadNotePDF(note)}
-                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors"
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors"
                         >
                           Download PDF
                         </button>
@@ -494,102 +494,6 @@ const handleSaveDraft = async () => {
         </div>
       )}
 
-
-      {viewingNote && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8">
-          <div className="bg-gray-900 border border-white/10 rounded-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-white/10 flex justify-between items-center">
-              <div>
-                <h2 className="text-xl font-bold text-green-400">Signed Clinical Note</h2>
-                <p className="text-sm text-gray-400 mt-1">Signed: {new Date(viewingNote.signed_at).toLocaleString()}</p>
-              </div>
-              <button onClick={() => setViewingNote(null)} className="text-gray-400 hover:text-white">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="prose prose-invert max-w-none">
-                <div className="text-white whitespace-pre-wrap leading-relaxed">
-                  {viewingNote.note_content}
-                </div>
-              </div>
-            </div>
-            <div className="p-4 border-t border-white/10 flex justify-between items-center">
-              <div className="text-xs text-gray-400">
-                Note ID: {viewingNote.id}
-              </div>
-              <button onClick={() => downloadNotePDF(viewingNote)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-semibold">
-                Download PDF
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
-      {showPreview && consultation && labResult && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white">
-          <div className="bg-white text-black max-w-4xl w-full max-h-[90vh] flex flex-col print:max-h-none print:shadow-none">
-            <div className="p-4 border-b flex justify-between items-center print:hidden">
-              <h2 className="text-lg font-bold">Clinical Note Preview</h2>
-              <div className="flex gap-2">
-                <button onClick={() => window.print()} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm font-semibold">
-                  Print / Save PDF
-                </button>
-                <button onClick={() => setShowPreview(false)} className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible" id="printable-note">
-              <div className="max-w-3xl mx-auto print:max-w-none">
-                <div className="border-b-2 border-black pb-4 mb-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h1 className="text-xl font-bold">ADONIS Health</h1>
-                      <p className="text-sm text-gray-600">Premium Mens Health Optimization</p>
-                    </div>
-                    <div className="text-right text-sm">
-                      <p>Phone: (305) 555-0100</p>
-                      <p>Fax: (305) 555-0101</p>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm border-t border-gray-300 pt-3">
-                    <div><span className="font-semibold">Patient:</span> {consultation.first_name} {consultation.last_name} ({getPatientId(consultation.id)})</div>
-                    <div><span className="font-semibold">DOB:</span> {consultation.date_of_birth}</div>
-                    <div><span className="font-semibold">Sex:</span> M</div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm mt-1">
-                    <div><span className="font-semibold">Provider:</span> ADONIS Health, MD</div>
-                    <div><span className="font-semibold">Visit:</span> {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], {hour: "2-digit", minute: "2-digit"})}</div>
-                    <div><span className="font-semibold">Chart:</span> {consultation.id.slice(0,12).toUpperCase()}</div>
-                  </div>
-                </div>
-                <div className="mb-6">
-                  <h3 className="text-base font-bold mb-3 border-b border-gray-300 pb-1">CLINICAL ASSESSMENT</h3>
-                  <div className="whitespace-pre-wrap text-sm leading-relaxed">{notes}</div>
-                </div>
-                <div className="mt-8 pt-4 border-t border-gray-300 text-xs text-gray-500 print:fixed print:bottom-0 print:left-0 print:right-0 print:bg-white print:p-4">
-                  <div className="flex justify-between">
-                    <span>Generated: {new Date().toLocaleString()}</span>
-                    <span>Lab Panel: {labResult.panel_name}</span>
-                    <span>Status: Draft - Pending Signature</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-
-
-
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
-      {/* Fixed Header */}
-      <div className="fixed top-20 left-0 right-0 z-40 border-b border-white/10 bg-black/95 backdrop-blur-xl">
-        <div className="mx-auto px-8" style={{ maxWidth: '1800px' }}>
           {/* Top Bar */}
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center gap-6">
