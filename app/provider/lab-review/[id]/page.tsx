@@ -396,62 +396,95 @@ const handleSaveDraft = async () => {
 
   return (
 <>
+
       {showNotesHistory && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8">
-          <div className="bg-gray-900 border border-white/10 rounded-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-white/10 flex justify-between">
-              <h2 className="text-xl font-bold">Notes History ({encounterNotes.length})</h2>
-              <button onClick={() => setShowNotesHistory(false)}><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
+          <div className="bg-gray-900 border border-white/20 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+            {/* Header - Improved contrast */}
+            <div className="p-6 border-b border-white/20 flex justify-between items-center bg-gray-800/50">
+              <h2 className="text-2xl font-bold text-white">Notes History <span className="text-yellow-400">({encounterNotes.length})</span></h2>
+              <button onClick={() => setShowNotesHistory(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-6 h-6 text-gray-400 hover:text-white" />
+              </button>
             </div>
+            
+            {/* Notes List */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {encounterNotes.map((note: any) => (
-              <div key={note.id} className="bg-black/40 border border-white/10 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div 
+                  key={note.id} 
+                  className={`rounded-xl p-5 transition-all ${
+                    note.status === "signed" 
+                      ? "bg-gradient-to-r from-green-900/20 to-green-800/10 border-2 border-green-500/30" 
+                      : "bg-black/40 border border-white/10"
+                  }`}
+                >
+                  {/* Note Header */}
+                  <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                        note.status === 'signed' 
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                          : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'
+                      <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${
+                        note.status === "signed" 
+                          ? "bg-green-500/30 text-green-300 border border-green-400/50" 
+                          : "bg-yellow-500/30 text-yellow-300 border border-yellow-400/50"
                       }`}>
-                        {note.status === 'signed' ? '✓ SIGNED' : '📝 DRAFT'}
+                        {note.status === "signed" ? "✓ SIGNED" : "📝 DRAFT"}
                       </span>
-                      <span className="text-xs text-gray-400">
-                        {new Date(note.created_at).toLocaleString()}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-sm text-white">
+                          {new Date(note.created_at).toLocaleString()}
+                        </span>
+                        {note.encounter_type && (
+                          <span className="text-xs text-gray-400">
+                            {note.encounter_type.replace(/_/g, " ").replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    {note.status === 'signed' && note.signed_at && (
-                      <span className="text-xs text-green-400">
-                        Signed: {new Date(note.signed_at).toLocaleDateString()}
-                      </span>
+                    {note.status === "signed" && (
+                      <div className="text-right">
+                        <span className="text-sm text-green-400 block">Signed: {new Date(note.signed_at).toLocaleDateString()}</span>
+                        <span className="text-xs text-gray-500">by {note.signed_by || "Provider"}</span>
+                      </div>
                     )}
                   </div>
                   
-                  <div className="text-sm text-white whitespace-pre-wrap mb-3 max-h-20 overflow-hidden">
+                  {/* Note Content - Expanded preview */}
+                  <div className="text-sm text-gray-200 whitespace-pre-wrap mb-4 line-clamp-4 leading-relaxed">
                     {note.note_content}
                   </div>
                   
-                  <div className="flex gap-2">
-                    {note.status === 'draft' ? (
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    {note.status === "draft" ? (
                       <>
                         <button
                           onClick={() => loadDraftIntoEditor(note.note_content)}
-                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded text-xs font-semibold"
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors"
                         >
                           Continue Editing
                         </button>
                         <button
                           onClick={() => deleteDraft(note.id)}
-                          className="px-3 py-1.5 bg-red-600 hover:bg-red-700 rounded text-xs font-semibold"
+                          className="px-4 py-2 bg-red-600/80 hover:bg-red-500 rounded-lg text-sm font-semibold transition-colors"
                         >
                           Delete Draft
                         </button>
                       </>
                     ) : (
-                      <button
-                        onClick={() => setViewingNote(note)} className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 rounded text-xs font-semibold"
-                      >
-                        View Full Note
-                      </button>
+                      <>
+                        <button
+                          onClick={() => setViewingNote(note)}
+                          className="px-4 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          View Full Note
+                        </button>
+                        <button
+                          onClick={() => downloadNotePDF(note)}
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold transition-colors"
+                        >
+                          Download PDF
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -460,6 +493,7 @@ const handleSaveDraft = async () => {
           </div>
         </div>
       )}
+
 
       {viewingNote && (
         <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-8">
