@@ -399,92 +399,89 @@ const handleSaveDraft = async () => {
   return (
 <>
 
+
+      {/* Notes History Modal - Redesigned */}
       {showNotesHistory && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
-          <div className="bg-black border border-yellow-400/30 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-6">
+          <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black border border-yellow-400/30 rounded-xl max-w-3xl w-full max-h-[85vh] flex flex-col shadow-2xl shadow-yellow-400/5">
             {/* Header */}
-            <div className="p-6 border-b border-yellow-400/20 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-white">Notes History <span className="text-yellow-400">({encounterNotes.length})</span></h2>
-              <button onClick={() => setShowNotesHistory(false)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-                <X className="w-6 h-6 text-gray-400 hover:text-white" />
+            <div className="px-5 py-4 border-b border-yellow-400/20 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-white">Notes History <span className="text-yellow-400">({encounterNotes.length})</span></h2>
+              <button onClick={() => setShowNotesHistory(false)} className="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
               </button>
             </div>
             
-            {/* Notes List */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            {/* Notes List - Tighter spacing */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {encounterNotes.map((note: any) => (
                 <div 
                   key={note.id} 
-                  className={`rounded-xl p-5 transition-all border ${
+                  className={`rounded-lg p-4 transition-all ${
                     note.status === "signed" 
-                      ? "bg-white/5 border-yellow-400/40" 
-                      : "bg-white/5 border-white/10"
+                      ? "bg-white/[0.03] border border-yellow-400/30 shadow-sm shadow-yellow-400/10" 
+                      : "bg-white/[0.02] border border-dashed border-white/20"
                   }`}
                 >
-                  {/* Note Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1.5 rounded text-xs font-bold ${
-                        note.status === "signed" 
-                          ? "bg-yellow-400 text-black" 
-                          : "bg-white/20 text-gray-300"
-                      }`}>
-                        {note.status === "signed" ? "✓ SIGNED" : "DRAFT"}
-                      </span>
-                      <div className="flex flex-col">
-                        <span className="text-sm text-white">
-                          {new Date(note.created_at).toLocaleString()}
-                        </span>
-                        {note.encounter_type && (
-                          <span className="text-xs text-gray-400">
-                            {note.encounter_type.replace(/_/g, " ").replace(/followup/gi, "Follow-Up:").replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    {note.status === "signed" && (
-                      <div className="text-right">
-                        <span className="text-sm text-yellow-400 block">Signed: {new Date(note.signed_at).toLocaleDateString()}</span>
-                        <span className="text-xs text-gray-500">by {note.signed_by || "Provider"}</span>
-                      </div>
-                    )}
+                  {/* Header Row: Badge + Encounter Type + Date */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
+                      note.status === "signed" 
+                        ? "bg-yellow-400 text-black" 
+                        : "bg-white/15 text-gray-400"
+                    }`}>
+                      {note.status === "signed" ? "✓ SIGNED" : "DRAFT"}
+                    </span>
+                    <span className="text-sm font-medium text-white">
+                      {note.encounter_type 
+                        ? note.encounter_type.replace(/_/g, " ").replace(/followup/gi, "Follow-Up:").replace(/\b\w/g, (l: string) => l.toUpperCase())
+                        : "Clinical Note"}
+                    </span>
+                    <span className="text-xs text-gray-500 ml-auto">
+                      {new Date(note.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}, {new Date(note.created_at).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                    </span>
                   </div>
                   
-                  {/* Note Content */}
-                  <div className="text-sm text-gray-300 whitespace-pre-wrap mb-4 line-clamp-4 leading-relaxed">
-                    {note.note_content}
+                  {/* Provider Line */}
+                  <div className="text-xs text-gray-500 mb-3">
+                    by {note.signed_by || "Provider"}
                   </div>
                   
-                  {/* Action Buttons */}
-                  <div className="flex gap-3">
+                  {/* Note Preview - 2-3 lines */}
+                  <div className="text-sm text-gray-400 mb-3 line-clamp-2 leading-relaxed">
+                    {note.note_content?.substring(0, 150)}{note.note_content?.length > 150 ? "..." : ""}
+                  </div>
+                  
+                  {/* Action Row */}
+                  <div className="flex items-center gap-3">
                     {note.status === "draft" ? (
                       <>
                         <button
                           onClick={() => loadDraftIntoEditor(note.note_content)}
-                          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm font-semibold transition-colors"
+                          className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded text-sm font-semibold transition-colors"
                         >
                           Continue Editing
                         </button>
                         <button
                           onClick={() => deleteDraft(note.id)}
-                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors"
+                          className="text-sm text-gray-500 hover:text-red-400 transition-colors"
                         >
-                          Delete Draft
+                          Delete
                         </button>
                       </>
                     ) : (
                       <>
                         <button
                           onClick={() => setViewingNote(note)}
-                          className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm font-semibold transition-colors"
+                          className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded text-sm font-semibold transition-colors flex items-center gap-1"
                         >
-                          View Full Note
+                          View Full Note <span className="text-xs">→</span>
                         </button>
                         <button
                           onClick={() => downloadNotePDF(note)}
-                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm font-semibold transition-colors"
+                          className="text-sm text-gray-500 hover:text-white transition-colors flex items-center gap-1"
                         >
-                          Download PDF
+                          <ChevronDown className="w-3.5 h-3.5" /> PDF
                         </button>
                       </>
                     )}
@@ -496,35 +493,44 @@ const handleSaveDraft = async () => {
         </div>
       )}
 
+      {/* View Full Note Modal */}
       {viewingNote && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
-          <div className="bg-black border border-yellow-400/30 rounded-xl max-w-4xl w-full max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-yellow-400/20 flex justify-between items-center">
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-6">
+          <div className="bg-gradient-to-br from-gray-900 via-gray-900 to-black border border-yellow-400/30 rounded-xl max-w-3xl w-full max-h-[80vh] flex flex-col shadow-2xl shadow-yellow-400/5">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-yellow-400/20 flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-bold text-yellow-400">Signed Clinical Note</h2>
-                <p className="text-sm text-gray-400 mt-1">Signed: {new Date(viewingNote.signed_at).toLocaleString()}</p>
+                <div className="flex items-center gap-2">
+                  <span className="px-2 py-0.5 bg-yellow-400 text-black rounded text-xs font-bold">✓ SIGNED</span>
+                  <span className="text-sm font-medium text-white">
+                    {viewingNote.encounter_type 
+                      ? viewingNote.encounter_type.replace(/_/g, " ").replace(/followup/gi, "Follow-Up:").replace(/\b\w/g, (l: string) => l.toUpperCase())
+                      : "Clinical Note"}
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">by {viewingNote.signed_by || "Provider"} • {new Date(viewingNote.signed_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
               </div>
-              <button onClick={() => setViewingNote(null)} className="p-2 hover:bg-white/10 rounded-lg">
-                <X className="w-5 h-5 text-gray-400" />
+              <button onClick={() => setViewingNote(null)} className="p-1.5 hover:bg-white/10 rounded-lg">
+                <X className="w-5 h-5 text-gray-400 hover:text-white" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="prose prose-invert max-w-none">
-                <div className="text-white whitespace-pre-wrap leading-relaxed">
-                  {viewingNote.note_content}
-                </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-5">
+              <div className="text-gray-200 whitespace-pre-wrap leading-relaxed text-sm">
+                {viewingNote.note_content}
               </div>
             </div>
-            <div className="p-4 border-t border-yellow-400/20 flex justify-between items-center">
-              <div className="text-xs text-gray-400">
-                Note ID: {viewingNote.id}
-              </div>
-              <button onClick={() => downloadNotePDF(viewingNote)} className="px-4 py-2 bg-yellow-400 hover:bg-yellow-300 text-black rounded-lg text-sm font-semibold">
-                Download PDF
+            {/* Footer */}
+            <div className="px-5 py-3 border-t border-yellow-400/20 flex justify-between items-center">
+              <span className="text-xs text-gray-600">ID: {viewingNote.id.substring(0, 8)}...</span>
+              <button onClick={() => downloadNotePDF(viewingNote)} className="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-black rounded text-sm font-semibold flex items-center gap-1">
+                <ChevronDown className="w-4 h-4" /> Download PDF
               </button>
             </div>
           </div>
         </div>
+      )}
+
       )}
 
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
