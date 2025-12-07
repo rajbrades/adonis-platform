@@ -37,7 +37,7 @@
 - ⚠️ **Critical Gaps:** PDF requisition generation, provider approval API refinements, scheduling system
 
 ### Technology Stack
-- **Framework:** Next.js 15.5.4 with TypeScript
+- **Framework:** Next.js 15.5.7 with TypeScript
 - **Database:** Supabase PostgreSQL
 - **Deployment:** Vercel (auto-deploy from main branch)
 - **Auth:** Clerk (admin/provider) + Custom bcrypt (patients)
@@ -82,7 +82,7 @@
 
 ### Core Stack
 ```
-Next.js 15.5.4 (App Router)
+Next.js 15.5.7 (App Router)
 ├── TypeScript 5.x (Strict Mode)
 ├── React 18.x (Server Components)
 ├── Tailwind CSS 3.x

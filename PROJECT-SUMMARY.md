@@ -12,7 +12,7 @@
 Premium men's health optimization and telemedicine platform targeting high-performing executives (ages 30-60). Features comprehensive hormone optimization (TRT, peptides), advanced biomarker tracking (69+ markers), AI-powered clinical analysis, and HIPAA-compliant patient/provider portals.
 
 ### Tech Stack
-- **Framework:** Next.js 15 (App Router) + TypeScript
+- **Framework:** Next.js 15.5.7 (App Router) + TypeScript
 - **Styling:** Tailwind CSS (glassmorphism design)
 - **Database:** Supabase (PostgreSQL)
 - **Authentication:** Clerk

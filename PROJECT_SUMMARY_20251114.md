@@ -16,7 +16,7 @@
 ## TECHNOLOGY STACK
 
 ### Core Framework
-- **Frontend:** Next.js 15.5.4 (App Router) + TypeScript + React
+- **Frontend:** Next.js 15.5.7 (App Router) + TypeScript + React
 - **Styling:** Tailwind CSS v4 with custom brand colors
 - **Deployment:** Vercel (production: getadonishealth.com)
 - **Version Control:** GitHub (rajbrades/adonis-platform)
